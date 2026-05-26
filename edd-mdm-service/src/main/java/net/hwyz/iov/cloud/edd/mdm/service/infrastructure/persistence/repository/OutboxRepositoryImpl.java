@@ -115,7 +115,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
     public void saveCarLineCreatedEvent(CarLineCreatedEvent event) {
         try {
             OutboxPo po = OutboxPo.builder()
-                    .aggregateType("SERIES")
+                    .aggregateType("CAR_LINE")
                     .aggregateId(event.getEntityId())
                     .eventType(event.getEventType())
                     .payload(objectMapper.writeValueAsString(event.getPayload()))
@@ -140,7 +140,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
     public void saveCarLineUpdatedEvent(CarLineUpdatedEvent event) {
         try {
             OutboxPo po = OutboxPo.builder()
-                    .aggregateType("SERIES")
+                    .aggregateType("CAR_LINE")
                     .aggregateId(event.getEntityId())
                     .eventType(event.getEventType())
                     .payload(objectMapper.writeValueAsString(event.getPayload()))
@@ -165,7 +165,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
     public void saveCarLineDeactivatedEvent(CarLineDeactivatedEvent event) {
         try {
             OutboxPo po = OutboxPo.builder()
-                    .aggregateType("SERIES")
+                    .aggregateType("CAR_LINE")
                     .aggregateId(event.getEntityId())
                     .eventType(event.getEventType())
                     .payload(objectMapper.writeValueAsString(event.getPayload()))
