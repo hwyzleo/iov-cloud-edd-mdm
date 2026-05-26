@@ -6,8 +6,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.BrandCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.BrandUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.BrandQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.BrandDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.BrandHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.BrandHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -183,6 +185,19 @@ public class BrandAppService {
     }
 
     /**
+     * 查询品牌历史版本列表
+     *
+     * @param code 品牌code
+     * @return 历史版本DTO列表
+     */
+    public List<BrandHistoryDto> listBrandHistory(String code) {
+        List<BrandHistory> historyList = productDomainService.listBrandHistory(code);
+        return historyList.stream()
+                .map(this::convertHistoryToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 转换为DTO
      *
      * @param brand 品牌聚合根
@@ -198,6 +213,12 @@ public class BrandAppService {
                 .logo(brand.getLogo())
                 .country(brand.getCountry())
                 .foundedYear(brand.getFoundedYear())
+                .sourceSystem(brand.getSourceSystem())
+                .sourceId(brand.getSourceId())
+                .sourceVersion(brand.getSourceVersion())
+                .ingestionChannel(brand.getIngestionChannel())
+                .ingestionTime(brand.getIngestionTime())
+                .sourcePayloadHash(brand.getSourcePayloadHash())
                 .version(brand.getVersion())
                 .effectiveFrom(brand.getEffectiveFrom())
                 .effectiveTo(brand.getEffectiveTo())
@@ -206,6 +227,43 @@ public class BrandAppService {
                 .createTime(brand.getCreateTime())
                 .modifyBy(brand.getModifyBy())
                 .modifyTime(brand.getModifyTime())
+                .build();
+    }
+
+    /**
+     * 转换历史版本为DTO
+     *
+     * @param history 品牌历史版本实体
+     * @return 品牌历史版本DTO
+     */
+    private BrandHistoryDto convertHistoryToDto(BrandHistory history) {
+        return BrandHistoryDto.builder()
+                .snapshotId(history.getSnapshotId())
+                .entityId(history.getEntityId())
+                .code(history.getCode())
+                .name(history.getName())
+                .nameLocal(history.getNameLocal())
+                .description(history.getDescription())
+                .logo(history.getLogo())
+                .country(history.getCountry())
+                .foundedYear(history.getFoundedYear())
+                .sourceSystem(history.getSourceSystem())
+                .sourceId(history.getSourceId())
+                .sourceVersion(history.getSourceVersion())
+                .ingestionChannel(history.getIngestionChannel())
+                .ingestionTime(history.getIngestionTime())
+                .sourcePayloadHash(history.getSourcePayloadHash())
+                .version(history.getVersion())
+                .effectiveFrom(history.getEffectiveFrom())
+                .effectiveTo(history.getEffectiveTo())
+                .status(history.getStatus())
+                .operationType(history.getOperationType())
+                .snapshotTime(history.getSnapshotTime())
+                .operator(history.getOperator())
+                .createBy(history.getCreateBy())
+                .createTime(history.getCreateTime())
+                .modifyBy(history.getModifyBy())
+                .modifyTime(history.getModifyTime())
                 .build();
     }
 }

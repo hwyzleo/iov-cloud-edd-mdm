@@ -59,6 +59,36 @@ public class SeriesDto {
     private String targetMarket;
 
     /**
+     * 来源系统
+     */
+    private String sourceSystem;
+
+    /**
+     * 来源系统ID
+     */
+    private String sourceId;
+
+    /**
+     * 来源版本
+     */
+    private String sourceVersion;
+
+    /**
+     * 数据接入渠道
+     */
+    private String ingestionChannel;
+
+    /**
+     * 数据接入时间
+     */
+    private Date ingestionTime;
+
+    /**
+     * 来源数据哈希
+     */
+    private String sourcePayloadHash;
+
+    /**
      * 业务版本号
      */
     private Integer version;

@@ -4,9 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.BrandHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter.BrandConverter;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter.BrandHistoryConverter;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.BrandHistoryMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.BrandMapper;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.BrandHistoryPo;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.BrandPo;
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +29,8 @@ public class BrandRepositoryImpl implements BrandRepository {
 
     private final BrandMapper brandMapper;
     private final BrandConverter brandConverter;
+    private final BrandHistoryMapper brandHistoryMapper;
+    private final BrandHistoryConverter brandHistoryConverter;
 
     @Override
     public Brand save(Brand brand) {
@@ -89,5 +95,17 @@ public class BrandRepositoryImpl implements BrandRepository {
     public void delete(Brand brand) {
         BrandPo po = brandConverter.toPo(brand);
         brandMapper.updateById(po);
+    }
+
+    @Override
+    public List<BrandHistory> findHistoryByCode(String code) {
+        LambdaQueryWrapper<BrandHistoryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(BrandHistoryPo::getCode, code);
+        wrapper.eq(BrandHistoryPo::getRowValid, true);
+        wrapper.orderByDesc(BrandHistoryPo::getVersion);
+        List<BrandHistoryPo> poList = brandHistoryMapper.selectList(wrapper);
+        return poList.stream()
+                .map(brandHistoryConverter::toDomain)
+                .collect(Collectors.toList());
     }
 }

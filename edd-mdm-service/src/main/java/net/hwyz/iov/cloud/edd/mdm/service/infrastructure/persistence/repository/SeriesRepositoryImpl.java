@@ -4,9 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SeriesRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter.SeriesConverter;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter.SeriesHistoryConverter;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.SeriesHistoryMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.SeriesMapper;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.SeriesHistoryPo;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.SeriesPo;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -26,6 +30,8 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 
     private final SeriesMapper seriesMapper;
     private final SeriesConverter seriesConverter;
+    private final SeriesHistoryMapper seriesHistoryMapper;
+    private final SeriesHistoryConverter seriesHistoryConverter;
 
     @Override
     public Series save(Series series) {
@@ -96,5 +102,17 @@ public class SeriesRepositoryImpl implements SeriesRepository {
     public void delete(Series series) {
         SeriesPo po = seriesConverter.toPo(series);
         seriesMapper.updateById(po);
+    }
+
+    @Override
+    public List<SeriesHistory> findHistoryByCode(String code) {
+        LambdaQueryWrapper<SeriesHistoryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SeriesHistoryPo::getCode, code);
+        wrapper.eq(SeriesHistoryPo::getRowValid, true);
+        wrapper.orderByDesc(SeriesHistoryPo::getVersion);
+        List<SeriesHistoryPo> poList = seriesHistoryMapper.selectList(wrapper);
+        return poList.stream()
+                .map(seriesHistoryConverter::toDomain)
+                .collect(Collectors.toList());
     }
 }

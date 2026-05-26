@@ -6,6 +6,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateE
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.BrandHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PlatformHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SeriesRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
@@ -453,5 +456,50 @@ public class ProductDomainService {
      */
     public long countPlatforms(boolean includeInactive) {
         return platformRepository.count(includeInactive);
+    }
+
+    /**
+     * 查询品牌历史版本列表
+     *
+     * @param code 品牌code
+     * @return 历史版本列表
+     * @throws BrandNotFoundException 品牌不存在
+     */
+    public List<BrandHistory> listBrandHistory(String code) {
+        // 检查品牌是否存在
+        if (!brandRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("品牌不存在: " + code);
+        }
+        return brandRepository.findHistoryByCode(code);
+    }
+
+    /**
+     * 查询车系历史版本列表
+     *
+     * @param code 车系code
+     * @return 历史版本列表
+     * @throws BrandNotFoundException 车系不存在
+     */
+    public List<SeriesHistory> listSeriesHistory(String code) {
+        // 检查车系是否存在
+        if (!seriesRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("车系不存在: " + code);
+        }
+        return seriesRepository.findHistoryByCode(code);
+    }
+
+    /**
+     * 查询平台历史版本列表
+     *
+     * @param code 平台code
+     * @return 历史版本列表
+     * @throws BrandNotFoundException 平台不存在
+     */
+    public List<PlatformHistory> listPlatformHistory(String code) {
+        // 检查平台是否存在
+        if (!platformRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("平台不存在: " + code);
+        }
+        return platformRepository.findHistoryByCode(code);
     }
 }

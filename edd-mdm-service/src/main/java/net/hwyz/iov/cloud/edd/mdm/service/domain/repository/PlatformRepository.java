@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.repository;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PlatformHistory;
 
 import java.util.List;
 import java.util.Optional;
@@ -68,4 +69,12 @@ public interface PlatformRepository {
      * @param platform 平台聚合根
      */
     void delete(Platform platform);
+
+    /**
+     * 查询平台历史版本列表
+     *
+     * @param code 平台code
+     * @return 历史版本列表
+     */
+    List<PlatformHistory> findHistoryByCode(String code);
 }

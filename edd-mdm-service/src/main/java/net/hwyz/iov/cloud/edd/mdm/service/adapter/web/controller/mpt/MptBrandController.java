@@ -5,7 +5,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.BrandAssembler;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.BrandCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.BrandUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.BrandDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.BrandHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.BrandAppService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.BrandHistoryPageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.BrandHistoryResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.BrandPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.BrandResponse;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
@@ -128,6 +131,26 @@ public class MptBrandController {
 
         return ApiResponse.ok(BrandPageResponse.builder()
                 .total(total)
+                .rows(rows)
+                .build());
+    }
+
+    /**
+     * 查询品牌历史版本列表
+     *
+     * @param code 品牌code
+     * @return 品牌历史版本分页响应
+     */
+    @GetMapping("/{code}/history")
+    public ApiResponse<BrandHistoryPageResponse> getHistory(@PathVariable String code) {
+        List<BrandHistoryDto> historyList = brandAppService.listBrandHistory(code);
+
+        List<BrandHistoryResponse> rows = historyList.stream()
+                .map(brandAssembler::toHistoryResponse)
+                .collect(Collectors.toList());
+
+        return ApiResponse.ok(BrandHistoryPageResponse.builder()
+                .total((long) rows.size())
                 .rows(rows)
                 .build());
     }

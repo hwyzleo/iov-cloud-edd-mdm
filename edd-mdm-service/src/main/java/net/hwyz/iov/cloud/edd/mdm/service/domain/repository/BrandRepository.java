@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.repository;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.BrandHistory;
 
 import java.util.List;
 import java.util.Optional;
@@ -68,4 +69,12 @@ public interface BrandRepository {
      * @param brand 品牌聚合根
      */
     void delete(Brand brand);
+
+    /**
+     * 查询品牌历史版本列表
+     *
+     * @param code 品牌code
+     * @return 历史版本列表
+     */
+    List<BrandHistory> findHistoryByCode(String code);
 }

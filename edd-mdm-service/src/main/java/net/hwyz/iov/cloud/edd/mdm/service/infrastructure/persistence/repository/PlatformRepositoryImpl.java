@@ -4,9 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PlatformHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter.PlatformConverter;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter.PlatformHistoryConverter;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.PlatformHistoryMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.PlatformMapper;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.PlatformHistoryPo;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.PlatformPo;
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +29,8 @@ public class PlatformRepositoryImpl implements PlatformRepository {
 
     private final PlatformMapper platformMapper;
     private final PlatformConverter platformConverter;
+    private final PlatformHistoryMapper platformHistoryMapper;
+    private final PlatformHistoryConverter platformHistoryConverter;
 
     @Override
     public Platform save(Platform platform) {
@@ -89,5 +95,17 @@ public class PlatformRepositoryImpl implements PlatformRepository {
     public void delete(Platform platform) {
         PlatformPo po = platformConverter.toPo(platform);
         platformMapper.updateById(po);
+    }
+
+    @Override
+    public List<PlatformHistory> findHistoryByCode(String code) {
+        LambdaQueryWrapper<PlatformHistoryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PlatformHistoryPo::getCode, code);
+        wrapper.eq(PlatformHistoryPo::getRowValid, true);
+        wrapper.orderByDesc(PlatformHistoryPo::getVersion);
+        List<PlatformHistoryPo> poList = platformHistoryMapper.selectList(wrapper);
+        return poList.stream()
+                .map(platformHistoryConverter::toDomain)
+                .collect(Collectors.toList());
     }
 }

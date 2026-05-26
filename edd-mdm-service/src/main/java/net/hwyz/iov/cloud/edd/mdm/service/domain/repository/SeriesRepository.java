@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.repository;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
 
 import java.util.List;
 import java.util.Optional;
@@ -70,4 +71,12 @@ public interface SeriesRepository {
      * @param series 车系聚合根
      */
     void delete(Series series);
+
+    /**
+     * 查询车系历史版本列表
+     *
+     * @param code 车系code
+     * @return 历史版本列表
+     */
+    List<SeriesHistory> findHistoryByCode(String code);
 }

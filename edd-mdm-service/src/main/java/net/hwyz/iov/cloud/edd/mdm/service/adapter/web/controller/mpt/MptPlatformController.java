@@ -6,7 +6,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PlatformCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PlatformUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.PlatformQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlatformDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlatformHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.PlatformAppService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PlatformHistoryPageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PlatformHistoryResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PlatformPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PlatformResponse;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
@@ -129,6 +132,26 @@ public class MptPlatformController {
 
         return ApiResponse.ok(PlatformPageResponse.builder()
                 .total(total)
+                .rows(rows)
+                .build());
+    }
+
+    /**
+     * 查询平台历史版本列表
+     *
+     * @param code 平台code
+     * @return 平台历史版本分页响应
+     */
+    @GetMapping("/{code}/history")
+    public ApiResponse<PlatformHistoryPageResponse> getHistory(@PathVariable String code) {
+        List<PlatformHistoryDto> historyList = platformAppService.listPlatformHistory(code);
+
+        List<PlatformHistoryResponse> rows = historyList.stream()
+                .map(platformAssembler::toHistoryResponse)
+                .collect(Collectors.toList());
+
+        return ApiResponse.ok(PlatformHistoryPageResponse.builder()
+                .total((long) rows.size())
                 .rows(rows)
                 .build());
     }

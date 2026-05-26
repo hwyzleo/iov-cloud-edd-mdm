@@ -6,7 +6,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SeriesQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SeriesAppService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesHistoryPageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesHistoryResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesResponse;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
@@ -132,6 +135,26 @@ public class MptSeriesController {
 
         return ApiResponse.ok(SeriesPageResponse.builder()
                 .total(total)
+                .rows(rows)
+                .build());
+    }
+
+    /**
+     * 查询车系历史版本列表
+     *
+     * @param code 车系code
+     * @return 车系历史版本分页响应
+     */
+    @GetMapping("/{code}/history")
+    public ApiResponse<SeriesHistoryPageResponse> getHistory(@PathVariable String code) {
+        List<SeriesHistoryDto> historyList = seriesAppService.listSeriesHistory(code);
+
+        List<SeriesHistoryResponse> rows = historyList.stream()
+                .map(seriesAssembler::toHistoryResponse)
+                .collect(Collectors.toList());
+
+        return ApiResponse.ok(SeriesHistoryPageResponse.builder()
+                .total((long) rows.size())
                 .rows(rows)
                 .build());
     }

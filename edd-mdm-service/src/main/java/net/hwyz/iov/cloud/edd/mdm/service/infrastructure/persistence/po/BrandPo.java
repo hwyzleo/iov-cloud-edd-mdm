@@ -63,6 +63,13 @@ public class BrandPo {
      */
     private Integer foundedYear;
 
+    private String sourceSystem;
+    private String sourceId;
+    private String sourceVersion;
+    private String ingestionChannel;
+    private Date ingestionTime;
+    private String sourcePayloadHash;
+
     /**
      * 业务版本号
      */

@@ -4,6 +4,8 @@
 
 edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主数据（Brand / Series / Platform）的 Golden Record。本 feature 建立 Product MDM 子域，承接原 VMD 项目侧的品牌 / 车系 / 平台主数据 SSOT 上移至 edd-mdm，实现主数据统一治理与分发能力。
 
+主数据的来源分为两类：(1) **本地维护**：由 MDM-User 通过后台直接 CRUD 录入；(2) **上游系统接入**：由具备业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台）通过 Kafka 消息或 Feign / HTTP 接口推送至 edd-mdm，由 edd-mdm 统一治理、版本化并对外分发。本 feature 同时支持上述两类来源，并在主数据上记录来源系统、来源 ID、来源版本、接收通道与接收时间等信息以支持幂等校验、冲突裁决与全链路审计。
+
 **业务属性**：横向  
 **领域**：企业数字底座  
 **微服务名**：edd-mdm
@@ -22,12 +24,14 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **G4**：通过事务性发件箱（Outbox Pattern）实现可靠的事件分发，支持下游订阅同步
 - **G5**：提供 Feign 全量快照接口，支持下游 Bootstrap 与对账
 - **G6**：遵循 DDD 设计原则，保持与 VMD 项目架构风格一致
+- **G7**：支持上游系统通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / Series / Platform 主数据至 edd-mdm，并在主数据与对外事件 payload 中记录来源系统、来源 ID、来源版本、接收通道、接收时间等字段，支持审计与下游识别
+- **G8**：对上游推送的数据实施 schema 校验、来源鉴权、权威源校验、幂等校验与冲突裁决，保证 Golden Record 的一致性、可追溯性与可监控性
 
 ### 非目标（明确不做）
 
 - **NG1**：不接管 VMD 的车辆实例（VIN）/ 零部件 / 生命周期 / 车型（Model）/ 基础车型（BaseModel）/ 生产配置（BuildConfig）/ 特征族（FeatureFamily）/ 制造厂商（Manufacturer）/ 供应商（Supplier）等领域
 - **NG2**：不接管 Customer / Material / Employee / Location 等其他 MDM 子域
-- **NG3**：不实施跨系统主数据合并（多源 Golden Record 合并裁决），首期只支持单一权威源
+- **NG3**：不实施跨系统主数据的字段级合并裁决（multi-source field-level merge）。首期采用 **单一权威源（Single Authoritative Source）** 策略：每条主数据在任一时刻仅由配置中指定的一个权威源（LOCAL 或某个上游系统）负责写入；非权威源的推送将被拒绝或仅记录审计日志，不更新主表
 - **NG4**：不实施数据质量打分引擎
 - **NG5**：不实施跨系统 ID 映射表
 - **NG6**：不实施审批工作流（首期 CRUD 即发布）
@@ -92,6 +96,10 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN Brand / Series / Platform 发生创建、更新、失效操作 THEN THE SYSTEM SHALL 在 history 表插入一条完整快照记录
 - WHEN history 表插入快照 THEN THE SYSTEM SHALL 记录变更时间、操作人、变更前后的 version
 - WHEN 查询历史版本 THEN THE SYSTEM SHALL 按 entityId 和 version 降序返回快照列表
+- WHEN MDM-User 通过后台查询品牌历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/brand/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段（sourceSystem / sourceId / sourceVersion / ingestionChannel / ingestionTime）
+- WHEN MDM-User 通过后台查询车系历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/series/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段
+- WHEN MDM-User 通过后台查询平台历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/platform/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段
+- WHEN 调用历史版本查询接口且 code 不存在 THEN THE SYSTEM SHALL 返回错误码 807002 并拒绝查询
 
 #### US-005: 生效期合法性校验
 
@@ -177,6 +185,97 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN Service-Caller 调用 GET /api/service/{entity}/v1/{code} 且记录不存在或 status≠ACTIVE THEN THE SYSTEM SHALL 返回 404 或空
 - WHEN Feign 调用失败 THEN THE SYSTEM SHALL 通过 FallbackFactory 返回 null 并记录日志
 
+### 域 5: 上游系统数据接入
+
+#### US-013: 接收上游系统推送的主数据（Kafka 通道）
+
+**As an** Upstream-System, **I want** 通过 Kafka 向 edd-mdm 推送 Brand / Series / Platform 主数据，**so that** 由 edd-mdm 作为 Golden Record 统一治理与分发。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 订阅约定的上游 Topic（命名约定：upstream.<sourceSystem>.product.brand / .series / .platform）消费推送消息
+- THE SYSTEM SHALL 校验消息 schema 合法性，必填字段包括：sourceSystem、sourceId、sourceVersion、entityType、occurredAt、payload
+- WHEN 上游消息 schema 非法或必填字段缺失 THEN THE SYSTEM SHALL 拒绝该消息、记录错误日志并投递至死信队列，返回错误码 807010
+- WHEN 上游消息 schema 合法 THEN THE SYSTEM SHALL 依次执行：来源鉴权 → 权威源校验（见 US-017） → 幂等校验（见 US-016） → 业务字段校验（与本地维护一致）
+- WHEN 所有校验通过 THEN THE SYSTEM SHALL 在同一本地事务内完成主表 upsert、history 写入与 outbox 事件写入，并自动填充审计字段（create_by/modify_by 使用配置的 sourceSystem 标识；create_time/modify_time 使用服务端当前时间）
+- WHEN 消息处理成功 THEN THE SYSTEM SHALL 提交 Kafka offset
+- WHEN 消息处理失败（非幂等丢弃，非业务校验拒绝）THEN THE SYSTEM SHALL 按默认 3 次重试，超出后投递死信队列并告警
+- THE SYSTEM SHALL 在 mdm_ingestion_log 中记录每一次消息的处理结果（见 US-018）
+
+#### US-014: 接收上游系统推送的主数据（Feign / HTTP 通道）
+
+**As an** Upstream-System, **I want** 通过 Feign / HTTP 接口向 edd-mdm 同步推送 Brand / Series / Platform 主数据，**so that** 在不具备 Kafka 通道的场景下完成主数据接入。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 提供以下接收接口：
+    - POST /api/upstream/mdm/brand/v1/ingest
+    - POST /api/upstream/mdm/series/v1/ingest
+    - POST /api/upstream/mdm/platform/v1/ingest
+- WHEN Upstream-System 调用 ingest 接口 THEN THE SYSTEM SHALL 从请求头（如 X-Source-System）或请求体提取 sourceSystem 标识并完成鉴权（API Key / OAuth2）
+- WHEN 鉴权失败、来源未注册或来源被禁用 THEN THE SYSTEM SHALL 返回错误码 807011 并拒绝接入
+- WHEN 鉴权通过 THEN THE SYSTEM SHALL 复用 US-013 同一接入处理链路（schema 校验 → 权威源校验 → 幂等校验 → 业务校验 → upsert + history + outbox）
+- WHEN 接入处理成功 THEN THE SYSTEM SHALL 返回 200 OK 与接入结果摘要（entityId、新 version、operationType：CREATED/UPDATED/DUPLICATED/REJECTED）
+- WHEN 接入处理失败 THEN THE SYSTEM SHALL 返回对应错误码（807010 ~ 807013）与错误描述，由上游系统决定是否重试
+
+#### US-015: 数据来源记录
+
+**As a** System, **I want** 在主数据上记录来源信息, **so that** 支持审计、追溯、裁决与下游识别。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 在 Brand / Series / Platform 主表及对应 history 表上扩展以下字段：
+    - source_system：来源系统编码（LOCAL / PLM / DMS / GROUP_MDM 等），不可为空
+    - source_id：上游系统中的业务主键（本地维护时与本地 code 相同或为空，由 LOCAL 适配器写入）
+    - source_version：上游系统中的版本号（本地维护时可为空）
+    - ingestion_channel：接入通道（LOCAL / KAFKA / FEIGN），不可为空
+    - ingestion_time：最近一次接收/变更时间，不可为空
+    - source_payload_hash：可选，最近一次接入消息体的哈希值，便于排查与冲突识别
+- WHEN 本地维护写入 THEN THE SYSTEM SHALL 设置 source_system=LOCAL、ingestion_channel=LOCAL、ingestion_time=now()
+- WHEN 上游接入写入 THEN THE SYSTEM SHALL 按消息携带的 sourceSystem / sourceId / sourceVersion 和实际接入通道（KAFKA/FEIGN）填充对应字段
+- WHEN 对外发布 Kafka 事件 THEN THE SYSTEM SHALL 在 payload 中携带来源字段（sourceSystem / sourceId / sourceVersion / ingestionChannel / ingestionTime）以便下游识别与对账
+- WHEN MDM-User 通过后台查询主数据详情或历史版本 THEN THE SYSTEM SHALL 在响应中展示来源字段
+
+#### US-016: 上游消息幂等处理
+
+**As a** System, **I want** 对上游推送实施幂等校验, **so that** 重复消息不会造成重复写入或版本回退。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 以 (source_system, source_id) 作为上游记录的逻辑主键定位本地记录
+- WHEN 上游消息到达且本地不存在对应记录 THEN THE SYSTEM SHALL 视为新增并执行写入
+- WHEN 上游消息到达且本地已存在对应记录 IF 上游 sourceVersion > 本地 source_version THEN THE SYSTEM SHALL 执行更新（version 自增、写 history、写 outbox）
+- WHEN 上游消息到达且本地已存在对应记录 IF 上游 sourceVersion < 本地 source_version THEN THE SYSTEM SHALL 视为过期消息，丢弃并记录 INFO 日志，不更新主表，不写 outbox，不返回错误
+- WHEN 上游消息到达且本地已存在对应记录 IF 上游 sourceVersion = 本地 source_version 且 source_payload_hash 一致 THEN THE SYSTEM SHALL 视为重复消息，丢弃并记录 INFO 日志
+- WHEN 上游消息到达且本地已存在对应记录 IF 上游 sourceVersion = 本地 source_version 且 source_payload_hash 不一致 THEN THE SYSTEM SHALL 视为同版本不一致冲突，记录告警日志并返回错误码 807012，由人工或权威源策略干预
+
+#### US-017: 权威源配置与冲突裁决
+
+**As a** MDM-Admin, **I want** 为每个实体（Brand / Series / Platform）配置权威源, **so that** 同一实体仅由唯一权威源写入，避免多源覆盖。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 提供权威源配置，维度包括：entityType（BRAND / SERIES / PLATFORM）、code 模式（精确 code 或通配 *）、authoritativeSource（LOCAL / PLM / DMS / ...）、conflictPolicy（REJECT / AUDIT_ONLY）
+- THE SYSTEM SHALL 支持通过 Nacos 配置或配置表维护，并支持热更新
+- WHEN 接收到上游消息或本地维护请求 IF 当前来源 = 配置的 authoritativeSource THEN THE SYSTEM SHALL 正常写入
+- WHEN 接收到上游消息或本地维护请求 IF 当前来源 != 配置的 authoritativeSource 且 conflictPolicy=REJECT THEN THE SYSTEM SHALL 拒绝写入，返回错误码 807013，并记录告警日志
+- WHEN 接收到上游消息或本地维护请求 IF 当前来源 != 配置的 authoritativeSource 且 conflictPolicy=AUDIT_ONLY THEN THE SYSTEM SHALL 仅在 mdm_ingestion_log 与 history 表中记录该次尝试，不更新主表，不写 outbox
+- WHEN MDM-Admin 切换某实体的权威源（如 LOCAL 切换到 PLM）THEN THE SYSTEM SHALL 记录权威源变更审计（操作人、时间、entityType + code、原 authoritativeSource、新 authoritativeSource）
+- IF 未匹配到任何精确配置 THEN THE SYSTEM SHALL 回退到 entityType 级默认配置；如仍未匹配，回退到全局默认（默认 authoritativeSource=LOCAL、conflictPolicy=REJECT）
+
+#### US-018: 上游接入审计与监控
+
+**As a** MDM-Admin, **I want** 查看上游接入处理记录与监控指标, **so that** 排查问题并保障数据质量。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 在独立审计表 mdm_ingestion_log 中记录每一次接入处理：
+    - messageId（Kafka offset 或 HTTP 请求 ID）、sourceSystem、sourceId、sourceVersion、entityType、ingestionChannel、receivedAt、processedAt、status（SUCCESS / DUPLICATED / OUTDATED / REJECTED / FAILED）、errorCode、errorMessage、payloadHash
+- THE SYSTEM SHALL 暴露 Prometheus 指标，按 sourceSystem / entityType / status 维度统计接入总量、成功率、失败率、平均处理耗时、消息积压量
+- WHEN 某 sourceSystem + entityType 维度连续失败次数超过阈值（默认 10 次 / 5 分钟，可通过 Nacos 配置）THEN THE SYSTEM SHALL 触发告警通知
+- THE SYSTEM SHALL 提供 MPT 端查询接口 GET /api/mpt/mdm/ingestion/v1/log，支持按 sourceSystem / entityType / status / 时间窗 过滤分页查询
+- THE SYSTEM SHALL 提供 MPT 端查询接口 GET /api/mpt/mdm/ingestion/v1/{messageId} 查询单条接入处理的明细
+
 ## 4. Constraints & Assumptions
 
 ### 业务约束
@@ -194,7 +293,9 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 - **MDM-User**：MDM 后台运营 / 工程师，持有 `mdm:product:*` 权限点
 - **Service-Caller**：内部微服务（VMD / 订单 / 销售配置器等）通过 Feign 或 Kafka 订阅消费 MDM 数据
-- **System**：edd-mdm 自身后台异步流程（事件发布、Outbox Relay 等）
+- **System**：edd-mdm 自身后台异步流程（事件发布、Outbox Relay、上游消息消费等）
+- **Upstream-System**：业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台），通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / Series / Platform 主数据至 edd-mdm；每个上游系统对应唯一的 sourceSystem 编码
+- **MDM-Admin**：MDM 管理员，持有 `mdm:admin:*` 权限点，负责权威源配置、上游来源注册、接入审计与监控查询等运维操作
 
 ## 5. Out of Scope
 
@@ -203,7 +304,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | OS-1 | VMD 的 VIN / 零部件 / 生命周期 / 车型 / 基础车型 / 生产配置 / 特征族 | 仍由 VMD 持有 |
 | OS-2 | Customer / Material / Employee / Location MDM 子域 | 未来扩展 |
 | OS-3 | Manufacturer / Supplier | 留待后续 CR |
-| OS-4 | 多源 Golden Record 合并 | 首期只支持单一权威源 |
+| OS-4 | 字段级多源合并裁决（field-level merge） | 首期采用单一权威源策略，每条主数据由唯一权威源写入；支持多上游接入但不做字段级合并 |
 | OS-5 | 数据质量打分引擎 | 未来扩展 |
 | OS-6 | 跨系统 ID 映射表 | 留待后续 CR |
 | OS-7 | 审批工作流 | 留待后续 CR；首期 CRUD 即发布 |
@@ -214,3 +315,5 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | Date | Change ID | Type | Description |
 |------|-----------|------|-------------|
 | 2026-05-26 | CR-001 | Added | 首版产出：建立 Product MDM 子域（Brand / Series / Platform）需求文档 |
+| 2026-05-26 | CR-002 | Added | 新增"域 5: 上游系统数据接入"（US-013 ~ US-018）：支持通过 Kafka / Feign 接收上游推送，新增数据来源字段（source_system / source_id / source_version / ingestion_channel / ingestion_time / source_payload_hash），新增幂等处理、权威源配置与冲突裁决（REJECT / AUDIT_ONLY）、接入审计表 mdm_ingestion_log 与监控指标；新增错误码 807010（消息 schema 非法）/ 807011（来源鉴权失败）/ 807012（同版本冲突）/ 807013（非权威源写入被拒绝）；新增角色 Upstream-System、MDM-Admin |
+| 2026-05-26 | CR-003 | Modified | 补充 US-004 历史版本快照需求：新增 MPT 后台查询接口定义（GET /api/mpt/mdm/{entity}/v1/{code}/history），支持 Brand / Series / Platform 历史版本按 version 降序查询，响应包含来源字段 |

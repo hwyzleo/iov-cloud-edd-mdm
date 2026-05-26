@@ -6,8 +6,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SeriesQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -184,6 +186,19 @@ public class SeriesAppService {
     }
 
     /**
+     * 查询车系历史版本列表
+     *
+     * @param code 车系code
+     * @return 历史版本DTO列表
+     */
+    public List<SeriesHistoryDto> listSeriesHistory(String code) {
+        List<SeriesHistory> historyList = productDomainService.listSeriesHistory(code);
+        return historyList.stream()
+                .map(this::convertHistoryToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 转换为DTO
      *
      * @param series 车系聚合根
@@ -199,6 +214,12 @@ public class SeriesAppService {
                 .seriesType(series.getSeriesType() != null ? series.getSeriesType().name() : null)
                 .lifecycleStatus(series.getLifecycleStatus() != null ? series.getLifecycleStatus().name() : null)
                 .targetMarket(series.getTargetMarket() != null ? series.getTargetMarket().name() : null)
+                .sourceSystem(series.getSourceSystem())
+                .sourceId(series.getSourceId())
+                .sourceVersion(series.getSourceVersion())
+                .ingestionChannel(series.getIngestionChannel())
+                .ingestionTime(series.getIngestionTime())
+                .sourcePayloadHash(series.getSourcePayloadHash())
                 .version(series.getVersion())
                 .effectiveFrom(series.getEffectiveFrom())
                 .effectiveTo(series.getEffectiveTo())
@@ -207,6 +228,43 @@ public class SeriesAppService {
                 .createTime(series.getCreateTime())
                 .modifyBy(series.getModifyBy())
                 .modifyTime(series.getModifyTime())
+                .build();
+    }
+
+    /**
+     * 转换历史版本为DTO
+     *
+     * @param history 车系历史版本实体
+     * @return 车系历史版本DTO
+     */
+    private SeriesHistoryDto convertHistoryToDto(SeriesHistory history) {
+        return SeriesHistoryDto.builder()
+                .snapshotId(history.getSnapshotId())
+                .entityId(history.getEntityId())
+                .code(history.getCode())
+                .name(history.getName())
+                .nameLocal(history.getNameLocal())
+                .brandCode(history.getBrandCode())
+                .seriesType(history.getSeriesType())
+                .lifecycleStatus(history.getLifecycleStatus())
+                .targetMarket(history.getTargetMarket())
+                .sourceSystem(history.getSourceSystem())
+                .sourceId(history.getSourceId())
+                .sourceVersion(history.getSourceVersion())
+                .ingestionChannel(history.getIngestionChannel())
+                .ingestionTime(history.getIngestionTime())
+                .sourcePayloadHash(history.getSourcePayloadHash())
+                .version(history.getVersion())
+                .effectiveFrom(history.getEffectiveFrom())
+                .effectiveTo(history.getEffectiveTo())
+                .status(history.getStatus())
+                .operationType(history.getOperationType())
+                .snapshotTime(history.getSnapshotTime())
+                .operator(history.getOperator())
+                .createBy(history.getCreateBy())
+                .createTime(history.getCreateTime())
+                .modifyBy(history.getModifyBy())
+                .modifyTime(history.getModifyTime())
                 .build();
     }
 }

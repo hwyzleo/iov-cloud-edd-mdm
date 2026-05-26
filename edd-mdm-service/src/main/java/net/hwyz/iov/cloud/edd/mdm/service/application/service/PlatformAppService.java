@@ -6,8 +6,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PlatformCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PlatformUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.PlatformQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlatformDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlatformHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PlatformHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -179,6 +181,19 @@ public class PlatformAppService {
     }
 
     /**
+     * 查询平台历史版本列表
+     *
+     * @param code 平台code
+     * @return 历史版本DTO列表
+     */
+    public List<PlatformHistoryDto> listPlatformHistory(String code) {
+        List<PlatformHistory> historyList = productDomainService.listPlatformHistory(code);
+        return historyList.stream()
+                .map(this::convertHistoryToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 转换为DTO
      *
      * @param platform 平台聚合根
@@ -192,6 +207,12 @@ public class PlatformAppService {
                 .nameLocal(platform.getNameLocal())
                 .platformType(platform.getPlatformType() != null ? platform.getPlatformType().name() : null)
                 .architecture(platform.getArchitecture())
+                .sourceSystem(platform.getSourceSystem())
+                .sourceId(platform.getSourceId())
+                .sourceVersion(platform.getSourceVersion())
+                .ingestionChannel(platform.getIngestionChannel())
+                .ingestionTime(platform.getIngestionTime())
+                .sourcePayloadHash(platform.getSourcePayloadHash())
                 .version(platform.getVersion())
                 .effectiveFrom(platform.getEffectiveFrom())
                 .effectiveTo(platform.getEffectiveTo())
@@ -200,6 +221,41 @@ public class PlatformAppService {
                 .createTime(platform.getCreateTime())
                 .modifyBy(platform.getModifyBy())
                 .modifyTime(platform.getModifyTime())
+                .build();
+    }
+
+    /**
+     * 转换历史版本为DTO
+     *
+     * @param history 平台历史版本实体
+     * @return 平台历史版本DTO
+     */
+    private PlatformHistoryDto convertHistoryToDto(PlatformHistory history) {
+        return PlatformHistoryDto.builder()
+                .snapshotId(history.getSnapshotId())
+                .entityId(history.getEntityId())
+                .code(history.getCode())
+                .name(history.getName())
+                .nameLocal(history.getNameLocal())
+                .platformType(history.getPlatformType())
+                .architecture(history.getArchitecture())
+                .sourceSystem(history.getSourceSystem())
+                .sourceId(history.getSourceId())
+                .sourceVersion(history.getSourceVersion())
+                .ingestionChannel(history.getIngestionChannel())
+                .ingestionTime(history.getIngestionTime())
+                .sourcePayloadHash(history.getSourcePayloadHash())
+                .version(history.getVersion())
+                .effectiveFrom(history.getEffectiveFrom())
+                .effectiveTo(history.getEffectiveTo())
+                .status(history.getStatus())
+                .operationType(history.getOperationType())
+                .snapshotTime(history.getSnapshotTime())
+                .operator(history.getOperator())
+                .createBy(history.getCreateBy())
+                .createTime(history.getCreateTime())
+                .modifyBy(history.getModifyBy())
+                .modifyTime(history.getModifyTime())
                 .build();
     }
 }

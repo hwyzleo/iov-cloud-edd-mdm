@@ -61,6 +61,36 @@ public class Brand {
     private Integer foundedYear;
 
     /**
+     * 来源系统
+     */
+    private String sourceSystem;
+
+    /**
+     * 来源ID
+     */
+    private String sourceId;
+
+    /**
+     * 来源版本
+     */
+    private String sourceVersion;
+
+    /**
+     * 数据接入渠道
+     */
+    private String ingestionChannel;
+
+    /**
+     * 数据接入时间
+     */
+    private Date ingestionTime;
+
+    /**
+     * 来源数据哈希
+     */
+    private String sourcePayloadHash;
+
+    /**
      * 业务版本号
      */
     private Integer version;
@@ -147,6 +177,12 @@ public class Brand {
                 .logo(logo)
                 .country(country)
                 .foundedYear(foundedYear)
+                .sourceSystem("LOCAL")
+                .sourceId(code)
+                .sourceVersion(null)
+                .ingestionChannel("LOCAL")
+                .ingestionTime(new Date())
+                .sourcePayloadHash(null)
                 .effectiveFrom(effectiveFrom)
                 .effectiveTo(effectiveTo)
                 .version(1)
@@ -191,6 +227,92 @@ public class Brand {
         this.modifyBy = modifyBy;
         this.modifyTime = new Date();
 
+        validateEffectiveDate();
+    }
+
+    /**
+     * 从上游数据创建品牌
+     *
+     * @param code              业务主键
+     * @param name              官方名称
+     * @param nameLocal         本地化名称
+     * @param description       品牌描述
+     * @param logo              Logo URL
+     * @param country           国家
+     * @param foundedYear       创立年份
+     * @param effectiveFrom     生效开始时间
+     * @param effectiveTo       生效结束时间
+     * @param sourceSystem      来源系统
+     * @param sourceId          来源ID
+     * @param sourceVersion     来源版本
+     * @param ingestionChannel  数据接入渠道
+     * @param sourcePayloadHash 来源数据哈希
+     * @param createBy          创建人
+     * @return 品牌聚合根
+     */
+    public static Brand createFromUpstream(String code, String name, String nameLocal, String description,
+                                           String logo, String country, Integer foundedYear,
+                                           Date effectiveFrom, Date effectiveTo,
+                                           String sourceSystem, String sourceId, String sourceVersion,
+                                           String ingestionChannel, String sourcePayloadHash,
+                                           String createBy) {
+        Brand brand = Brand.builder()
+                .code(code).name(name).nameLocal(nameLocal).description(description)
+                .logo(logo).country(country).foundedYear(foundedYear)
+                .sourceSystem(sourceSystem).sourceId(sourceId).sourceVersion(sourceVersion)
+                .ingestionChannel(ingestionChannel).ingestionTime(new Date())
+                .sourcePayloadHash(sourcePayloadHash)
+                .effectiveFrom(effectiveFrom).effectiveTo(effectiveTo)
+                .version(1).status(BrandStatus.ACTIVE)
+                .createBy(createBy).createTime(new Date())
+                .modifyBy(createBy).modifyTime(new Date())
+                .rowVersion(0).rowValid(true)
+                .build();
+        brand.validateEffectiveDate();
+        return brand;
+    }
+
+    /**
+     * 从上游数据更新品牌
+     *
+     * @param name              官方名称
+     * @param nameLocal         本地化名称
+     * @param description       品牌描述
+     * @param logo              Logo URL
+     * @param country           国家
+     * @param foundedYear       创立年份
+     * @param effectiveFrom     生效开始时间
+     * @param effectiveTo       生效结束时间
+     * @param sourceSystem      来源系统
+     * @param sourceId          来源ID
+     * @param sourceVersion     来源版本
+     * @param ingestionChannel  数据接入渠道
+     * @param sourcePayloadHash 来源数据哈希
+     * @param modifyBy          修改人
+     */
+    public void updateFromUpstream(String name, String nameLocal, String description,
+                                   String logo, String country, Integer foundedYear,
+                                   Date effectiveFrom, Date effectiveTo,
+                                   String sourceSystem, String sourceId, String sourceVersion,
+                                   String ingestionChannel, String sourcePayloadHash,
+                                   String modifyBy) {
+        this.name = name;
+        this.nameLocal = nameLocal;
+        this.description = description;
+        this.logo = logo;
+        this.country = country;
+        this.foundedYear = foundedYear;
+        this.sourceSystem = sourceSystem;
+        this.sourceId = sourceId;
+        this.sourceVersion = sourceVersion;
+        this.ingestionChannel = ingestionChannel;
+        this.ingestionTime = new Date();
+        this.sourcePayloadHash = sourcePayloadHash;
+        this.effectiveFrom = effectiveFrom;
+        this.effectiveTo = effectiveTo;
+        this.version = this.version + 1;
+        this.modifyBy = modifyBy;
+        this.modifyTime = new Date();
         validateEffectiveDate();
     }
 
