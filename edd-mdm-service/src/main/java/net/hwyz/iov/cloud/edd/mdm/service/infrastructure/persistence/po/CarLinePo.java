@@ -19,7 +19,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("mdm_carLine")
+@TableName("mdm_car_line")
 public class CarLinePo {
 
     /**
