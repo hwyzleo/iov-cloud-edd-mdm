@@ -13,6 +13,8 @@
     <description>Master Data Management - 主数据管理系统</description>
 
     <modules>
+        <module>edd-mdm-api</module>
+        <module>edd-mdm-service</module>
     </modules>
 
 </project>

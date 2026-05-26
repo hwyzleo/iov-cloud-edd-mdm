@@ -1,0 +1,228 @@
+package net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SeriesStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SeriesType;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket;
+
+import java.util.Date;
+
+/**
+ * 车系聚合根
+ *
+ * @author hwyz_leo
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Series {
+
+    /**
+     * 主键ID
+     */
+    private Long id;
+
+    /**
+     * 业务主键（code）
+     */
+    private String code;
+
+    /**
+     * 官方名称
+     */
+    private String name;
+
+    /**
+     * 本地化名称
+     */
+    private String nameLocal;
+
+    /**
+     * 品牌code
+     */
+    private String brandCode;
+
+    /**
+     * 车系类型
+     */
+    private SeriesType seriesType;
+
+    /**
+     * 生命周期状态
+     */
+    private LifecycleStatus lifecycleStatus;
+
+    /**
+     * 目标市场
+     */
+    private TargetMarket targetMarket;
+
+    /**
+     * 业务版本号
+     */
+    private Integer version;
+
+    /**
+     * 生效开始时间
+     */
+    private Date effectiveFrom;
+
+    /**
+     * 生效结束时间
+     */
+    private Date effectiveTo;
+
+    /**
+     * 状态
+     */
+    private SeriesStatus status;
+
+    /**
+     * 创建人
+     */
+    private String createBy;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 修改人
+     */
+    private String modifyBy;
+
+    /**
+     * 修改时间
+     */
+    private Date modifyTime;
+
+    /**
+     * 乐观锁版本号
+     */
+    private Integer rowVersion;
+
+    /**
+     * 行有效标记
+     */
+    private Boolean rowValid;
+
+    /**
+     * 校验生效期合法性
+     *
+     * @throws InvalidEffectiveDateException 生效期无效异常
+     */
+    public void validateEffectiveDate() throws InvalidEffectiveDateException {
+        if (effectiveFrom != null && effectiveTo != null && effectiveFrom.after(effectiveTo)) {
+            throw new InvalidEffectiveDateException("生效开始时间不能晚于生效结束时间");
+        }
+    }
+
+    /**
+     * 创建车系
+     *
+     * @param code            业务主键
+     * @param name            官方名称
+     * @param nameLocal       本地化名称
+     * @param brandCode       品牌code
+     * @param seriesType      车系类型
+     * @param lifecycleStatus 生命周期状态
+     * @param targetMarket    目标市场
+     * @param effectiveFrom   生效开始时间
+     * @param effectiveTo     生效结束时间
+     * @param createBy        创建人
+     * @return 车系聚合根
+     */
+    public static Series create(String code, String name, String nameLocal, String brandCode,
+                                SeriesType seriesType, LifecycleStatus lifecycleStatus,
+                                TargetMarket targetMarket, Date effectiveFrom, Date effectiveTo,
+                                String createBy) {
+        Series series = Series.builder()
+                .code(code)
+                .name(name)
+                .nameLocal(nameLocal)
+                .brandCode(brandCode)
+                .seriesType(seriesType)
+                .lifecycleStatus(lifecycleStatus)
+                .targetMarket(targetMarket)
+                .effectiveFrom(effectiveFrom)
+                .effectiveTo(effectiveTo)
+                .version(1)
+                .status(SeriesStatus.ACTIVE)
+                .createBy(createBy)
+                .createTime(new Date())
+                .modifyBy(createBy)
+                .modifyTime(new Date())
+                .rowVersion(0)
+                .rowValid(true)
+                .build();
+
+        series.validateEffectiveDate();
+        return series;
+    }
+
+    /**
+     * 更新车系
+     *
+     * @param name            官方名称
+     * @param nameLocal       本地化名称
+     * @param seriesType      车系类型
+     * @param lifecycleStatus 生命周期状态
+     * @param targetMarket    目标市场
+     * @param effectiveFrom   生效开始时间
+     * @param effectiveTo     生效结束时间
+     * @param modifyBy        修改人
+     */
+    public void update(String name, String nameLocal, SeriesType seriesType,
+                       LifecycleStatus lifecycleStatus, TargetMarket targetMarket,
+                       Date effectiveFrom, Date effectiveTo, String modifyBy) {
+        this.name = name;
+        this.nameLocal = nameLocal;
+        this.seriesType = seriesType;
+        this.lifecycleStatus = lifecycleStatus;
+        this.targetMarket = targetMarket;
+        this.effectiveFrom = effectiveFrom;
+        this.effectiveTo = effectiveTo;
+        this.version = this.version + 1;
+        this.modifyBy = modifyBy;
+        this.modifyTime = new Date();
+
+        validateEffectiveDate();
+    }
+
+    /**
+     * 失效车系
+     *
+     * @param modifyBy 修改人
+     */
+    public void deactivate(String modifyBy) {
+        if (this.status != SeriesStatus.ACTIVE) {
+            throw new IllegalStateException("只有ACTIVE状态的车系才能失效");
+        }
+        this.status = SeriesStatus.INACTIVE;
+        this.effectiveTo = new Date();
+        this.version = this.version + 1;
+        this.modifyBy = modifyBy;
+        this.modifyTime = new Date();
+    }
+
+    /**
+     * 删除车系（仅DRAFT状态可删除）
+     *
+     * @param modifyBy 修改人
+     */
+    public void delete(String modifyBy) {
+        if (this.status != SeriesStatus.DRAFT) {
+            throw new IllegalStateException("只有DRAFT状态的车系才能删除");
+        }
+        this.rowValid = false;
+        this.modifyBy = modifyBy;
+        this.modifyTime = new Date();
+    }
+}

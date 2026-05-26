@@ -1,0 +1,2 @@
+mybatis-plus:
+  type-aliases-package: net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po

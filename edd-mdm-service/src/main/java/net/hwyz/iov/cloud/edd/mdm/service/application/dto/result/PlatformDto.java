@@ -1,0 +1,90 @@
+package net.hwyz.iov.cloud.edd.mdm.service.application.dto.result;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Date;
+
+/**
+ * 平台DTO
+ *
+ * @author hwyz_leo
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PlatformDto {
+
+    /**
+     * 主键ID
+     */
+    private Long id;
+
+    /**
+     * 业务主键（code）
+     */
+    private String code;
+
+    /**
+     * 官方名称
+     */
+    private String name;
+
+    /**
+     * 本地化名称
+     */
+    private String nameLocal;
+
+    /**
+     * 平台类型
+     */
+    private String platformType;
+
+    /**
+     * EE架构代号
+     */
+    private String architecture;
+
+    /**
+     * 业务版本号
+     */
+    private Integer version;
+
+    /**
+     * 生效开始时间
+     */
+    private Date effectiveFrom;
+
+    /**
+     * 生效结束时间
+     */
+    private Date effectiveTo;
+
+    /**
+     * 状态
+     */
+    private String status;
+
+    /**
+     * 创建人
+     */
+    private String createBy;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 修改人
+     */
+    private String modifyBy;
+
+    /**
+     * 修改时间
+     */
+    private Date modifyTime;
+}
