@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
+import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,12 @@ public class SeriesAppService {
     public SeriesDto createSeries(SeriesCreateCmd cmd) {
         log.info("创建车系: {}", cmd.getCode());
 
+        // 自动获取当前用户作为创建人
+        String createBy = cmd.getCreateBy();
+        if (createBy == null || createBy.isBlank()) {
+            createBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务创建车系
         Series series = productDomainService.createSeries(
                 cmd.getCode(),
@@ -49,7 +56,7 @@ public class SeriesAppService {
                 cmd.getTargetMarket(),
                 cmd.getEffectiveFrom(),
                 cmd.getEffectiveTo(),
-                cmd.getCreateBy()
+                createBy
         );
 
         // 发布车系创建事件到Outbox
@@ -68,6 +75,12 @@ public class SeriesAppService {
     public SeriesDto updateSeries(SeriesUpdateCmd cmd) {
         log.info("更新车系: {}", cmd.getCode());
 
+        // 自动获取当前用户作为修改人
+        String modifyBy = cmd.getModifyBy();
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务更新车系
         Series series = productDomainService.updateSeries(
                 cmd.getCode(),
@@ -78,7 +91,7 @@ public class SeriesAppService {
                 cmd.getTargetMarket(),
                 cmd.getEffectiveFrom(),
                 cmd.getEffectiveTo(),
-                cmd.getModifyBy()
+                modifyBy
         );
 
         // 发布车系更新事件到Outbox
@@ -98,6 +111,11 @@ public class SeriesAppService {
     public SeriesDto deactivateSeries(String code, String modifyBy) {
         log.info("失效车系: {}", code);
 
+        // 自动获取当前用户作为修改人
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务失效车系
         Series series = productDomainService.deactivateSeries(code, modifyBy);
 
@@ -116,6 +134,12 @@ public class SeriesAppService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteSeries(String code, String modifyBy) {
         log.info("删除车系: {}", code);
+
+        // 自动获取当前用户作为修改人
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         productDomainService.deleteSeries(code, modifyBy);
     }
 

@@ -8,6 +8,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.BrandDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.BrandAppService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.BrandPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.BrandResponse;
+import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,9 +42,9 @@ public class MptBrandController {
      * @return 品牌响应
      */
     @PostMapping("/create")
-    public BrandResponse create(@RequestBody BrandCreateCmd cmd) {
+    public ApiResponse<BrandResponse> create(@RequestBody BrandCreateCmd cmd) {
         BrandDto brand = brandAppService.createBrand(cmd);
-        return brandAssembler.toResponse(brand);
+        return ApiResponse.ok(brandAssembler.toResponse(brand));
     }
 
     /**
@@ -54,10 +55,10 @@ public class MptBrandController {
      * @return 品牌响应
      */
     @PutMapping("/{code}")
-    public BrandResponse update(@PathVariable String code, @RequestBody BrandUpdateCmd cmd) {
+    public ApiResponse<BrandResponse> update(@PathVariable String code, @RequestBody BrandUpdateCmd cmd) {
         cmd.setCode(code);
         BrandDto brand = brandAppService.updateBrand(cmd);
-        return brandAssembler.toResponse(brand);
+        return ApiResponse.ok(brandAssembler.toResponse(brand));
     }
 
     /**
@@ -67,8 +68,9 @@ public class MptBrandController {
      * @param modifyBy 修改人
      */
     @DeleteMapping("/{code}")
-    public void delete(@PathVariable String code, @RequestParam String modifyBy) {
+    public ApiResponse<Void> delete(@PathVariable String code, @RequestParam String modifyBy) {
         brandAppService.deleteBrand(code, modifyBy);
+        return ApiResponse.ok();
     }
 
     /**
@@ -79,9 +81,9 @@ public class MptBrandController {
      * @return 品牌响应
      */
     @PostMapping("/{code}/deactivate")
-    public BrandResponse deactivate(@PathVariable String code, @RequestParam String modifyBy) {
+    public ApiResponse<BrandResponse> deactivate(@PathVariable String code, @RequestParam String modifyBy) {
         BrandDto brand = brandAppService.deactivateBrand(code, modifyBy);
-        return brandAssembler.toResponse(brand);
+        return ApiResponse.ok(brandAssembler.toResponse(brand));
     }
 
     /**
@@ -91,9 +93,9 @@ public class MptBrandController {
      * @return 品牌响应
      */
     @GetMapping("/{code}")
-    public BrandResponse getByCode(@PathVariable String code) {
+    public ApiResponse<BrandResponse> getByCode(@PathVariable String code) {
         BrandDto brand = brandAppService.getBrandByCode(code);
-        return brandAssembler.toResponse(brand);
+        return ApiResponse.ok(brandAssembler.toResponse(brand));
     }
 
     /**
@@ -105,9 +107,9 @@ public class MptBrandController {
      * @return 品牌分页响应
      */
     @GetMapping("/list")
-    public BrandPageResponse list(@RequestParam(defaultValue = "1") Integer page,
-                                  @RequestParam(defaultValue = "10") Integer size,
-                                  @RequestParam(required = false) Boolean includeInactive) {
+    public ApiResponse<BrandPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
+                                               @RequestParam(defaultValue = "10") Integer size,
+                                               @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
         List<BrandDto> brands = brandAppService.listBrands(
@@ -124,9 +126,9 @@ public class MptBrandController {
                 .map(brandAssembler::toResponse)
                 .collect(Collectors.toList());
 
-        return BrandPageResponse.builder()
+        return ApiResponse.ok(BrandPageResponse.builder()
                 .total(total)
                 .rows(rows)
-                .build();
+                .build());
     }
 }

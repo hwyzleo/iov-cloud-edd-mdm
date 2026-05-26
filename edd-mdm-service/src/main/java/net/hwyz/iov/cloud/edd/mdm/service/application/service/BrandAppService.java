@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.BrandDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
+import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,12 @@ public class BrandAppService {
     public BrandDto createBrand(BrandCreateCmd cmd) {
         log.info("创建品牌: {}", cmd.getCode());
 
+        // 自动获取当前用户作为创建人
+        String createBy = cmd.getCreateBy();
+        if (createBy == null || createBy.isBlank()) {
+            createBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务创建品牌
         Brand brand = productDomainService.createBrand(
                 cmd.getCode(),
@@ -49,7 +56,7 @@ public class BrandAppService {
                 cmd.getFoundedYear(),
                 cmd.getEffectiveFrom(),
                 cmd.getEffectiveTo(),
-                cmd.getCreateBy()
+                createBy
         );
 
         // 发布品牌创建事件到Outbox
@@ -68,6 +75,12 @@ public class BrandAppService {
     public BrandDto updateBrand(BrandUpdateCmd cmd) {
         log.info("更新品牌: {}", cmd.getCode());
 
+        // 自动获取当前用户作为修改人
+        String modifyBy = cmd.getModifyBy();
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务更新品牌
         Brand brand = productDomainService.updateBrand(
                 cmd.getCode(),
@@ -79,7 +92,7 @@ public class BrandAppService {
                 cmd.getFoundedYear(),
                 cmd.getEffectiveFrom(),
                 cmd.getEffectiveTo(),
-                cmd.getModifyBy()
+                modifyBy
         );
 
         // 发布品牌更新事件到Outbox
@@ -99,6 +112,11 @@ public class BrandAppService {
     public BrandDto deactivateBrand(String code, String modifyBy) {
         log.info("失效品牌: {}", code);
 
+        // 自动获取当前用户作为修改人
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务失效品牌
         Brand brand = productDomainService.deactivateBrand(code, modifyBy);
 
@@ -117,6 +135,12 @@ public class BrandAppService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteBrand(String code, String modifyBy) {
         log.info("删除品牌: {}", code);
+
+        // 自动获取当前用户作为修改人
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         productDomainService.deleteBrand(code, modifyBy);
     }
 

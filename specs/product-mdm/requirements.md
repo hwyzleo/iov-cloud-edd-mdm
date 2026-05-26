@@ -44,11 +44,11 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN MDM-User 创建 Brand 且 code 唯一 THEN THE SYSTEM SHALL 持久化 Brand 记录并设置 version=1
+- WHEN MDM-User 创建 Brand 且 code 唯一 THEN THE SYSTEM SHALL 持久化 Brand 记录并设置 version=1，并自动填充 create_by（当前认证用户）、create_time（当前时间）、modify_by、modify_time
 - WHEN MDM-User 创建 Brand 且 code 已存在 THEN THE SYSTEM SHALL 返回错误码 807001 并拒绝创建
-- WHEN MDM-User 更新 Brand 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录
+- WHEN MDM-User 更新 Brand 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by（当前认证用户）、modify_time（当前时间）
 - WHEN MDM-User 更新 Brand 且记录不存在 THEN THE SYSTEM SHALL 返回错误码 807002 并拒绝更新
-- WHEN MDM-User 失效 Brand 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version
+- WHEN MDM-User 失效 Brand 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
 - WHEN MDM-User 删除 Brand 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
 - WHEN MDM-User 删除 Brand 且 status≠DRAFT THEN THE SYSTEM SHALL 返回错误码 807003 并拒绝删除
 - IF Brand 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
@@ -59,11 +59,11 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN MDM-User 创建 Series 且 code 唯一且 brandCode 指向已存在且 status=ACTIVE 的 Brand THEN THE SYSTEM SHALL 持久化 Series 记录并设置 version=1
+- WHEN MDM-User 创建 Series 且 code 唯一且 brandCode 指向已存在且 status=ACTIVE 的 Brand THEN THE SYSTEM SHALL 持久化 Series 记录并设置 version=1，并自动填充 create_by（当前认证用户）、create_time（当前时间）、modify_by、modify_time
 - WHEN MDM-User 创建 Series 且 code 已存在 THEN THE SYSTEM SHALL 返回错误码 807001 并拒绝创建
 - WHEN MDM-User 创建 Series 且 brandCode 指向不存在或 status≠ACTIVE 的 Brand THEN THE SYSTEM SHALL 返回错误码 807005 并拒绝创建
-- WHEN MDM-User 更新 Series 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录
-- WHEN MDM-User 失效 Series 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version
+- WHEN MDM-User 更新 Series 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by（当前认证用户）、modify_time（当前时间）
+- WHEN MDM-User 失效 Series 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
 - WHEN MDM-User 删除 Series 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
 - WHEN MDM-User 查询 Series 列表 THEN THE SYSTEM SHALL 支持按 brandCode 和 status 过滤
 - IF Series 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
@@ -74,10 +74,10 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN MDM-User 创建 Platform 且 code 唯一 THEN THE SYSTEM SHALL 持久化 Platform 记录并设置 version=1
+- WHEN MDM-User 创建 Platform 且 code 唯一 THEN THE SYSTEM SHALL 持久化 Platform 记录并设置 version=1，并自动填充 create_by（当前认证用户）、create_time（当前时间）、modify_by、modify_time
 - WHEN MDM-User 创建 Platform 且 code 已存在 THEN THE SYSTEM SHALL 返回错误码 807001 并拒绝创建
-- WHEN MDM-User 更新 Platform 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录
-- WHEN MDM-User 失效 Platform 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version
+- WHEN MDM-User 更新 Platform 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by（当前认证用户）、modify_time（当前时间）
+- WHEN MDM-User 失效 Platform 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
 - WHEN MDM-User 删除 Platform 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
 - IF Platform 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
 

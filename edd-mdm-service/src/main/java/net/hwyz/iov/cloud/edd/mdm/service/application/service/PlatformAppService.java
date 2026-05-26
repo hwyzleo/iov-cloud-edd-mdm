@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlatformDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
+import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,12 @@ public class PlatformAppService {
     public PlatformDto createPlatform(PlatformCreateCmd cmd) {
         log.info("创建平台: {}", cmd.getCode());
 
+        // 自动获取当前用户作为创建人
+        String createBy = cmd.getCreateBy();
+        if (createBy == null || createBy.isBlank()) {
+            createBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务创建平台
         Platform platform = productDomainService.createPlatform(
                 cmd.getCode(),
@@ -47,7 +54,7 @@ public class PlatformAppService {
                 cmd.getArchitecture(),
                 cmd.getEffectiveFrom(),
                 cmd.getEffectiveTo(),
-                cmd.getCreateBy()
+                createBy
         );
 
         // 发布平台创建事件到Outbox
@@ -66,6 +73,12 @@ public class PlatformAppService {
     public PlatformDto updatePlatform(PlatformUpdateCmd cmd) {
         log.info("更新平台: {}", cmd.getCode());
 
+        // 自动获取当前用户作为修改人
+        String modifyBy = cmd.getModifyBy();
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务更新平台
         Platform platform = productDomainService.updatePlatform(
                 cmd.getCode(),
@@ -75,7 +88,7 @@ public class PlatformAppService {
                 cmd.getArchitecture(),
                 cmd.getEffectiveFrom(),
                 cmd.getEffectiveTo(),
-                cmd.getModifyBy()
+                modifyBy
         );
 
         // 发布平台更新事件到Outbox
@@ -95,6 +108,11 @@ public class PlatformAppService {
     public PlatformDto deactivatePlatform(String code, String modifyBy) {
         log.info("失效平台: {}", code);
 
+        // 自动获取当前用户作为修改人
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         // 调用领域服务失效平台
         Platform platform = productDomainService.deactivatePlatform(code, modifyBy);
 
@@ -113,6 +131,12 @@ public class PlatformAppService {
     @Transactional(rollbackFor = Exception.class)
     public void deletePlatform(String code, String modifyBy) {
         log.info("删除平台: {}", code);
+
+        // 自动获取当前用户作为修改人
+        if (modifyBy == null || modifyBy.isBlank()) {
+            modifyBy = SecurityUtils.getUsername();
+        }
+
         productDomainService.deletePlatform(code, modifyBy);
     }
 

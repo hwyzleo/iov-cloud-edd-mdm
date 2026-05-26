@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SeriesAppService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesResponse;
+import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,9 +43,9 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @PostMapping("/create")
-    public SeriesResponse create(@RequestBody SeriesCreateCmd cmd) {
+    public ApiResponse<SeriesResponse> create(@RequestBody SeriesCreateCmd cmd) {
         SeriesDto series = seriesAppService.createSeries(cmd);
-        return seriesAssembler.toResponse(series);
+        return ApiResponse.ok(seriesAssembler.toResponse(series));
     }
 
     /**
@@ -55,10 +56,10 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @PutMapping("/{code}")
-    public SeriesResponse update(@PathVariable String code, @RequestBody SeriesUpdateCmd cmd) {
+    public ApiResponse<SeriesResponse> update(@PathVariable String code, @RequestBody SeriesUpdateCmd cmd) {
         cmd.setCode(code);
         SeriesDto series = seriesAppService.updateSeries(cmd);
-        return seriesAssembler.toResponse(series);
+        return ApiResponse.ok(seriesAssembler.toResponse(series));
     }
 
     /**
@@ -68,8 +69,9 @@ public class MptSeriesController {
      * @param modifyBy 修改人
      */
     @DeleteMapping("/{code}")
-    public void delete(@PathVariable String code, @RequestParam String modifyBy) {
+    public ApiResponse<Void> delete(@PathVariable String code, @RequestParam String modifyBy) {
         seriesAppService.deleteSeries(code, modifyBy);
+        return ApiResponse.ok();
     }
 
     /**
@@ -80,9 +82,9 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @PostMapping("/{code}/deactivate")
-    public SeriesResponse deactivate(@PathVariable String code, @RequestParam String modifyBy) {
+    public ApiResponse<SeriesResponse> deactivate(@PathVariable String code, @RequestParam String modifyBy) {
         SeriesDto series = seriesAppService.deactivateSeries(code, modifyBy);
-        return seriesAssembler.toResponse(series);
+        return ApiResponse.ok(seriesAssembler.toResponse(series));
     }
 
     /**
@@ -92,9 +94,9 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @GetMapping("/{code}")
-    public SeriesResponse getByCode(@PathVariable String code) {
+    public ApiResponse<SeriesResponse> getByCode(@PathVariable String code) {
         SeriesDto series = seriesAppService.getSeriesByCode(code);
-        return seriesAssembler.toResponse(series);
+        return ApiResponse.ok(seriesAssembler.toResponse(series));
     }
 
     /**
@@ -107,10 +109,10 @@ public class MptSeriesController {
      * @return 车系分页响应
      */
     @GetMapping("/list")
-    public SeriesPageResponse list(@RequestParam(defaultValue = "1") Integer page,
-                                   @RequestParam(defaultValue = "10") Integer size,
-                                   @RequestParam(required = false) String brandCode,
-                                   @RequestParam(required = false) Boolean includeInactive) {
+    public ApiResponse<SeriesPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
+                                                @RequestParam(defaultValue = "10") Integer size,
+                                                @RequestParam(required = false) String brandCode,
+                                                @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
         List<SeriesDto> seriesList = seriesAppService.listSeries(
@@ -128,9 +130,9 @@ public class MptSeriesController {
                 .map(seriesAssembler::toResponse)
                 .collect(Collectors.toList());
 
-        return SeriesPageResponse.builder()
+        return ApiResponse.ok(SeriesPageResponse.builder()
                 .total(total)
                 .rows(rows)
-                .build();
+                .build());
     }
 }

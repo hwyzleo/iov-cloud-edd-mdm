@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlatformDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.PlatformAppService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PlatformPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PlatformResponse;
+import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,9 +43,9 @@ public class MptPlatformController {
      * @return 平台响应
      */
     @PostMapping("/create")
-    public PlatformResponse create(@RequestBody PlatformCreateCmd cmd) {
+    public ApiResponse<PlatformResponse> create(@RequestBody PlatformCreateCmd cmd) {
         PlatformDto platform = platformAppService.createPlatform(cmd);
-        return platformAssembler.toResponse(platform);
+        return ApiResponse.ok(platformAssembler.toResponse(platform));
     }
 
     /**
@@ -55,10 +56,10 @@ public class MptPlatformController {
      * @return 平台响应
      */
     @PutMapping("/{code}")
-    public PlatformResponse update(@PathVariable String code, @RequestBody PlatformUpdateCmd cmd) {
+    public ApiResponse<PlatformResponse> update(@PathVariable String code, @RequestBody PlatformUpdateCmd cmd) {
         cmd.setCode(code);
         PlatformDto platform = platformAppService.updatePlatform(cmd);
-        return platformAssembler.toResponse(platform);
+        return ApiResponse.ok(platformAssembler.toResponse(platform));
     }
 
     /**
@@ -68,8 +69,9 @@ public class MptPlatformController {
      * @param modifyBy 修改人
      */
     @DeleteMapping("/{code}")
-    public void delete(@PathVariable String code, @RequestParam String modifyBy) {
+    public ApiResponse<Void> delete(@PathVariable String code, @RequestParam String modifyBy) {
         platformAppService.deletePlatform(code, modifyBy);
+        return ApiResponse.ok();
     }
 
     /**
@@ -80,9 +82,9 @@ public class MptPlatformController {
      * @return 平台响应
      */
     @PostMapping("/{code}/deactivate")
-    public PlatformResponse deactivate(@PathVariable String code, @RequestParam String modifyBy) {
+    public ApiResponse<PlatformResponse> deactivate(@PathVariable String code, @RequestParam String modifyBy) {
         PlatformDto platform = platformAppService.deactivatePlatform(code, modifyBy);
-        return platformAssembler.toResponse(platform);
+        return ApiResponse.ok(platformAssembler.toResponse(platform));
     }
 
     /**
@@ -92,9 +94,9 @@ public class MptPlatformController {
      * @return 平台响应
      */
     @GetMapping("/{code}")
-    public PlatformResponse getByCode(@PathVariable String code) {
+    public ApiResponse<PlatformResponse> getByCode(@PathVariable String code) {
         PlatformDto platform = platformAppService.getPlatformByCode(code);
-        return platformAssembler.toResponse(platform);
+        return ApiResponse.ok(platformAssembler.toResponse(platform));
     }
 
     /**
@@ -106,9 +108,9 @@ public class MptPlatformController {
      * @return 平台分页响应
      */
     @GetMapping("/list")
-    public PlatformPageResponse list(@RequestParam(defaultValue = "1") Integer page,
-                                     @RequestParam(defaultValue = "10") Integer size,
-                                     @RequestParam(required = false) Boolean includeInactive) {
+    public ApiResponse<PlatformPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
+                                                  @RequestParam(defaultValue = "10") Integer size,
+                                                  @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
         List<PlatformDto> platforms = platformAppService.listPlatforms(
@@ -125,9 +127,9 @@ public class MptPlatformController {
                 .map(platformAssembler::toResponse)
                 .collect(Collectors.toList());
 
-        return PlatformPageResponse.builder()
+        return ApiResponse.ok(PlatformPageResponse.builder()
                 .total(total)
                 .rows(rows)
-                .build();
+                .build());
     }
 }
