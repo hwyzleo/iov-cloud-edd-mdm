@@ -827,13 +827,13 @@ sequenceDiagram
 
 | Method | Path | 说明 |
 |--------|------|------|
-| POST | /api/mpt/mdm/series/v1/create | 创建车系 |
-| PUT | /api/mpt/mdm/series/v1/{code} | 更新车系 |
-| DELETE | /api/mpt/mdm/series/v1/{code} | 删除车系（仅 DRAFT 状态） |
-| POST | /api/mpt/mdm/series/v1/{code}/deactivate | 失效车系 |
-| GET | /api/mpt/mdm/series/v1/{code} | 查询车系详情 |
-| GET | /api/mpt/mdm/series/v1/list | 分页查询车系列表（支持 brandCode、status 过滤） |
-| GET | /api/mpt/mdm/series/v1/{code}/history | 查询车系历史版本 |
+| POST | /api/mpt/mdm/carline/v1/create | 创建车系 |
+| PUT | /api/mpt/mdm/carline/v1/{code} | 更新车系 |
+| DELETE | /api/mpt/mdm/carline/v1/{code} | 删除车系（仅 DRAFT 状态） |
+| POST | /api/mpt/mdm/carline/v1/{code}/deactivate | 失效车系 |
+| GET | /api/mpt/mdm/carline/v1/{code} | 查询车系详情 |
+| GET | /api/mpt/mdm/carline/v1/list | 分页查询车系列表（支持 brandCode、status 过滤） |
+| GET | /api/mpt/mdm/carline/v1/{code}/history | 查询车系历史版本 |
 
 #### Platform 接口
 
@@ -860,8 +860,8 @@ sequenceDiagram
 
 | Method | Path | 说明 |
 |--------|------|------|
-| GET | /api/service/series/v1/listAll | 全量快照（支持分页、brandCode 过滤） |
-| GET | /api/service/series/v1/{code} | 按 code 单点查询 |
+| GET | /api/service/carline/v1/listAll | 全量快照（支持分页、brandCode 过滤） |
+| GET | /api/service/carline/v1/{code} | 按 code 单点查询 |
 
 #### Platform 接口
 
@@ -882,7 +882,7 @@ sequenceDiagram
 
 | Method | Path | 说明 |
 |--------|------|------|
-| POST | /api/upstream/mdm/series/v1/ingest | 接收上游 CarLine 主数据 |
+| POST | /api/upstream/mdm/carline/v1/ingest | 接收上游 CarLine 主数据 |
 
 #### Platform 接入
 

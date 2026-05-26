@@ -97,7 +97,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN history 表插入快照 THEN THE SYSTEM SHALL 记录变更时间、操作人、变更前后的 version
 - WHEN 查询历史版本 THEN THE SYSTEM SHALL 按 entityId 和 version 降序返回快照列表
 - WHEN MDM-User 通过后台查询品牌历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/brand/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段（sourceSystem / sourceId / sourceVersion / ingestionChannel / ingestionTime）
-- WHEN MDM-User 通过后台查询车系历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/series/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段
+- WHEN MDM-User 通过后台查询车系历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/carline/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段
 - WHEN MDM-User 通过后台查询平台历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/platform/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段
 - WHEN 调用历史版本查询接口且 code 不存在 THEN THE SYSTEM SHALL 返回错误码 807002 并拒绝查询
 
@@ -160,11 +160,11 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 #### US-010: CarLine 全量快照
 
-**As a** Service-Caller, **I want** 通过 Feign 拉取 CarLine 全量快照（GET /api/service/series/v1/listAll，支持 brandCode 过滤），**so that** 下游可执行 Bootstrap 与对账。
+**As a** Service-Caller, **I want** 通过 Feign 拉取 CarLine 全量快照（GET /api/service/carline/v1/listAll，支持 brandCode 过滤），**so that** 下游可执行 Bootstrap 与对账。
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN Service-Caller 调用 GET /api/service/series/v1/listAll 且传 brandCode 参数 THEN THE SYSTEM SHALL 仅返回 brandCode 匹配的记录
+- WHEN Service-Caller 调用 GET /api/service/carline/v1/listAll 且传 brandCode 参数 THEN THE SYSTEM SHALL 仅返回 brandCode 匹配的记录
 - 其他 AC 与 US-009 共通
 
 #### US-011: Platform 全量快照
@@ -210,7 +210,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 - THE SYSTEM SHALL 提供以下接收接口：
     - POST /api/upstream/mdm/brand/v1/ingest
-    - POST /api/upstream/mdm/series/v1/ingest
+    - POST /api/upstream/mdm/carline/v1/ingest
     - POST /api/upstream/mdm/platform/v1/ingest
 - WHEN Upstream-System 调用 ingest 接口 THEN THE SYSTEM SHALL 从请求头（如 X-Source-System）或请求体提取 sourceSystem 标识并完成鉴权（API Key / OAuth2）
 - WHEN 鉴权失败、来源未注册或来源被禁用 THEN THE SYSTEM SHALL 返回错误码 807011 并拒绝接入
