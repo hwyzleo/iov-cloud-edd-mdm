@@ -10,9 +10,9 @@ import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/upstream/mdm/series/v1")
+@RequestMapping("/api/upstream/mdm/carLine/v1")
 @RequiredArgsConstructor
-public class UpstreamSeriesController {
+public class UpstreamCarLineController {
 
     private final IngestionAppService ingestionAppService;
 

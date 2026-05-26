@@ -16,7 +16,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesCreateCmd {
+public class CarLineCreateCmd {
 
     /**
      * 业务主键（code）
@@ -41,7 +41,7 @@ public class SeriesCreateCmd {
     /**
      * 车系类型
      */
-    private String seriesType;
+    private String carLineType;
 
     /**
      * 生命周期状态

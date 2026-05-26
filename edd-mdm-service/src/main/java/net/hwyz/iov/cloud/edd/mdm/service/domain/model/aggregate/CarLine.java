@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SeriesStatus;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SeriesType;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket;
 
@@ -21,7 +21,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Series {
+public class CarLine {
 
     /**
      * 主键ID
@@ -51,7 +51,7 @@ public class Series {
     /**
      * 车系类型
      */
-    private SeriesType seriesType;
+    private CarLineType carLineType;
 
     /**
      * 生命周期状态
@@ -111,7 +111,7 @@ public class Series {
     /**
      * 状态
      */
-    private SeriesStatus status;
+    private CarLineStatus status;
 
     /**
      * 创建人
@@ -161,7 +161,7 @@ public class Series {
      * @param name            官方名称
      * @param nameLocal       本地化名称
      * @param brandCode       品牌code
-     * @param seriesType      车系类型
+     * @param carLineType      车系类型
      * @param lifecycleStatus 生命周期状态
      * @param targetMarket    目标市场
      * @param effectiveFrom   生效开始时间
@@ -169,16 +169,16 @@ public class Series {
      * @param createBy        创建人
      * @return 车系聚合根
      */
-    public static Series create(String code, String name, String nameLocal, String brandCode,
-                                SeriesType seriesType, LifecycleStatus lifecycleStatus,
+    public static CarLine create(String code, String name, String nameLocal, String brandCode,
+                                CarLineType carLineType, LifecycleStatus lifecycleStatus,
                                 TargetMarket targetMarket, Date effectiveFrom, Date effectiveTo,
                                 String createBy) {
-        Series series = Series.builder()
+        CarLine carLine = CarLine.builder()
                 .code(code)
                 .name(name)
                 .nameLocal(nameLocal)
                 .brandCode(brandCode)
-                .seriesType(seriesType)
+                .carLineType(carLineType)
                 .lifecycleStatus(lifecycleStatus)
                 .targetMarket(targetMarket)
                 .sourceSystem("LOCAL")
@@ -190,7 +190,7 @@ public class Series {
                 .effectiveFrom(effectiveFrom)
                 .effectiveTo(effectiveTo)
                 .version(1)
-                .status(SeriesStatus.ACTIVE)
+                .status(CarLineStatus.ACTIVE)
                 .createBy(createBy)
                 .createTime(new Date())
                 .modifyBy(createBy)
@@ -199,8 +199,8 @@ public class Series {
                 .rowValid(true)
                 .build();
 
-        series.validateEffectiveDate();
-        return series;
+        carLine.validateEffectiveDate();
+        return carLine;
     }
 
     /**
@@ -208,19 +208,19 @@ public class Series {
      *
      * @param name            官方名称
      * @param nameLocal       本地化名称
-     * @param seriesType      车系类型
+     * @param carLineType      车系类型
      * @param lifecycleStatus 生命周期状态
      * @param targetMarket    目标市场
      * @param effectiveFrom   生效开始时间
      * @param effectiveTo     生效结束时间
      * @param modifyBy        修改人
      */
-    public void update(String name, String nameLocal, SeriesType seriesType,
+    public void update(String name, String nameLocal, CarLineType carLineType,
                        LifecycleStatus lifecycleStatus, TargetMarket targetMarket,
                        Date effectiveFrom, Date effectiveTo, String modifyBy) {
         this.name = name;
         this.nameLocal = nameLocal;
-        this.seriesType = seriesType;
+        this.carLineType = carLineType;
         this.lifecycleStatus = lifecycleStatus;
         this.targetMarket = targetMarket;
         this.effectiveFrom = effectiveFrom;
@@ -239,7 +239,7 @@ public class Series {
      * @param name              官方名称
      * @param nameLocal         本地化名称
      * @param brandCode         品牌code
-     * @param seriesType        车系类型
+     * @param carLineType        车系类型
      * @param lifecycleStatus   生命周期状态
      * @param targetMarket      目标市场
      * @param effectiveFrom     生效开始时间
@@ -252,26 +252,26 @@ public class Series {
      * @param createBy          创建人
      * @return 车系聚合根
      */
-    public static Series createFromUpstream(String code, String name, String nameLocal, String brandCode,
-                                           SeriesType seriesType, LifecycleStatus lifecycleStatus,
+    public static CarLine createFromUpstream(String code, String name, String nameLocal, String brandCode,
+                                           CarLineType carLineType, LifecycleStatus lifecycleStatus,
                                            TargetMarket targetMarket, Date effectiveFrom, Date effectiveTo,
                                            String sourceSystem, String sourceId, String sourceVersion,
                                            String ingestionChannel, String sourcePayloadHash,
                                            String createBy) {
-        Series series = Series.builder()
+        CarLine carLine = CarLine.builder()
                 .code(code).name(name).nameLocal(nameLocal).brandCode(brandCode)
-                .seriesType(seriesType).lifecycleStatus(lifecycleStatus).targetMarket(targetMarket)
+                .carLineType(carLineType).lifecycleStatus(lifecycleStatus).targetMarket(targetMarket)
                 .sourceSystem(sourceSystem).sourceId(sourceId).sourceVersion(sourceVersion)
                 .ingestionChannel(ingestionChannel).ingestionTime(new Date())
                 .sourcePayloadHash(sourcePayloadHash)
                 .effectiveFrom(effectiveFrom).effectiveTo(effectiveTo)
-                .version(1).status(SeriesStatus.ACTIVE)
+                .version(1).status(CarLineStatus.ACTIVE)
                 .createBy(createBy).createTime(new Date())
                 .modifyBy(createBy).modifyTime(new Date())
                 .rowVersion(0).rowValid(true)
                 .build();
-        series.validateEffectiveDate();
-        return series;
+        carLine.validateEffectiveDate();
+        return carLine;
     }
 
     /**
@@ -279,7 +279,7 @@ public class Series {
      *
      * @param name              官方名称
      * @param nameLocal         本地化名称
-     * @param seriesType        车系类型
+     * @param carLineType        车系类型
      * @param lifecycleStatus   生命周期状态
      * @param targetMarket      目标市场
      * @param effectiveFrom     生效开始时间
@@ -291,7 +291,7 @@ public class Series {
      * @param sourcePayloadHash 来源数据哈希
      * @param modifyBy          修改人
      */
-    public void updateFromUpstream(String name, String nameLocal, SeriesType seriesType,
+    public void updateFromUpstream(String name, String nameLocal, CarLineType carLineType,
                                    LifecycleStatus lifecycleStatus, TargetMarket targetMarket,
                                    Date effectiveFrom, Date effectiveTo,
                                    String sourceSystem, String sourceId, String sourceVersion,
@@ -299,7 +299,7 @@ public class Series {
                                    String modifyBy) {
         this.name = name;
         this.nameLocal = nameLocal;
-        this.seriesType = seriesType;
+        this.carLineType = carLineType;
         this.lifecycleStatus = lifecycleStatus;
         this.targetMarket = targetMarket;
         this.sourceSystem = sourceSystem;
@@ -322,10 +322,10 @@ public class Series {
      * @param modifyBy 修改人
      */
     public void deactivate(String modifyBy) {
-        if (this.status != SeriesStatus.ACTIVE) {
+        if (this.status != CarLineStatus.ACTIVE) {
             throw new IllegalStateException("只有ACTIVE状态的车系才能失效");
         }
-        this.status = SeriesStatus.INACTIVE;
+        this.status = CarLineStatus.INACTIVE;
         this.effectiveTo = new Date();
         this.version = this.version + 1;
         this.modifyBy = modifyBy;
@@ -338,7 +338,7 @@ public class Series {
      * @param modifyBy 修改人
      */
     public void delete(String modifyBy) {
-        if (this.status != SeriesStatus.DRAFT) {
+        if (this.status != CarLineStatus.DRAFT) {
             throw new IllegalStateException("只有DRAFT状态的车系才能删除");
         }
         this.rowValid = false;

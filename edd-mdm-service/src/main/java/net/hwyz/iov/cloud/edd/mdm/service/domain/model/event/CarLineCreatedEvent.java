@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 车系更新事件
+ * 车系创建事件
  *
  * @author hwyz_leo
  */
@@ -16,7 +16,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesUpdatedEvent {
+public class CarLineCreatedEvent {
 
     /**
      * 事件ID

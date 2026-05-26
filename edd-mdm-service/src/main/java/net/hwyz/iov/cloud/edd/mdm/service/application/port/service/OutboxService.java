@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.application.port.service;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 
 /**
@@ -35,23 +35,23 @@ public interface OutboxService {
     /**
      * 发布车系创建事件
      *
-     * @param series 车系聚合根
+     * @param carLine 车系聚合根
      */
-    void publishSeriesCreatedEvent(Series series);
+    void publishCarLineCreatedEvent(CarLine carLine);
 
     /**
      * 发布车系更新事件
      *
-     * @param series 车系聚合根
+     * @param carLine 车系聚合根
      */
-    void publishSeriesUpdatedEvent(Series series);
+    void publishCarLineUpdatedEvent(CarLine carLine);
 
     /**
      * 发布车系失效事件
      *
-     * @param series 车系聚合根
+     * @param carLine 车系聚合根
      */
-    void publishSeriesDeactivatedEvent(Series series);
+    void publishCarLineDeactivatedEvent(CarLine carLine);
 
     /**
      * 发布平台创建事件

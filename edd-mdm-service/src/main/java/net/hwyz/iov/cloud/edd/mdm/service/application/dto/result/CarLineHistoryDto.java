@@ -1,4 +1,4 @@
-package net.hwyz.iov.cloud.edd.mdm.api.vo.response;
+package net.hwyz.iov.cloud.edd.mdm.service.application.dto.result;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 车系历史版本响应
+ * 车系历史版本DTO
  *
  * @author hwyz_leo
  */
@@ -16,7 +16,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesHistoryResponse {
+public class CarLineHistoryDto {
 
     /**
      * 快照ID
@@ -51,7 +51,7 @@ public class SeriesHistoryResponse {
     /**
      * 车系类型
      */
-    private String seriesType;
+    private String carLineType;
 
     /**
      * 生命周期状态

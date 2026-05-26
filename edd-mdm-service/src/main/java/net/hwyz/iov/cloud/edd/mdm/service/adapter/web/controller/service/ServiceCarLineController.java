@@ -1,13 +1,13 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.service;
 
 import lombok.RequiredArgsConstructor;
-import net.hwyz.iov.cloud.edd.mdm.api.service.SeriesService;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesPageResponse;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesResponse;
-import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SeriesAssembler;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SeriesQuery;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
-import net.hwyz.iov.cloud.edd.mdm.service.application.service.SeriesAppService;
+import net.hwyz.iov.cloud.edd.mdm.api.service.CarLineService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLinePageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineResponse;
+import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.CarLineAssembler;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.CarLineQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.service.CarLineAppService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,24 +23,24 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/series/v1")
+@RequestMapping("/service/carLine/v1")
 @RequiredArgsConstructor
-public class ServiceSeriesController implements SeriesService {
+public class ServiceCarLineController implements CarLineService {
 
-    private final SeriesAppService seriesAppService;
-    private final SeriesAssembler seriesAssembler;
+    private final CarLineAppService carLineAppService;
+    private final CarLineAssembler carLineAssembler;
 
     @Override
     @GetMapping("/listAll")
-    public SeriesPageResponse listAll(@RequestParam(defaultValue = "1") Integer page,
+    public CarLinePageResponse listAll(@RequestParam(defaultValue = "1") Integer page,
                                       @RequestParam(defaultValue = "100") Integer size,
                                       @RequestParam(required = false) String brandCode,
                                       @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
         // 查询车系列表
-        List<SeriesDto> seriesList = seriesAppService.listSeries(
-                SeriesQuery.builder()
+        List<CarLineDto> carLineList = carLineAppService.listCarLine(
+                CarLineQuery.builder()
                         .page(page)
                         .size(size)
                         .brandCode(brandCode)
@@ -49,14 +49,14 @@ public class ServiceSeriesController implements SeriesService {
         );
 
         // 查询总数
-        long total = seriesAppService.countSeries(brandCode, includeInactiveFlag);
+        long total = carLineAppService.countCarLine(brandCode, includeInactiveFlag);
 
         // 转换为响应对象
-        List<SeriesResponse> rows = seriesList.stream()
-                .map(seriesAssembler::toResponse)
+        List<CarLineResponse> rows = carLineList.stream()
+                .map(carLineAssembler::toResponse)
                 .collect(Collectors.toList());
 
-        return SeriesPageResponse.builder()
+        return CarLinePageResponse.builder()
                 .total(total)
                 .rows(rows)
                 .build();
@@ -64,8 +64,8 @@ public class ServiceSeriesController implements SeriesService {
 
     @Override
     @GetMapping("/{code}")
-    public SeriesResponse getByCode(@PathVariable String code) {
-        SeriesDto series = seriesAppService.getSeriesByCode(code);
-        return seriesAssembler.toResponse(series);
+    public CarLineResponse getByCode(@PathVariable String code) {
+        CarLineDto carLine = carLineAppService.getCarLineByCode(code);
+        return carLineAssembler.toResponse(carLine);
     }
 }

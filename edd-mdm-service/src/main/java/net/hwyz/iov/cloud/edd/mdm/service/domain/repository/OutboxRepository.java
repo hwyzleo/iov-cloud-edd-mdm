@@ -3,9 +3,9 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.repository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesCreatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesUpdatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
@@ -45,21 +45,21 @@ public interface OutboxRepository {
      *
      * @param event 车系创建事件
      */
-    void saveSeriesCreatedEvent(SeriesCreatedEvent event);
+    void saveCarLineCreatedEvent(CarLineCreatedEvent event);
 
     /**
      * 保存车系更新事件
      *
      * @param event 车系更新事件
      */
-    void saveSeriesUpdatedEvent(SeriesUpdatedEvent event);
+    void saveCarLineUpdatedEvent(CarLineUpdatedEvent event);
 
     /**
      * 保存车系失效事件
      *
      * @param event 车系失效事件
      */
-    void saveSeriesDeactivatedEvent(SeriesDeactivatedEvent event);
+    void saveCarLineDeactivatedEvent(CarLineDeactivatedEvent event);
 
     /**
      * 保存平台创建事件

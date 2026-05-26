@@ -2,14 +2,14 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesCreateCmd;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesUpdateCmd;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SeriesQuery;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesHistoryDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.CarLineCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.CarLineUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.CarLineQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.CarLineHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SeriesAppService {
+public class CarLineAppService {
 
     private final ProductDomainService productDomainService;
     private final OutboxService outboxService;
@@ -38,7 +38,7 @@ public class SeriesAppService {
      * @return 车系DTO
      */
     @Transactional(rollbackFor = Exception.class)
-    public SeriesDto createSeries(SeriesCreateCmd cmd) {
+    public CarLineDto createCarLine(CarLineCreateCmd cmd) {
         log.info("创建车系: {}", cmd.getCode());
 
         // 自动获取当前用户作为创建人
@@ -48,12 +48,12 @@ public class SeriesAppService {
         }
 
         // 调用领域服务创建车系
-        Series series = productDomainService.createSeries(
+        CarLine carLine = productDomainService.createCarLine(
                 cmd.getCode(),
                 cmd.getName(),
                 cmd.getNameLocal(),
                 cmd.getBrandCode(),
-                cmd.getSeriesType(),
+                cmd.getCarLineType(),
                 cmd.getLifecycleStatus(),
                 cmd.getTargetMarket(),
                 cmd.getEffectiveFrom(),
@@ -62,9 +62,9 @@ public class SeriesAppService {
         );
 
         // 发布车系创建事件到Outbox
-        outboxService.publishSeriesCreatedEvent(series);
+        outboxService.publishCarLineCreatedEvent(carLine);
 
-        return convertToDto(series);
+        return convertToDto(carLine);
     }
 
     /**
@@ -74,7 +74,7 @@ public class SeriesAppService {
      * @return 车系DTO
      */
     @Transactional(rollbackFor = Exception.class)
-    public SeriesDto updateSeries(SeriesUpdateCmd cmd) {
+    public CarLineDto updateCarLine(CarLineUpdateCmd cmd) {
         log.info("更新车系: {}", cmd.getCode());
 
         // 自动获取当前用户作为修改人
@@ -84,11 +84,11 @@ public class SeriesAppService {
         }
 
         // 调用领域服务更新车系
-        Series series = productDomainService.updateSeries(
+        CarLine carLine = productDomainService.updateCarLine(
                 cmd.getCode(),
                 cmd.getName(),
                 cmd.getNameLocal(),
-                cmd.getSeriesType(),
+                cmd.getCarLineType(),
                 cmd.getLifecycleStatus(),
                 cmd.getTargetMarket(),
                 cmd.getEffectiveFrom(),
@@ -97,9 +97,9 @@ public class SeriesAppService {
         );
 
         // 发布车系更新事件到Outbox
-        outboxService.publishSeriesUpdatedEvent(series);
+        outboxService.publishCarLineUpdatedEvent(carLine);
 
-        return convertToDto(series);
+        return convertToDto(carLine);
     }
 
     /**
@@ -110,7 +110,7 @@ public class SeriesAppService {
      * @return 车系DTO
      */
     @Transactional(rollbackFor = Exception.class)
-    public SeriesDto deactivateSeries(String code, String modifyBy) {
+    public CarLineDto deactivateCarLine(String code, String modifyBy) {
         log.info("失效车系: {}", code);
 
         // 自动获取当前用户作为修改人
@@ -119,12 +119,12 @@ public class SeriesAppService {
         }
 
         // 调用领域服务失效车系
-        Series series = productDomainService.deactivateSeries(code, modifyBy);
+        CarLine carLine = productDomainService.deactivateCarLine(code, modifyBy);
 
         // 发布车系失效事件到Outbox
-        outboxService.publishSeriesDeactivatedEvent(series);
+        outboxService.publishCarLineDeactivatedEvent(carLine);
 
-        return convertToDto(series);
+        return convertToDto(carLine);
     }
 
     /**
@@ -134,7 +134,7 @@ public class SeriesAppService {
      * @param modifyBy 修改人
      */
     @Transactional(rollbackFor = Exception.class)
-    public void deleteSeries(String code, String modifyBy) {
+    public void deleteCarLine(String code, String modifyBy) {
         log.info("删除车系: {}", code);
 
         // 自动获取当前用户作为修改人
@@ -142,7 +142,7 @@ public class SeriesAppService {
             modifyBy = SecurityUtils.getUsername();
         }
 
-        productDomainService.deleteSeries(code, modifyBy);
+        productDomainService.deleteCarLine(code, modifyBy);
     }
 
     /**
@@ -151,9 +151,9 @@ public class SeriesAppService {
      * @param code 车系code
      * @return 车系DTO
      */
-    public SeriesDto getSeriesByCode(String code) {
-        Series series = productDomainService.getSeriesByCode(code);
-        return convertToDto(series);
+    public CarLineDto getCarLineByCode(String code) {
+        CarLine carLine = productDomainService.getCarLineByCode(code);
+        return convertToDto(carLine);
     }
 
     /**
@@ -162,14 +162,14 @@ public class SeriesAppService {
      * @param query 查询条件
      * @return 车系DTO列表
      */
-    public List<SeriesDto> listSeries(SeriesQuery query) {
-        List<Series> seriesList = productDomainService.listSeries(
+    public List<CarLineDto> listCarLine(CarLineQuery query) {
+        List<CarLine> carLineList = productDomainService.listCarLine(
                 query.getPage(),
                 query.getSize(),
                 query.getBrandCode(),
                 query.isIncludeInactive()
         );
-        return seriesList.stream()
+        return carLineList.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -181,8 +181,8 @@ public class SeriesAppService {
      * @param includeInactive 是否包含失效记录
      * @return 总数
      */
-    public long countSeries(String brandCode, boolean includeInactive) {
-        return productDomainService.countSeries(brandCode, includeInactive);
+    public long countCarLine(String brandCode, boolean includeInactive) {
+        return productDomainService.countCarLine(brandCode, includeInactive);
     }
 
     /**
@@ -191,8 +191,8 @@ public class SeriesAppService {
      * @param code 车系code
      * @return 历史版本DTO列表
      */
-    public List<SeriesHistoryDto> listSeriesHistory(String code) {
-        List<SeriesHistory> historyList = productDomainService.listSeriesHistory(code);
+    public List<CarLineHistoryDto> listCarLineHistory(String code) {
+        List<CarLineHistory> historyList = productDomainService.listCarLineHistory(code);
         return historyList.stream()
                 .map(this::convertHistoryToDto)
                 .collect(Collectors.toList());
@@ -201,33 +201,33 @@ public class SeriesAppService {
     /**
      * 转换为DTO
      *
-     * @param series 车系聚合根
+     * @param carLine 车系聚合根
      * @return 车系DTO
      */
-    private SeriesDto convertToDto(Series series) {
-        return SeriesDto.builder()
-                .id(series.getId())
-                .code(series.getCode())
-                .name(series.getName())
-                .nameLocal(series.getNameLocal())
-                .brandCode(series.getBrandCode())
-                .seriesType(series.getSeriesType() != null ? series.getSeriesType().name() : null)
-                .lifecycleStatus(series.getLifecycleStatus() != null ? series.getLifecycleStatus().name() : null)
-                .targetMarket(series.getTargetMarket() != null ? series.getTargetMarket().name() : null)
-                .sourceSystem(series.getSourceSystem())
-                .sourceId(series.getSourceId())
-                .sourceVersion(series.getSourceVersion())
-                .ingestionChannel(series.getIngestionChannel())
-                .ingestionTime(series.getIngestionTime())
-                .sourcePayloadHash(series.getSourcePayloadHash())
-                .version(series.getVersion())
-                .effectiveFrom(series.getEffectiveFrom())
-                .effectiveTo(series.getEffectiveTo())
-                .status(series.getStatus().name())
-                .createBy(series.getCreateBy())
-                .createTime(series.getCreateTime())
-                .modifyBy(series.getModifyBy())
-                .modifyTime(series.getModifyTime())
+    private CarLineDto convertToDto(CarLine carLine) {
+        return CarLineDto.builder()
+                .id(carLine.getId())
+                .code(carLine.getCode())
+                .name(carLine.getName())
+                .nameLocal(carLine.getNameLocal())
+                .brandCode(carLine.getBrandCode())
+                .carLineType(carLine.getCarLineType() != null ? carLine.getCarLineType().name() : null)
+                .lifecycleStatus(carLine.getLifecycleStatus() != null ? carLine.getLifecycleStatus().name() : null)
+                .targetMarket(carLine.getTargetMarket() != null ? carLine.getTargetMarket().name() : null)
+                .sourceSystem(carLine.getSourceSystem())
+                .sourceId(carLine.getSourceId())
+                .sourceVersion(carLine.getSourceVersion())
+                .ingestionChannel(carLine.getIngestionChannel())
+                .ingestionTime(carLine.getIngestionTime())
+                .sourcePayloadHash(carLine.getSourcePayloadHash())
+                .version(carLine.getVersion())
+                .effectiveFrom(carLine.getEffectiveFrom())
+                .effectiveTo(carLine.getEffectiveTo())
+                .status(carLine.getStatus().name())
+                .createBy(carLine.getCreateBy())
+                .createTime(carLine.getCreateTime())
+                .modifyBy(carLine.getModifyBy())
+                .modifyTime(carLine.getModifyTime())
                 .build();
     }
 
@@ -237,15 +237,15 @@ public class SeriesAppService {
      * @param history 车系历史版本实体
      * @return 车系历史版本DTO
      */
-    private SeriesHistoryDto convertHistoryToDto(SeriesHistory history) {
-        return SeriesHistoryDto.builder()
+    private CarLineHistoryDto convertHistoryToDto(CarLineHistory history) {
+        return CarLineHistoryDto.builder()
                 .snapshotId(history.getSnapshotId())
                 .entityId(history.getEntityId())
                 .code(history.getCode())
                 .name(history.getName())
                 .nameLocal(history.getNameLocal())
                 .brandCode(history.getBrandCode())
-                .seriesType(history.getSeriesType())
+                .carLineType(history.getCarLineType())
                 .lifecycleStatus(history.getLifecycleStatus())
                 .targetMarket(history.getTargetMarket())
                 .sourceSystem(history.getSourceSystem())

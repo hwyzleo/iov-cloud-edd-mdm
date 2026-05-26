@@ -16,7 +16,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesUpdateCmd {
+public class CarLineUpdateCmd {
 
     /**
      * 业务主键（code）
@@ -36,7 +36,7 @@ public class SeriesUpdateCmd {
     /**
      * 车系类型
      */
-    private String seriesType;
+    private String carLineType;
 
     /**
      * 生命周期状态

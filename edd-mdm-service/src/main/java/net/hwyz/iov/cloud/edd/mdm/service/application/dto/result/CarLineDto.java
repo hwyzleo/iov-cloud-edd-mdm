@@ -16,7 +16,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesDto {
+public class CarLineDto {
 
     /**
      * 主键ID
@@ -46,7 +46,7 @@ public class SeriesDto {
     /**
      * 车系类型
      */
-    private String seriesType;
+    private String carLineType;
 
     /**
      * 生命周期状态

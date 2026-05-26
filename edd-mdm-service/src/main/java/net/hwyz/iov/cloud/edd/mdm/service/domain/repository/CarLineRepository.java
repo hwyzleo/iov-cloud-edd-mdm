@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.repository;
 
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.CarLineHistory;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,15 +11,15 @@ import java.util.Optional;
  *
  * @author hwyz_leo
  */
-public interface SeriesRepository {
+public interface CarLineRepository {
 
     /**
      * 保存车系
      *
-     * @param series 车系聚合根
+     * @param carLine 车系聚合根
      * @return 保存后的车系
      */
-    Series save(Series series);
+    CarLine save(CarLine carLine);
 
     /**
      * 根据ID查找车系
@@ -27,7 +27,7 @@ public interface SeriesRepository {
      * @param id 主键ID
      * @return 车系
      */
-    Optional<Series> findById(Long id);
+    Optional<CarLine> findById(Long id);
 
     /**
      * 根据code查找车系
@@ -35,7 +35,7 @@ public interface SeriesRepository {
      * @param code 业务主键
      * @return 车系
      */
-    Optional<Series> findByCode(String code);
+    Optional<CarLine> findByCode(String code);
 
     /**
      * 检查code是否存在
@@ -54,7 +54,7 @@ public interface SeriesRepository {
      * @param includeInactive 是否包含失效记录
      * @return 车系列表
      */
-    List<Series> findAll(int page, int size, String brandCode, boolean includeInactive);
+    List<CarLine> findAll(int page, int size, String brandCode, boolean includeInactive);
 
     /**
      * 查询车系总数
@@ -68,9 +68,9 @@ public interface SeriesRepository {
     /**
      * 删除车系
      *
-     * @param series 车系聚合根
+     * @param carLine 车系聚合根
      */
-    void delete(Series series);
+    void delete(CarLine carLine);
 
     /**
      * 查询车系历史版本列表
@@ -78,5 +78,5 @@ public interface SeriesRepository {
      * @param code 车系code
      * @return 历史版本列表
      */
-    List<SeriesHistory> findHistoryByCode(String code);
+    List<CarLineHistory> findHistoryByCode(String code);
 }

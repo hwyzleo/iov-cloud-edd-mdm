@@ -1,9 +1,9 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler;
 
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesHistoryResponse;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesResponse;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesHistoryDto;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineHistoryResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineResponse;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineHistoryDto;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * @author hwyz_leo
  */
 @Component
-public class SeriesAssembler {
+public class CarLineAssembler {
 
     /**
      * DTO转换为响应对象
@@ -20,17 +20,17 @@ public class SeriesAssembler {
      * @param dto 车系DTO
      * @return 车系响应对象
      */
-    public SeriesResponse toResponse(SeriesDto dto) {
+    public CarLineResponse toResponse(CarLineDto dto) {
         if (dto == null) {
             return null;
         }
-        return SeriesResponse.builder()
+        return CarLineResponse.builder()
                 .id(dto.getId())
                 .code(dto.getCode())
                 .name(dto.getName())
                 .nameLocal(dto.getNameLocal())
                 .brandCode(dto.getBrandCode())
-                .seriesType(dto.getSeriesType())
+                .carLineType(dto.getCarLineType())
                 .lifecycleStatus(dto.getLifecycleStatus())
                 .targetMarket(dto.getTargetMarket())
                 .sourceSystem(dto.getSourceSystem())
@@ -56,18 +56,18 @@ public class SeriesAssembler {
      * @param dto 车系历史版本DTO
      * @return 车系历史版本响应对象
      */
-    public SeriesHistoryResponse toHistoryResponse(SeriesHistoryDto dto) {
+    public CarLineHistoryResponse toHistoryResponse(CarLineHistoryDto dto) {
         if (dto == null) {
             return null;
         }
-        return SeriesHistoryResponse.builder()
+        return CarLineHistoryResponse.builder()
                 .snapshotId(dto.getSnapshotId())
                 .entityId(dto.getEntityId())
                 .code(dto.getCode())
                 .name(dto.getName())
                 .nameLocal(dto.getNameLocal())
                 .brandCode(dto.getBrandCode())
-                .seriesType(dto.getSeriesType())
+                .carLineType(dto.getCarLineType())
                 .lifecycleStatus(dto.getLifecycleStatus())
                 .targetMarket(dto.getTargetMarket())
                 .sourceSystem(dto.getSourceSystem())

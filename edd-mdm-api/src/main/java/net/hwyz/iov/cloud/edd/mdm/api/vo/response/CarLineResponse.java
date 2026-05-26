@@ -1,8 +1,5 @@
-package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po;
+package net.hwyz.iov.cloud.edd.mdm.api.vo.response;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 车系历史快照持久化对象
+ * 车系响应
  *
  * @author hwyz_leo
  */
@@ -19,19 +16,12 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("mdm_series_history")
-public class SeriesHistoryPo {
+public class CarLineResponse {
 
     /**
      * 主键ID
      */
-    @TableId(type = IdType.AUTO)
-    private Long snapshotId;
-
-    /**
-     * 关联主表id
-     */
-    private Long entityId;
+    private Long id;
 
     /**
      * 业务主键（code）
@@ -56,7 +46,7 @@ public class SeriesHistoryPo {
     /**
      * 车系类型
      */
-    private String seriesType;
+    private String carLineType;
 
     /**
      * 生命周期状态
@@ -68,11 +58,34 @@ public class SeriesHistoryPo {
      */
     private String targetMarket;
 
+    /**
+     * 来源系统
+     */
     private String sourceSystem;
+
+    /**
+     * 来源系统ID
+     */
     private String sourceId;
+
+    /**
+     * 来源版本
+     */
     private String sourceVersion;
+
+    /**
+     * 数据接入渠道
+     */
     private String ingestionChannel;
+
+    /**
+     * 数据接入时间
+     */
     private Date ingestionTime;
+
+    /**
+     * 来源数据哈希
+     */
     private String sourcePayloadHash;
 
     /**
@@ -96,21 +109,6 @@ public class SeriesHistoryPo {
     private String status;
 
     /**
-     * 操作类型
-     */
-    private String operationType;
-
-    /**
-     * 快照时间
-     */
-    private Date snapshotTime;
-
-    /**
-     * 操作人
-     */
-    private String operator;
-
-    /**
      * 创建人
      */
     private String createBy;
@@ -129,14 +127,4 @@ public class SeriesHistoryPo {
      * 修改时间
      */
     private Date modifyTime;
-
-    /**
-     * 乐观锁版本号
-     */
-    private Integer rowVersion;
-
-    /**
-     * 行有效标记
-     */
-    private Boolean rowValid;
 }

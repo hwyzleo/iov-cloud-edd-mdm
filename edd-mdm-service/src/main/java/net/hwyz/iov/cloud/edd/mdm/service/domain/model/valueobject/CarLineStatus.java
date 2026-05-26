@@ -5,7 +5,7 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject;
  *
  * @author hwyz_leo
  */
-public enum SeriesStatus {
+public enum CarLineStatus {
 
     /**
      * 激活

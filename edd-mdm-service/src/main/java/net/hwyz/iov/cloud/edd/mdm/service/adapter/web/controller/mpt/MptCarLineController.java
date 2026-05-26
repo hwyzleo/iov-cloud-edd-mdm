@@ -1,17 +1,17 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.mpt;
 
 import lombok.RequiredArgsConstructor;
-import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SeriesAssembler;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesCreateCmd;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SeriesUpdateCmd;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SeriesQuery;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesDto;
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SeriesHistoryDto;
-import net.hwyz.iov.cloud.edd.mdm.service.application.service.SeriesAppService;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesHistoryPageResponse;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesHistoryResponse;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesPageResponse;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesResponse;
+import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.CarLineAssembler;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.CarLineCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.CarLineUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.CarLineQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.CarLineHistoryDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.service.CarLineAppService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineHistoryPageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineHistoryResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLinePageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineResponse;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,12 +32,12 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/mpt/series/v1")
+@RequestMapping("/api/mpt/carLine/v1")
 @RequiredArgsConstructor
-public class MptSeriesController {
+public class MptCarLineController {
 
-    private final SeriesAppService seriesAppService;
-    private final SeriesAssembler seriesAssembler;
+    private final CarLineAppService carLineAppService;
+    private final CarLineAssembler carLineAssembler;
 
     /**
      * 创建车系
@@ -46,9 +46,9 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @PostMapping("/create")
-    public ApiResponse<SeriesResponse> create(@RequestBody SeriesCreateCmd cmd) {
-        SeriesDto series = seriesAppService.createSeries(cmd);
-        return ApiResponse.ok(seriesAssembler.toResponse(series));
+    public ApiResponse<CarLineResponse> create(@RequestBody CarLineCreateCmd cmd) {
+        CarLineDto carLine = carLineAppService.createCarLine(cmd);
+        return ApiResponse.ok(carLineAssembler.toResponse(carLine));
     }
 
     /**
@@ -59,10 +59,10 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @PutMapping("/{code}")
-    public ApiResponse<SeriesResponse> update(@PathVariable String code, @RequestBody SeriesUpdateCmd cmd) {
+    public ApiResponse<CarLineResponse> update(@PathVariable String code, @RequestBody CarLineUpdateCmd cmd) {
         cmd.setCode(code);
-        SeriesDto series = seriesAppService.updateSeries(cmd);
-        return ApiResponse.ok(seriesAssembler.toResponse(series));
+        CarLineDto carLine = carLineAppService.updateCarLine(cmd);
+        return ApiResponse.ok(carLineAssembler.toResponse(carLine));
     }
 
     /**
@@ -73,7 +73,7 @@ public class MptSeriesController {
      */
     @DeleteMapping("/{code}")
     public ApiResponse<Void> delete(@PathVariable String code, @RequestParam String modifyBy) {
-        seriesAppService.deleteSeries(code, modifyBy);
+        carLineAppService.deleteCarLine(code, modifyBy);
         return ApiResponse.ok();
     }
 
@@ -85,9 +85,9 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @PostMapping("/{code}/deactivate")
-    public ApiResponse<SeriesResponse> deactivate(@PathVariable String code, @RequestParam String modifyBy) {
-        SeriesDto series = seriesAppService.deactivateSeries(code, modifyBy);
-        return ApiResponse.ok(seriesAssembler.toResponse(series));
+    public ApiResponse<CarLineResponse> deactivate(@PathVariable String code, @RequestParam String modifyBy) {
+        CarLineDto carLine = carLineAppService.deactivateCarLine(code, modifyBy);
+        return ApiResponse.ok(carLineAssembler.toResponse(carLine));
     }
 
     /**
@@ -97,9 +97,9 @@ public class MptSeriesController {
      * @return 车系响应
      */
     @GetMapping("/{code}")
-    public ApiResponse<SeriesResponse> getByCode(@PathVariable String code) {
-        SeriesDto series = seriesAppService.getSeriesByCode(code);
-        return ApiResponse.ok(seriesAssembler.toResponse(series));
+    public ApiResponse<CarLineResponse> getByCode(@PathVariable String code) {
+        CarLineDto carLine = carLineAppService.getCarLineByCode(code);
+        return ApiResponse.ok(carLineAssembler.toResponse(carLine));
     }
 
     /**
@@ -112,14 +112,14 @@ public class MptSeriesController {
      * @return 车系分页响应
      */
     @GetMapping("/list")
-    public ApiResponse<SeriesPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
+    public ApiResponse<CarLinePageResponse> list(@RequestParam(defaultValue = "1") Integer page,
                                                 @RequestParam(defaultValue = "10") Integer size,
                                                 @RequestParam(required = false) String brandCode,
                                                 @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
-        List<SeriesDto> seriesList = seriesAppService.listSeries(
-                SeriesQuery.builder()
+        List<CarLineDto> carLineList = carLineAppService.listCarLine(
+                CarLineQuery.builder()
                         .page(page)
                         .size(size)
                         .brandCode(brandCode)
@@ -127,13 +127,13 @@ public class MptSeriesController {
                         .build()
         );
 
-        long total = seriesAppService.countSeries(brandCode, includeInactiveFlag);
+        long total = carLineAppService.countCarLine(brandCode, includeInactiveFlag);
 
-        List<SeriesResponse> rows = seriesList.stream()
-                .map(seriesAssembler::toResponse)
+        List<CarLineResponse> rows = carLineList.stream()
+                .map(carLineAssembler::toResponse)
                 .collect(Collectors.toList());
 
-        return ApiResponse.ok(SeriesPageResponse.builder()
+        return ApiResponse.ok(CarLinePageResponse.builder()
                 .total(total)
                 .rows(rows)
                 .build());
@@ -146,14 +146,14 @@ public class MptSeriesController {
      * @return 车系历史版本分页响应
      */
     @GetMapping("/{code}/history")
-    public ApiResponse<SeriesHistoryPageResponse> getHistory(@PathVariable String code) {
-        List<SeriesHistoryDto> historyList = seriesAppService.listSeriesHistory(code);
+    public ApiResponse<CarLineHistoryPageResponse> getHistory(@PathVariable String code) {
+        List<CarLineHistoryDto> historyList = carLineAppService.listCarLineHistory(code);
 
-        List<SeriesHistoryResponse> rows = historyList.stream()
-                .map(seriesAssembler::toHistoryResponse)
+        List<CarLineHistoryResponse> rows = historyList.stream()
+                .map(carLineAssembler::toHistoryResponse)
                 .collect(Collectors.toList());
 
-        return ApiResponse.ok(SeriesHistoryPageResponse.builder()
+        return ApiResponse.ok(CarLineHistoryPageResponse.builder()
                 .total((long) rows.size())
                 .rows(rows)
                 .build());

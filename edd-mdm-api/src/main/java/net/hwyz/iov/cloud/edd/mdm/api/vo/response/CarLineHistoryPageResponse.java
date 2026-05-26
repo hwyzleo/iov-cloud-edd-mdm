@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesHistoryPageResponse {
+public class CarLineHistoryPageResponse {
 
     /**
      * 总记录数
@@ -26,5 +26,5 @@ public class SeriesHistoryPageResponse {
     /**
      * 历史版本列表
      */
-    private List<SeriesHistoryResponse> rows;
+    private List<CarLineHistoryResponse> rows;
 }

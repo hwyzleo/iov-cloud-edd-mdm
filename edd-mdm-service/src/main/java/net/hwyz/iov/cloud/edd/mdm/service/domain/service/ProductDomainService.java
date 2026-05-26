@@ -4,13 +4,13 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.BrandNotFoundExceptio
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.BrandHistory;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.CarLineHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PlatformHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SeriesRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.CarLineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ import java.util.Optional;
 public class ProductDomainService {
 
     private final BrandRepository brandRepository;
-    private final SeriesRepository seriesRepository;
+    private final CarLineRepository carLineRepository;
     private final PlatformRepository platformRepository;
 
     /**
@@ -177,7 +177,7 @@ public class ProductDomainService {
      * @param name            官方名称
      * @param nameLocal       本地化名称
      * @param brandCode       品牌code
-     * @param seriesType      车系类型
+     * @param carLineType      车系类型
      * @param lifecycleStatus 生命周期状态
      * @param targetMarket    目标市场
      * @param effectiveFrom   生效开始时间
@@ -187,11 +187,11 @@ public class ProductDomainService {
      * @throws DuplicateCodeException      code已存在
      * @throws InvalidEffectiveDateException 生效期无效
      */
-    public Series createSeries(String code, String name, String nameLocal, String brandCode,
-                               String seriesType, String lifecycleStatus, String targetMarket,
+    public CarLine createCarLine(String code, String name, String nameLocal, String brandCode,
+                               String carLineType, String lifecycleStatus, String targetMarket,
                                Date effectiveFrom, Date effectiveTo, String createBy) {
         // 检查code唯一性
-        if (seriesRepository.existsByCode(code)) {
+        if (carLineRepository.existsByCode(code)) {
             throw new DuplicateCodeException("车系code已存在: " + code);
         }
 
@@ -203,14 +203,14 @@ public class ProductDomainService {
         }
 
         // 创建车系
-        Series series = Series.create(code, name, nameLocal, brandCode,
-                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SeriesType.valueOf(seriesType),
+        CarLine carLine = CarLine.create(code, name, nameLocal, brandCode,
+                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineType.valueOf(carLineType),
                 net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus.valueOf(lifecycleStatus),
                 net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket.valueOf(targetMarket),
                 effectiveFrom, effectiveTo, createBy);
 
         // 保存车系
-        return seriesRepository.save(series);
+        return carLineRepository.save(carLine);
     }
 
     /**
@@ -219,7 +219,7 @@ public class ProductDomainService {
      * @param code            业务主键
      * @param name            官方名称
      * @param nameLocal       本地化名称
-     * @param seriesType      车系类型
+     * @param carLineType      车系类型
      * @param lifecycleStatus 生命周期状态
      * @param targetMarket    目标市场
      * @param effectiveFrom   生效开始时间
@@ -229,22 +229,22 @@ public class ProductDomainService {
      * @throws BrandNotFoundException        车系不存在
      * @throws InvalidEffectiveDateException 生效期无效
      */
-    public Series updateSeries(String code, String name, String nameLocal,
-                               String seriesType, String lifecycleStatus, String targetMarket,
+    public CarLine updateCarLine(String code, String name, String nameLocal,
+                               String carLineType, String lifecycleStatus, String targetMarket,
                                Date effectiveFrom, Date effectiveTo, String modifyBy) {
         // 查找车系
-        Series series = seriesRepository.findByCode(code)
+        CarLine carLine = carLineRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车系不存在: " + code));
 
         // 更新车系
-        series.update(name, nameLocal,
-                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SeriesType.valueOf(seriesType),
+        carLine.update(name, nameLocal,
+                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineType.valueOf(carLineType),
                 net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus.valueOf(lifecycleStatus),
                 net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket.valueOf(targetMarket),
                 effectiveFrom, effectiveTo, modifyBy);
 
         // 保存车系
-        return seriesRepository.save(series);
+        return carLineRepository.save(carLine);
     }
 
     /**
@@ -255,16 +255,16 @@ public class ProductDomainService {
      * @return 车系聚合根
      * @throws BrandNotFoundException 车系不存在
      */
-    public Series deactivateSeries(String code, String modifyBy) {
+    public CarLine deactivateCarLine(String code, String modifyBy) {
         // 查找车系
-        Series series = seriesRepository.findByCode(code)
+        CarLine carLine = carLineRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车系不存在: " + code));
 
         // 失效车系
-        series.deactivate(modifyBy);
+        carLine.deactivate(modifyBy);
 
         // 保存车系
-        return seriesRepository.save(series);
+        return carLineRepository.save(carLine);
     }
 
     /**
@@ -274,16 +274,16 @@ public class ProductDomainService {
      * @param modifyBy 修改人
      * @throws BrandNotFoundException 车系不存在
      */
-    public void deleteSeries(String code, String modifyBy) {
+    public void deleteCarLine(String code, String modifyBy) {
         // 查找车系
-        Series series = seriesRepository.findByCode(code)
+        CarLine carLine = carLineRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车系不存在: " + code));
 
         // 删除车系
-        series.delete(modifyBy);
+        carLine.delete(modifyBy);
 
         // 保存车系
-        seriesRepository.save(series);
+        carLineRepository.save(carLine);
     }
 
     /**
@@ -293,8 +293,8 @@ public class ProductDomainService {
      * @return 车系聚合根
      * @throws BrandNotFoundException 车系不存在
      */
-    public Series getSeriesByCode(String code) {
-        return seriesRepository.findByCode(code)
+    public CarLine getCarLineByCode(String code) {
+        return carLineRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车系不存在: " + code));
     }
 
@@ -307,8 +307,8 @@ public class ProductDomainService {
      * @param includeInactive 是否包含失效记录
      * @return 车系列表
      */
-    public List<Series> listSeries(int page, int size, String brandCode, boolean includeInactive) {
-        return seriesRepository.findAll(page, size, brandCode, includeInactive);
+    public List<CarLine> listCarLine(int page, int size, String brandCode, boolean includeInactive) {
+        return carLineRepository.findAll(page, size, brandCode, includeInactive);
     }
 
     /**
@@ -318,8 +318,8 @@ public class ProductDomainService {
      * @param includeInactive 是否包含失效记录
      * @return 总数
      */
-    public long countSeries(String brandCode, boolean includeInactive) {
-        return seriesRepository.count(brandCode, includeInactive);
+    public long countCarLine(String brandCode, boolean includeInactive) {
+        return carLineRepository.count(brandCode, includeInactive);
     }
 
     /**
@@ -480,12 +480,12 @@ public class ProductDomainService {
      * @return 历史版本列表
      * @throws BrandNotFoundException 车系不存在
      */
-    public List<SeriesHistory> listSeriesHistory(String code) {
+    public List<CarLineHistory> listCarLineHistory(String code) {
         // 检查车系是否存在
-        if (!seriesRepository.existsByCode(code)) {
+        if (!carLineRepository.existsByCode(code)) {
             throw new BrandNotFoundException("车系不存在: " + code);
         }
-        return seriesRepository.findHistoryByCode(code);
+        return carLineRepository.findHistoryByCode(code);
     }
 
     /**

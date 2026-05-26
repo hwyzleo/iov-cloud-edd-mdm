@@ -4,14 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesCreatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesUpdatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
@@ -79,48 +79,48 @@ public class OutboxServiceImpl implements OutboxService {
     }
 
     @Override
-    public void publishSeriesCreatedEvent(Series series) {
-        SeriesCreatedEvent event = SeriesCreatedEvent.builder()
+    public void publishCarLineCreatedEvent(CarLine carLine) {
+        CarLineCreatedEvent event = CarLineCreatedEvent.builder()
                 .eventId(UUID.randomUUID().toString())
-                .eventType("mdm.product.series.created")
+                .eventType("mdm.product.carLine.created")
                 .occurredAt(new Date())
-                .entityId(series.getCode())
-                .version(series.getVersion())
-                .payload(series)
+                .entityId(carLine.getCode())
+                .version(carLine.getVersion())
+                .payload(carLine)
                 .build();
 
-        outboxRepository.saveSeriesCreatedEvent(event);
-        log.info("发布车系创建事件: {}", series.getCode());
+        outboxRepository.saveCarLineCreatedEvent(event);
+        log.info("发布车系创建事件: {}", carLine.getCode());
     }
 
     @Override
-    public void publishSeriesUpdatedEvent(Series series) {
-        SeriesUpdatedEvent event = SeriesUpdatedEvent.builder()
+    public void publishCarLineUpdatedEvent(CarLine carLine) {
+        CarLineUpdatedEvent event = CarLineUpdatedEvent.builder()
                 .eventId(UUID.randomUUID().toString())
-                .eventType("mdm.product.series.updated")
+                .eventType("mdm.product.carLine.updated")
                 .occurredAt(new Date())
-                .entityId(series.getCode())
-                .version(series.getVersion())
-                .payload(series)
+                .entityId(carLine.getCode())
+                .version(carLine.getVersion())
+                .payload(carLine)
                 .build();
 
-        outboxRepository.saveSeriesUpdatedEvent(event);
-        log.info("发布车系更新事件: {}", series.getCode());
+        outboxRepository.saveCarLineUpdatedEvent(event);
+        log.info("发布车系更新事件: {}", carLine.getCode());
     }
 
     @Override
-    public void publishSeriesDeactivatedEvent(Series series) {
-        SeriesDeactivatedEvent event = SeriesDeactivatedEvent.builder()
+    public void publishCarLineDeactivatedEvent(CarLine carLine) {
+        CarLineDeactivatedEvent event = CarLineDeactivatedEvent.builder()
                 .eventId(UUID.randomUUID().toString())
-                .eventType("mdm.product.series.deactivated")
+                .eventType("mdm.product.carLine.deactivated")
                 .occurredAt(new Date())
-                .entityId(series.getCode())
-                .version(series.getVersion())
-                .payload(series)
+                .entityId(carLine.getCode())
+                .version(carLine.getVersion())
+                .payload(carLine)
                 .build();
 
-        outboxRepository.saveSeriesDeactivatedEvent(event);
-        log.info("发布车系失效事件: {}", series.getCode());
+        outboxRepository.saveCarLineDeactivatedEvent(event);
+        log.info("发布车系失效事件: {}", carLine.getCode());
     }
 
     @Override

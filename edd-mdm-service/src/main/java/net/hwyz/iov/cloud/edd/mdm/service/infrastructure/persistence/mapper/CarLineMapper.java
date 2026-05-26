@@ -1,14 +1,14 @@
 package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.SeriesHistoryPo;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.CarLinePo;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 车系历史快照Mapper接口
+ * 车系Mapper接口
  *
  * @author hwyz_leo
  */
 @Mapper
-public interface SeriesHistoryMapper extends BaseMapper<SeriesHistoryPo> {
+public interface CarLineMapper extends BaseMapper<CarLinePo> {
 }

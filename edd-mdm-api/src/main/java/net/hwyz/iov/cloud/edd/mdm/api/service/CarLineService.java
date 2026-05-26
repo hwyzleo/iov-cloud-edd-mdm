@@ -1,8 +1,8 @@
 package net.hwyz.iov.cloud.edd.mdm.api.service;
 
-import net.hwyz.iov.cloud.edd.mdm.api.fallback.SeriesServiceFallbackFactory;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesPageResponse;
-import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SeriesResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.fallback.CarLineServiceFallbackFactory;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLinePageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.CarLineResponse;
 import net.hwyz.iov.cloud.framework.common.constant.ServiceNameConstants;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "seriesService", value = ServiceNameConstants.EDD_MDM, path = "/service/series/v1", fallbackFactory = SeriesServiceFallbackFactory.class)
-public interface SeriesService {
+@FeignClient(contextId = "carLineService", value = ServiceNameConstants.EDD_MDM, path = "/service/carLine/v1", fallbackFactory = CarLineServiceFallbackFactory.class)
+public interface CarLineService {
 
     /**
      * 获取车系全量快照
@@ -27,7 +27,7 @@ public interface SeriesService {
      * @return 车系分页响应
      */
     @GetMapping("/listAll")
-    SeriesPageResponse listAll(@RequestParam(defaultValue = "1") Integer page,
+    CarLinePageResponse listAll(@RequestParam(defaultValue = "1") Integer page,
                                @RequestParam(defaultValue = "100") Integer size,
                                @RequestParam(required = false) String brandCode,
                                @RequestParam(required = false) Boolean includeInactive);
@@ -39,5 +39,5 @@ public interface SeriesService {
      * @return 车系响应
      */
     @GetMapping("/{code}")
-    SeriesResponse getByCode(@PathVariable String code);
+    CarLineResponse getByCode(@PathVariable String code);
 }

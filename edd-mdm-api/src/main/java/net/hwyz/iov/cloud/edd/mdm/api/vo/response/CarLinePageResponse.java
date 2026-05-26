@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesPageResponse {
+public class CarLinePageResponse {
 
     /**
      * 总记录数
@@ -27,15 +27,15 @@ public class SeriesPageResponse {
     /**
      * 当前页数据
      */
-    private List<SeriesResponse> rows;
+    private List<CarLineResponse> rows;
 
     /**
      * 创建空的分页响应
      *
      * @return 空分页响应
      */
-    public static SeriesPageResponse empty() {
-        return SeriesPageResponse.builder()
+    public static CarLinePageResponse empty() {
+        return CarLinePageResponse.builder()
                 .total(0L)
                 .rows(Collections.emptyList())
                 .build();

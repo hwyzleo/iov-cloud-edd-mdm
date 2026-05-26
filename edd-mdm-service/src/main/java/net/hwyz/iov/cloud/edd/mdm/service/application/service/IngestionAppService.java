@@ -13,13 +13,13 @@ import net.hwyz.iov.cloud.edd.mdm.service.common.enums.IngestionStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.IngestionSchemaException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Series;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.IngestionLog;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.EntityType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.IngestionLogRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SeriesRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.CarLineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.AuthoritativeSourceService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.IngestionDomainService;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class IngestionAppService {
     private final AuthoritativeSourceService authoritativeSourceService;
     private final IngestionDomainService ingestionDomainService;
     private final BrandRepository brandRepository;
-    private final SeriesRepository seriesRepository;
+    private final CarLineRepository carLineRepository;
     private final PlatformRepository platformRepository;
     private final OutboxService outboxService;
     private final IngestionLogRepository ingestionLogRepository;
@@ -71,7 +71,7 @@ public class IngestionAppService {
         // 5. 根据实体类型处理
         return switch (et) {
             case BRAND -> processBrand(cmd, code, payloadHash);
-            case SERIES -> processSeries(cmd, code, payloadHash);
+            case SERIES -> processCarLine(cmd, code, payloadHash);
             case PLATFORM -> processPlatform(cmd, code, payloadHash);
         };
     }
@@ -135,7 +135,7 @@ public class IngestionAppService {
         return IngestionResult.builder().entityId(brand.getId()).version(brand.getVersion()).operationType(operationType).build();
     }
 
-    private IngestionResult processSeries(IngestCmd cmd, String code, String payloadHash) {
+    private IngestionResult processCarLine(IngestCmd cmd, String code, String payloadHash) {
         String sourceSystem = cmd.getSourceSystem();
         String sourceId = cmd.getSourceId();
         String sourceVersion = cmd.getSourceVersion();
@@ -143,7 +143,7 @@ public class IngestionAppService {
         String messageId = cmd.getMessageId();
         Map<String, Object> payload = cmd.getPayload();
 
-        Series existing = seriesRepository.findByCode(code).orElse(null);
+        CarLine existing = carLineRepository.findByCode(code).orElse(null);
         String localVersion = existing != null ? existing.getSourceVersion() : null;
         String localHash = existing != null ? existing.getSourcePayloadHash() : null;
 
@@ -167,28 +167,28 @@ public class IngestionAppService {
         String nameLocal = (String) payload.get("nameLocal");
         String brandCode = (String) payload.get("brandCode");
 
-        Series series;
+        CarLine carLine;
         String operationType;
         if (existing == null) {
-            series = Series.createFromUpstream(code, name, nameLocal, brandCode,
+            carLine = CarLine.createFromUpstream(code, name, nameLocal, brandCode,
                     null, null, null, cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            series = seriesRepository.save(series);
-            outboxService.publishSeriesCreatedEvent(series);
+            carLine = carLineRepository.save(carLine);
+            outboxService.publishCarLineCreatedEvent(carLine);
             operationType = "CREATED";
         } else {
             existing.updateFromUpstream(name, nameLocal, null, null, null,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            series = seriesRepository.save(existing);
-            outboxService.publishSeriesUpdatedEvent(series);
+            carLine = carLineRepository.save(existing);
+            outboxService.publishCarLineUpdatedEvent(carLine);
             operationType = "UPDATED";
         }
 
         ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
                 EntityType.SERIES, code, ingestionChannel, IngestionStatus.SUCCESS, null, null, payloadHash);
 
-        return IngestionResult.builder().entityId(series.getId()).version(series.getVersion()).operationType(operationType).build();
+        return IngestionResult.builder().entityId(carLine.getId()).version(carLine.getVersion()).operationType(operationType).build();
     }
 
     private IngestionResult processPlatform(IngestCmd cmd, String code, String payloadHash) {

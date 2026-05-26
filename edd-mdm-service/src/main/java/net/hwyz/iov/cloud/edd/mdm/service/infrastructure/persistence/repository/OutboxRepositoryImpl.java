@@ -8,9 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesCreatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesUpdatedEvent;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SeriesDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
@@ -112,7 +112,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
     }
 
     @Override
-    public void saveSeriesCreatedEvent(SeriesCreatedEvent event) {
+    public void saveCarLineCreatedEvent(CarLineCreatedEvent event) {
         try {
             OutboxPo po = OutboxPo.builder()
                     .aggregateType("SERIES")
@@ -137,7 +137,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
     }
 
     @Override
-    public void saveSeriesUpdatedEvent(SeriesUpdatedEvent event) {
+    public void saveCarLineUpdatedEvent(CarLineUpdatedEvent event) {
         try {
             OutboxPo po = OutboxPo.builder()
                     .aggregateType("SERIES")
@@ -162,7 +162,7 @@ public class OutboxRepositoryImpl implements OutboxRepository {
     }
 
     @Override
-    public void saveSeriesDeactivatedEvent(SeriesDeactivatedEvent event) {
+    public void saveCarLineDeactivatedEvent(CarLineDeactivatedEvent event) {
         try {
             OutboxPo po = OutboxPo.builder()
                     .aggregateType("SERIES")

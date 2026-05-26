@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter;
 
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SeriesHistory;
-import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.SeriesHistoryPo;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.CarLineHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.CarLineHistoryPo;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * @author hwyz_leo
  */
 @Component
-public class SeriesHistoryConverter {
+public class CarLineHistoryConverter {
 
     /**
      * 持久化对象转换为领域实体
@@ -18,18 +18,18 @@ public class SeriesHistoryConverter {
      * @param po 持久化对象
      * @return 领域实体
      */
-    public SeriesHistory toDomain(SeriesHistoryPo po) {
+    public CarLineHistory toDomain(CarLineHistoryPo po) {
         if (po == null) {
             return null;
         }
-        return SeriesHistory.builder()
+        return CarLineHistory.builder()
                 .snapshotId(po.getSnapshotId())
                 .entityId(po.getEntityId())
                 .code(po.getCode())
                 .name(po.getName())
                 .nameLocal(po.getNameLocal())
                 .brandCode(po.getBrandCode())
-                .seriesType(po.getSeriesType())
+                .carLineType(po.getCarLineType())
                 .lifecycleStatus(po.getLifecycleStatus())
                 .targetMarket(po.getTargetMarket())
                 .sourceSystem(po.getSourceSystem())

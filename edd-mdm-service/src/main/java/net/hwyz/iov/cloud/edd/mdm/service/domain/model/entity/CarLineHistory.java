@@ -1,4 +1,4 @@
-package net.hwyz.iov.cloud.edd.mdm.api.vo.response;
+package net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 车系响应
+ * 车系历史版本实体
  *
  * @author hwyz_leo
  */
@@ -16,12 +16,17 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SeriesResponse {
+public class CarLineHistory {
 
     /**
-     * 主键ID
+     * 快照ID
      */
-    private Long id;
+    private Long snapshotId;
+
+    /**
+     * 关联主表id
+     */
+    private Long entityId;
 
     /**
      * 业务主键（code）
@@ -46,7 +51,7 @@ public class SeriesResponse {
     /**
      * 车系类型
      */
-    private String seriesType;
+    private String carLineType;
 
     /**
      * 生命周期状态
@@ -64,7 +69,7 @@ public class SeriesResponse {
     private String sourceSystem;
 
     /**
-     * 来源系统ID
+     * 来源ID
      */
     private String sourceId;
 
@@ -107,6 +112,21 @@ public class SeriesResponse {
      * 状态
      */
     private String status;
+
+    /**
+     * 操作类型
+     */
+    private String operationType;
+
+    /**
+     * 快照时间
+     */
+    private Date snapshotTime;
+
+    /**
+     * 操作人
+     */
+    private String operator;
 
     /**
      * 创建人
