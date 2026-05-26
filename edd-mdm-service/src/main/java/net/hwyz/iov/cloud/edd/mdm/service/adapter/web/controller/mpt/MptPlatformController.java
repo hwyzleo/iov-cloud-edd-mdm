@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/mpt/mdm/platform/v1")
+@RequestMapping("/api/mpt/platform/v1")
 @RequiredArgsConstructor
 public class MptPlatformController {
 

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/mpt/mdm/brand/v1")
+@RequestMapping("/api/mpt/brand/v1")
 @RequiredArgsConstructor
 public class MptBrandController {
 

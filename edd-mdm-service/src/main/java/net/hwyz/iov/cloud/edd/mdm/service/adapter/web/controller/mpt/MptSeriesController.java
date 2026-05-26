@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/mpt/mdm/series/v1")
+@RequestMapping("/api/mpt/series/v1")
 @RequiredArgsConstructor
 public class MptSeriesController {
 
