@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主数据（Brand / Series / Platform）的 Golden Record。本 feature 建立 Product MDM 子域，承接原 VMD 项目侧的品牌 / 车系 / 平台主数据 SSOT 上移至 edd-mdm，实现主数据统一治理与分发能力。
+edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主数据（Brand / CarLine / Platform）的 Golden Record。本 feature 建立 Product MDM 子域，承接原 VMD 项目侧的品牌 / 车系 / 平台主数据 SSOT 上移至 edd-mdm，实现主数据统一治理与分发能力。
 
 主数据的来源分为两类：(1) **本地维护**：由 MDM-User 通过后台直接 CRUD 录入；(2) **上游系统接入**：由具备业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台）通过 Kafka 消息或 Feign / HTTP 接口推送至 edd-mdm，由 edd-mdm 统一治理、版本化并对外分发。本 feature 同时支持上述两类来源，并在主数据上记录来源系统、来源 ID、来源版本、接收通道与接收时间等信息以支持幂等校验、冲突裁决与全链路审计。
 
@@ -18,13 +18,13 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 ### 目标
 
-- **G1**：建立 edd-mdm 作为 Brand / Series / Platform 三类主数据的 SSOT（Single Source of Truth）
+- **G1**：建立 edd-mdm 作为 Brand / CarLine / Platform 三类主数据的 SSOT（Single Source of Truth）
 - **G2**：提供统一的主数据 CRUD 维护能力，支持 MDM-User 后台管理
 - **G3**：实现版本控制与生效期管理，支持历史追溯与审计
 - **G4**：通过事务性发件箱（Outbox Pattern）实现可靠的事件分发，支持下游订阅同步
 - **G5**：提供 Feign 全量快照接口，支持下游 Bootstrap 与对账
 - **G6**：遵循 DDD 设计原则，保持与 VMD 项目架构风格一致
-- **G7**：支持上游系统通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / Series / Platform 主数据至 edd-mdm，并在主数据与对外事件 payload 中记录来源系统、来源 ID、来源版本、接收通道、接收时间等字段，支持审计与下游识别
+- **G7**：支持上游系统通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / CarLine / Platform 主数据至 edd-mdm，并在主数据与对外事件 payload 中记录来源系统、来源 ID、来源版本、接收通道、接收时间等字段，支持审计与下游识别
 - **G8**：对上游推送的数据实施 schema 校验、来源鉴权、权威源校验、幂等校验与冲突裁决，保证 Golden Record 的一致性、可追溯性与可监控性
 
 ### 非目标（明确不做）
@@ -57,20 +57,20 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN MDM-User 删除 Brand 且 status≠DRAFT THEN THE SYSTEM SHALL 返回错误码 807003 并拒绝删除
 - IF Brand 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
 
-#### US-002: CRUD Series
+#### US-002: CRUD CarLine
 
-**As a** MDM-User, **I want** CRUD Series（含按 brandCode 过滤、按 status 过滤），**so that** 管理车系 Golden Record。
+**As a** MDM-User, **I want** CRUD CarLine（含按 brandCode 过滤、按 status 过滤），**so that** 管理车系 Golden Record。
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN MDM-User 创建 Series 且 code 唯一且 brandCode 指向已存在且 status=ACTIVE 的 Brand THEN THE SYSTEM SHALL 持久化 Series 记录并设置 version=1，并自动填充 create_by（当前认证用户）、create_time（当前时间）、modify_by、modify_time
-- WHEN MDM-User 创建 Series 且 code 已存在 THEN THE SYSTEM SHALL 返回错误码 807001 并拒绝创建
-- WHEN MDM-User 创建 Series 且 brandCode 指向不存在或 status≠ACTIVE 的 Brand THEN THE SYSTEM SHALL 返回错误码 807005 并拒绝创建
-- WHEN MDM-User 更新 Series 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by（当前认证用户）、modify_time（当前时间）
-- WHEN MDM-User 失效 Series 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
-- WHEN MDM-User 删除 Series 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
-- WHEN MDM-User 查询 Series 列表 THEN THE SYSTEM SHALL 支持按 brandCode 和 status 过滤
-- IF Series 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
+- WHEN MDM-User 创建 CarLine 且 code 唯一且 brandCode 指向已存在且 status=ACTIVE 的 Brand THEN THE SYSTEM SHALL 持久化 CarLine 记录并设置 version=1，并自动填充 create_by（当前认证用户）、create_time（当前时间）、modify_by、modify_time
+- WHEN MDM-User 创建 CarLine 且 code 已存在 THEN THE SYSTEM SHALL 返回错误码 807001 并拒绝创建
+- WHEN MDM-User 创建 CarLine 且 brandCode 指向不存在或 status≠ACTIVE 的 Brand THEN THE SYSTEM SHALL 返回错误码 807005 并拒绝创建
+- WHEN MDM-User 更新 CarLine 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by（当前认证用户）、modify_time（当前时间）
+- WHEN MDM-User 失效 CarLine 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
+- WHEN MDM-User 删除 CarLine 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 查询 CarLine 列表 THEN THE SYSTEM SHALL 支持按 brandCode 和 status 过滤
+- IF CarLine 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
 
 #### US-003: CRUD Platform
 
@@ -93,7 +93,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN Brand / Series / Platform 发生创建、更新、失效操作 THEN THE SYSTEM SHALL 在 history 表插入一条完整快照记录
+- WHEN Brand / CarLine / Platform 发生创建、更新、失效操作 THEN THE SYSTEM SHALL 在 history 表插入一条完整快照记录
 - WHEN history 表插入快照 THEN THE SYSTEM SHALL 记录变更时间、操作人、变更前后的 version
 - WHEN 查询历史版本 THEN THE SYSTEM SHALL 按 entityId 和 version 降序返回快照列表
 - WHEN MDM-User 通过后台查询品牌历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/brand/v1/{code}/history 接口，按 version 降序返回快照列表，响应包含来源字段（sourceSystem / sourceId / sourceVersion / ingestionChannel / ingestionTime）
@@ -107,8 +107,8 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN 保存 Brand / Series / Platform 且 effectiveFrom 不为空且 effectiveTo 不为空 IF effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
-- WHEN 保存 Brand / Series / Platform 且 effectiveFrom 为空或 effectiveTo 为空 THEN THE SYSTEM SHALL 允许保存（单边或无限制）
+- WHEN 保存 Brand / CarLine / Platform 且 effectiveFrom 不为空且 effectiveTo 不为空 IF effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
+- WHEN 保存 Brand / CarLine / Platform 且 effectiveFrom 为空或 effectiveTo 为空 THEN THE SYSTEM SHALL 允许保存（单边或无限制）
 
 ### 域 3: 对外分发 - Kafka 事件（基于 Outbox Pattern）
 
@@ -126,14 +126,14 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN Kafka 投递失败 IF 超出重试次数（默认 3 次）THEN THE SYSTEM SHALL 投递死信队列并告警
 - WHEN 事件 payload 构建 THEN THE SYSTEM SHALL 包含 eventId / eventType / occurredAt / entityId / version / payload 主体字段
 
-#### US-007: Series 事件发布
+#### US-007: CarLine 事件发布
 
-**As a** System, **I want** 同上规则发布 Series 事件（`mdm.product.series.*`），**so that** 下游同步车系数据。
+**As a** System, **I want** 同上规则发布 CarLine 事件（`mdm.product.series.*`），**so that** 下游同步车系数据。
 
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN Series 被创建且 status=ACTIVE THEN THE SYSTEM SHALL 写入 Outbox 事件（eventType=mdm.product.series.created）
-- WHEN Series 事件 payload 构建 THEN THE SYSTEM SHALL 包含 brandCode 字段（避免下游跨表 join）
+- WHEN CarLine 被创建且 status=ACTIVE THEN THE SYSTEM SHALL 写入 Outbox 事件（eventType=mdm.product.series.created）
+- WHEN CarLine 事件 payload 构建 THEN THE SYSTEM SHALL 包含 brandCode 字段（避免下游跨表 join）
 - 其他 AC 与 US-006 共通
 
 #### US-008: Platform 事件发布
@@ -158,9 +158,9 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN 返回结果 THEN THE SYSTEM SHALL 支持分页（page / size 参数）
 - WHEN Feign 调用失败 THEN THE SYSTEM SHALL 通过 FallbackFactory 返回空列表并记录日志
 
-#### US-010: Series 全量快照
+#### US-010: CarLine 全量快照
 
-**As a** Service-Caller, **I want** 通过 Feign 拉取 Series 全量快照（GET /api/service/series/v1/listAll，支持 brandCode 过滤），**so that** 下游可执行 Bootstrap 与对账。
+**As a** Service-Caller, **I want** 通过 Feign 拉取 CarLine 全量快照（GET /api/service/series/v1/listAll，支持 brandCode 过滤），**so that** 下游可执行 Bootstrap 与对账。
 
 **Acceptance Criteria** (EARS 语法):
 
@@ -189,7 +189,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 #### US-013: 接收上游系统推送的主数据（Kafka 通道）
 
-**As an** Upstream-System, **I want** 通过 Kafka 向 edd-mdm 推送 Brand / Series / Platform 主数据，**so that** 由 edd-mdm 作为 Golden Record 统一治理与分发。
+**As an** Upstream-System, **I want** 通过 Kafka 向 edd-mdm 推送 Brand / CarLine / Platform 主数据，**so that** 由 edd-mdm 作为 Golden Record 统一治理与分发。
 
 **Acceptance Criteria** (EARS 语法):
 
@@ -204,7 +204,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 #### US-014: 接收上游系统推送的主数据（Feign / HTTP 通道）
 
-**As an** Upstream-System, **I want** 通过 Feign / HTTP 接口向 edd-mdm 同步推送 Brand / Series / Platform 主数据，**so that** 在不具备 Kafka 通道的场景下完成主数据接入。
+**As an** Upstream-System, **I want** 通过 Feign / HTTP 接口向 edd-mdm 同步推送 Brand / CarLine / Platform 主数据，**so that** 在不具备 Kafka 通道的场景下完成主数据接入。
 
 **Acceptance Criteria** (EARS 语法):
 
@@ -224,7 +224,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **Acceptance Criteria** (EARS 语法):
 
-- THE SYSTEM SHALL 在 Brand / Series / Platform 主表及对应 history 表上扩展以下字段：
+- THE SYSTEM SHALL 在 Brand / CarLine / Platform 主表及对应 history 表上扩展以下字段：
     - source_system：来源系统编码（LOCAL / PLM / DMS / GROUP_MDM 等），不可为空
     - source_id：上游系统中的业务主键（本地维护时与本地 code 相同或为空，由 LOCAL 适配器写入）
     - source_version：上游系统中的版本号（本地维护时可为空）
@@ -251,7 +251,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 #### US-017: 权威源配置与冲突裁决
 
-**As a** MDM-Admin, **I want** 为每个实体（Brand / Series / Platform）配置权威源, **so that** 同一实体仅由唯一权威源写入，避免多源覆盖。
+**As a** MDM-Admin, **I want** 为每个实体（Brand / CarLine / Platform）配置权威源, **so that** 同一实体仅由唯一权威源写入，避免多源覆盖。
 
 **Acceptance Criteria** (EARS 语法):
 
@@ -294,7 +294,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **MDM-User**：MDM 后台运营 / 工程师，持有 `mdm:product:*` 权限点
 - **Service-Caller**：内部微服务（VMD / 订单 / 销售配置器等）通过 Feign 或 Kafka 订阅消费 MDM 数据
 - **System**：edd-mdm 自身后台异步流程（事件发布、Outbox Relay、上游消息消费等）
-- **Upstream-System**：业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台），通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / Series / Platform 主数据至 edd-mdm；每个上游系统对应唯一的 sourceSystem 编码
+- **Upstream-System**：业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台），通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / CarLine / Platform 主数据至 edd-mdm；每个上游系统对应唯一的 sourceSystem 编码
 - **MDM-Admin**：MDM 管理员，持有 `mdm:admin:*` 权限点，负责权威源配置、上游来源注册、接入审计与监控查询等运维操作
 
 ## 5. Out of Scope
@@ -314,6 +314,6 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 | Date | Change ID | Type | Description |
 |------|-----------|------|-------------|
-| 2026-05-26 | CR-001 | Added | 首版产出：建立 Product MDM 子域（Brand / Series / Platform）需求文档 |
+| 2026-05-26 | CR-001 | Added | 首版产出：建立 Product MDM 子域（Brand / CarLine / Platform）需求文档 |
 | 2026-05-26 | CR-002 | Added | 新增"域 5: 上游系统数据接入"（US-013 ~ US-018）：支持通过 Kafka / Feign 接收上游推送，新增数据来源字段（source_system / source_id / source_version / ingestion_channel / ingestion_time / source_payload_hash），新增幂等处理、权威源配置与冲突裁决（REJECT / AUDIT_ONLY）、接入审计表 mdm_ingestion_log 与监控指标；新增错误码 807010（消息 schema 非法）/ 807011（来源鉴权失败）/ 807012（同版本冲突）/ 807013（非权威源写入被拒绝）；新增角色 Upstream-System、MDM-Admin |
-| 2026-05-26 | CR-003 | Modified | 补充 US-004 历史版本快照需求：新增 MPT 后台查询接口定义（GET /api/mpt/mdm/{entity}/v1/{code}/history），支持 Brand / Series / Platform 历史版本按 version 降序查询，响应包含来源字段 |
+| 2026-05-26 | CR-003 | Modified | 补充 US-004 历史版本快照需求：新增 MPT 后台查询接口定义（GET /api/mpt/mdm/{entity}/v1/{code}/history），支持 Brand / CarLine / Platform 历史版本按 version 降序查询，响应包含来源字段 |
