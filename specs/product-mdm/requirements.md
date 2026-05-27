@@ -1,14 +1,29 @@
-# Product MDM 子域 - Requirements
+# MDM 平台 - Requirements
 
 ## 1. Overview
 
-edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主数据的 Golden Record。本 feature 建立 Product MDM 子域，承接原 VMD 项目侧的产品树主数据 SSOT 上移至 edd-mdm，实现主数据统一治理与分发能力。
+edd-mdm 是企业数字底座领域的横向微服务，定位为**多子域主数据管理（MDM）平台**，按业务域划分子域，逐步纳入企业核心主数据的 Golden Record 治理。当前已纳入治理的子域：
 
-产品树主数据覆盖以下 8 类实体：
+| 子域 | 管理范畴 | 落地状态 |
+|------|----------|----------|
+| **Product MDM** | 管"卖什么/造什么"——品牌、车系、平台、车型、配置、选项等产品树主数据 | CR-001 ~ CR-005 已落地 |
+| **Party MDM** | 管"跟谁交易"——供应商、经销商、客户、合作方等外部业务伙伴主数据 | CR-006 本期纳入 |
+
+> 后续规划子域：Org MDM（组织架构）、Location MDM（地理位置）等，留待后续 CR。
+
+### Product MDM 子域
+
+承接原 VMD 项目侧的产品树主数据 SSOT 上移至 edd-mdm，覆盖以下 8 类实体：
 - **已落地**（CR-001 / CR-002 / CR-003）：Brand（品牌）、CarLine（车系）、Platform（平台）
-- **本期纳入**（CR-004）：Model（车型）、Variant（版本）、Configuration（配置）、Option Family（选项族）、Option Code（选项码）
+- **已纳入**（CR-004）：Model（车型）、Variant（版本）、Configuration（配置）、Option Family（选项族）、Option Code（选项码）
 
-主数据的来源分为两类：(1) **本地维护**：由 MDM-User 通过后台直接 CRUD 录入；(2) **上游系统接入**：由具备业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台 / CPQ）通过 Kafka 消息或 Feign / HTTP 接口推送至 edd-mdm，由 edd-mdm 统一治理、版本化并对外分发。本 feature 同时支持上述两类来源，并在主数据上记录来源系统、来源 ID、来源版本、接收通道与接收时间等信息以支持幂等校验、冲突裁决与全链路审计。
+### Party MDM 子域
+
+建立业务伙伴主数据的统一治理能力。首期范围 = **Supplier（供应商）**，后续扩展 Dealer（经销商）、Customer（客户）等实体（见 OS-13）。
+
+---
+
+主数据的来源分为两类：(1) **本地维护**：由 MDM-User 通过后台直接 CRUD 录入；(2) **上游系统接入**：由具备业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台 / CPQ / ERP / SRM）通过 Kafka 消息或 Feign / HTTP 接口推送至 edd-mdm，由 edd-mdm 统一治理、版本化并对外分发。所有子域共享同一套接入/分发/审计/版本化基础设施，并在主数据上记录来源系统、来源 ID、来源版本、接收通道与接收时间等信息以支持幂等校验、冲突裁决与全链路审计。
 
 **业务属性**：横向  
 **领域**：企业数字底座  
@@ -32,19 +47,23 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **G8**：对上游推送的数据实施 schema 校验、来源鉴权、权威源校验、幂等校验与冲突裁决，保证 Golden Record 的一致性、可追溯性与可监控性
 - **G9**：将产品树底层 5 类主数据（Model / Variant / Configuration / Option Family / Option Code）纳入 edd-mdm 统一治理，建立完整的产品树 SSOT，消除上下游对产品树底层数据的冗余维护
 - **G10**：提供按选项码组合反查配置的能力，支撑订单 / 销售域的核心高频业务场景
+- **G11**：建立 Party MDM 子域，以 Supplier（供应商）作为首个实体落地，形成 Supplier 的 SSOT（Single Source of Truth）
+- **G12**：Party MDM 复用 Product MDM 已建立的接入/分发/审计/版本化基础设施（Outbox Pattern、Ingestion Log、权威源配置、幂等校验等），不做重复造轮子
 
 ### 非目标（明确不做）
 
-- **NG1**：不接管 VMD 的车辆实例（VIN）/ 零部件 / 生命周期 / 制造厂商（Manufacturer）/ 供应商（Supplier）等领域
+- **NG1**：不接管 VMD 的车辆实例（VIN）/ 零部件 / 生命周期 / 制造厂商（Manufacturer）等领域
 - **NG2**：不接管 Customer / Material / Employee / Location 等其他 MDM 子域
 - **NG3**：不实施跨系统主数据的字段级合并裁决（multi-source field-level merge）。首期采用 **单一权威源（Single Authoritative Source）** 策略：每条主数据在任一时刻仅由配置中指定的一个权威源（LOCAL 或某个上游系统）负责写入；非权威源的推送将被拒绝或仅记录审计日志，不更新主表
 - **NG4**：不实施数据质量打分引擎
 - **NG5**：不实施跨系统 ID 映射表
 - **NG6**：不实施审批工作流（首期 CRUD 即发布）
-- **NG7**：不实施 Manufacturer / Supplier（留待后续 CR）
+- **NG7**：不实施 Manufacturer（留待后续 CR）
 - **NG8**：不实施对账机制（留待后续 CR）
 
 ## 3. Glossary（术语表）
+
+### Product MDM 术语
 
 | 英文 | 中文 | 行业对齐说明 |
 |------|------|-------------|
@@ -58,6 +77,13 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | Option Code | 选项码 | CR-004 纳入。等价于 SAP Characteristic Value、GM RPO Code、VW PR-Nummer |
 
 > **语义说明**："选项族 / 选项码"在 MDM 体系内承载**两种语义**：既可代表"版本/配置的标配识别特征"，也可代表"客户选装项"。MDM 不区分这两种语义，由消费方根据上下文使用。
+
+### Party MDM 术语
+
+| 英文 | 中文 | 行业对齐说明 |
+|------|------|-------------|
+| Party | 业务伙伴 | 泛指与企业发生业务往来的外部组织或个人。Party MDM 管"跟谁交易"（供应商、经销商、客户、合作方等） |
+| Supplier | 供应商 | CR-006 纳入。指向企业提供物料、零部件、服务或物流等资源的外部组织。等价于 SAP Vendor / Supplier、Oracle Supplier |
 
 ## 4. User Stories
 
@@ -484,6 +510,136 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - WHEN 上游推送的 Configuration code 长度超过 64 字符 THEN THE SYSTEM SHALL 视同上游未携带 code，由系统按 US-022 规则生成本地 code，并在 mdm_ingestion_log 中记录告警
 - WHEN 上游推送 Model / Variant / Option Family / Option Code 主数据（非 Configuration）THEN THE SYSTEM SHALL 沿用 US-013 / US-014 既有 code 处理策略，不应用本条 Configuration 专属规则
 
+### 域 11: Party MDM - 供应商管理
+
+#### US-031: CRUD Supplier
+
+**As a** MDM-User, **I want** CRUD Supplier, **so that** 管理供应商 Golden Record。
+
+> **Supplier 字段定义**：
+> - ✅ code: VARCHAR(64)，业务主键，全局唯一
+> - ✅ name: VARCHAR(128)，供应商正式名称
+> - ⭕ name_local: VARCHAR(128)，本地化名称
+> - ⭕ short_name: VARCHAR(64)，简称/品牌名
+> - ⭕ supplier_type: VARCHAR(32)，业务分类（MATERIAL / COMPONENT / SERVICE / LOGISTICS / OTHER）
+> - ⭕ country: VARCHAR(64)，所在国家/地区
+> - ⭕ business_license_no: VARCHAR(64)，统一社会信用代码/工商注册号
+> - ⭕ tax_id: VARCHAR(64)，税号
+> - ⭕ registered_address: VARCHAR(256)，注册地址
+> - ⭕ contact_name: VARCHAR(64)，联系人姓名
+> - ⭕ contact_phone: VARCHAR(32)，联系人电话
+> - ⭕ contact_email: VARCHAR(128)，联系人邮箱
+> - ⭕ bank_name: VARCHAR(128)，开户银行
+> - ⭕ bank_account: VARCHAR(64)，银行账号
+> - ⭕ cooperation_start_date: DATE，合作开始日期
+> - ⭕ description: VARCHAR(512)，描述
+> - 通用治理字段（与 Product MDM 各表完全对齐）：source_system / source_id / source_version / ingestion_channel / ingestion_time / source_payload_hash / version / effective_from / effective_to / status / create_by / create_time / modify_by / modify_time / row_version / row_valid
+>
+> ✅ = 必填，⭕ = 可选
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 创建 Supplier 且 code 唯一 THEN THE SYSTEM SHALL 持久化 Supplier 记录并设置 version=1，并自动填充 create_by（当前认证用户）、create_time（当前时间）、modify_by、modify_time
+- WHEN MDM-User 创建 Supplier 且 code 已存在 THEN THE SYSTEM SHALL 返回错误码 807020 并拒绝创建
+- WHEN MDM-User 创建 Supplier 且 name 为空 THEN THE SYSTEM SHALL 返回参数校验错误并拒绝创建
+- WHEN MDM-User 更新 Supplier 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by（当前认证用户）、modify_time（当前时间）
+- WHEN MDM-User 更新 Supplier 且记录不存在 THEN THE SYSTEM SHALL 返回错误码 807002 并拒绝更新
+- WHEN MDM-User 失效 Supplier 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effective_to=now() 并自增 version，并自动填充 modify_by、modify_time；THE SYSTEM SHALL NOT 校验下层引用（Supplier 在 MDM 内无下层实体，失效时仅发布事件，由下游各自决定是否拒绝引用）
+- WHEN MDM-User 删除 Supplier 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Supplier 且 status≠DRAFT THEN THE SYSTEM SHALL 返回错误码 807003 并拒绝删除
+- IF Supplier 的 effective_from > effective_to THEN THE SYSTEM SHALL 返回错误码 807004 并拒绝保存
+- WHEN 本地维护写入 Supplier THEN THE SYSTEM SHALL 设置 source_system=LOCAL、ingestion_channel=LOCAL、ingestion_time=now()
+- THE SYSTEM SHALL 支持 Supplier 的状态机：DRAFT → ACTIVE → INACTIVE，状态流转规则与 Product MDM 各实体一致
+
+#### US-032: Supplier 历史版本快照
+
+**As a** System, **I want** 每次 Supplier 发生变更时生成历史版本快照, **so that** 支持回溯与审计。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Supplier 发生创建、更新、失效操作 THEN THE SYSTEM SHALL 在 Supplier history 表插入一条完整快照记录（与 US-004 / US-029 同模式）
+- WHEN history 表插入快照 THEN THE SYSTEM SHALL 记录变更时间、操作人、变更前后的 version
+- WHEN 查询 Supplier 历史版本 THEN THE SYSTEM SHALL 按 entityId 和 version 降序返回快照列表，响应包含来源字段（source_system / source_id / source_version / ingestion_channel / ingestion_time）
+- WHEN MDM-User 通过后台查询 Supplier 历史版本 THEN THE SYSTEM SHALL 提供 GET /api/mpt/mdm/supplier/v1/{code}/history 接口，按 version 降序返回快照列表
+- WHEN 调用历史版本查询接口且 code 不存在 THEN THE SYSTEM SHALL 返回错误码 807002 并拒绝查询
+
+#### US-033: Supplier 事件发布
+
+**As a** System, **I want** 在 Supplier 发生变更时通过事务性发件箱写入事件，后台 Relay 任务推送到 Kafka topic `mdm.party.supplier.created` / `mdm.party.supplier.updated` / `mdm.party.supplier.deactivated`, **so that** 下游可订阅同步且不丢消息。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Supplier 被创建且 status=ACTIVE THEN THE SYSTEM SHALL 写入 Outbox 事件（eventType=mdm.party.supplier.created）
+- WHEN Supplier 被更新（含失效）THEN THE SYSTEM SHALL 写入 Outbox 事件（eventType=mdm.party.supplier.updated 或 mdm.party.supplier.deactivated）
+- WHEN 事件写入 Outbox THEN THE SYSTEM SHALL 与业务变更在同一本地事务内完成
+- WHEN 后台 Relay 任务扫描 Outbox THEN THE SYSTEM SHALL 按 occurredAt 顺序投递 Kafka
+- WHEN Kafka 投递成功 THEN THE SYSTEM SHALL 标记 Outbox 记录为已发送（sent=true, sent_at=now()）
+- WHEN Kafka 投递失败 IF 超出重试次数（默认 3 次）THEN THE SYSTEM SHALL 投递死信队列并告警
+- WHEN 事件 payload 构建 THEN THE SYSTEM SHALL 包含 eventId / eventType / occurredAt / entityId / version / payload 主体字段及来源字段（source_system / source_id / source_version / ingestion_channel / ingestion_time）
+- THE SYSTEM SHALL 使用 `mdm.party.supplier.*` 命名空间（区别于 Product MDM 的 `mdm.product.*`），体现 Party 子域的命名空间隔离
+
+#### US-034: Supplier 全量快照
+
+**As a** Service-Caller, **I want** 通过 Feign 拉取 Supplier 全量快照, **so that** 下游可执行 Bootstrap 与对账。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Service-Caller 调用 GET /api/service/supplier/v1/listAll 且未传 includeInactive 参数 THEN THE SYSTEM SHALL 仅返回 status=ACTIVE 的记录
+- WHEN Service-Caller 调用 GET /api/service/supplier/v1/listAll 且 includeInactive=true THEN THE SYSTEM SHALL 返回所有状态的记录
+- WHEN 返回结果 THEN THE SYSTEM SHALL 支持分页（page / size 参数）
+- WHEN Service-Caller 调用 GET /api/service/supplier/v1/{code} 且记录存在且 status=ACTIVE THEN THE SYSTEM SHALL 返回 Supplier 详情（与 US-009 / US-012 同模式）
+- WHEN Service-Caller 调用 GET /api/service/supplier/v1/{code} 且记录不存在或 status≠ACTIVE THEN THE SYSTEM SHALL 返回 404 或空
+- WHEN Feign 调用失败 THEN THE SYSTEM SHALL 通过 FallbackFactory 返回空列表或 null 并记录日志
+
+#### US-035: Supplier 上游接入（Kafka 通道）
+
+**As an** Upstream-System, **I want** 通过 Kafka 向 edd-mdm 推送 Supplier 主数据, **so that** 由 edd-mdm 作为 Supplier Golden Record 统一治理与分发。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 订阅约定的上游 Topic（命名约定：`upstream.<sourceSystem>.party.supplier`）消费推送消息
+- THE SYSTEM SHALL 复用 US-013 已建立的接入处理链路（schema 校验 → 来源鉴权 → 权威源校验 → 幂等校验 → 业务字段校验 → upsert + history + outbox）
+- WHEN 上游消息 schema 合法 THEN THE SYSTEM SHALL 依次执行：来源鉴权 → 权威源校验（见 US-017） → 幂等校验（见 US-016） → 业务字段校验（与本地维护一致）
+- WHEN 所有校验通过 THEN THE SYSTEM SHALL 在同一本地事务内完成主表 upsert、history 写入与 outbox 事件写入，并自动填充审计字段（create_by/modify_by 使用配置的 sourceSystem 标识；create_time/modify_time 使用服务端当前时间）
+- WHEN 消息处理成功 THEN THE SYSTEM SHALL 提交 Kafka offset
+- WHEN 消息处理失败（非幂等丢弃，非业务校验拒绝）THEN THE SYSTEM SHALL 按默认 3 次重试，超出后投递死信队列并告警
+- THE SYSTEM SHALL 在 mdm_ingestion_log 中记录每一次消息的处理结果（见 US-018）
+
+#### US-036: Supplier 上游接入（Feign / HTTP 通道）
+
+**As an** Upstream-System, **I want** 通过 Feign / HTTP 接口向 edd-mdm 同步推送 Supplier 主数据, **so that** 在不具备 Kafka 通道的场景下完成主数据接入。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 提供接收接口：POST /api/upstream/mdm/supplier/v1/ingest
+- WHEN Upstream-System 调用 ingest 接口 THEN THE SYSTEM SHALL 从请求头（如 X-Source-System）或请求体提取 sourceSystem 标识并完成鉴权（API Key / OAuth2）
+- WHEN 鉴权失败、来源未注册或来源被禁用 THEN THE SYSTEM SHALL 返回错误码 807011 并拒绝接入
+- WHEN 鉴权通过 THEN THE SYSTEM SHALL 复用 US-014 同一接入处理链路（schema 校验 → 权威源校验 → 幂等校验 → 业务校验 → upsert + history + outbox）
+- WHEN 接入处理成功 THEN THE SYSTEM SHALL 返回 200 OK 与接入结果摘要（entityId、新 version、operationType：CREATED/UPDATED/DUPLICATED/REJECTED）
+- WHEN 接入处理失败 THEN THE SYSTEM SHALL 返回对应错误码（807010 ~ 807013 / 807020）与错误描述，由上游系统决定是否重试
+
+#### US-037: Supplier 数据来源记录、幂等处理、权威源裁决
+
+**As a** System, **I want** Supplier 纳入与 Product MDM 相同的数据来源记录、幂等处理与权威源裁决治理体系, **so that** 保证 Supplier Golden Record 的一致性、可追溯性与可监控性。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 复用 US-015 已定义的数据来源记录机制：Supplier 主表及 history 表包含 source_system / source_id / source_version / ingestion_channel / ingestion_time / source_payload_hash 字段，填充规则与 Product MDM 各实体一致
+- THE SYSTEM SHALL 复用 US-016 已定义的幂等处理机制：以 (source_system, source_id) 作为上游记录的逻辑主键定位本地 Supplier 记录，版本比较与冲突处理规则不变
+- THE SYSTEM SHALL 复用 US-017 已定义的权威源配置与冲突裁决机制：entityType 扩展 SUPPLIER 取值，支持为 Supplier 配置独立的 authoritativeSource 与 conflictPolicy
+- THE SYSTEM SHALL NOT 重复定义上述机制的字段语义与处理规则，避免双源信息漂移
+
+#### US-038: Supplier 上游接入审计与监控
+
+**As a** MDM-Admin, **I want** 查看 Supplier 上游接入处理记录与监控指标, **so that** 排查问题并保障数据质量。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 复用 US-018 已定义的 mdm_ingestion_log 审计表：entityType 扩展 SUPPLIER 取值，记录 Supplier 每一次接入处理的完整信息
+- THE SYSTEM SHALL 复用 US-018 已定义的 Prometheus 指标：按 sourceSystem / entityType=SUPPLIER / status 维度统计接入总量、成功率、失败率、平均处理耗时、消息积压量
+- WHEN 某 sourceSystem + entityType=SUPPLIER 维度连续失败次数超过阈值 THEN THE SYSTEM SHALL 触发告警通知（阈值配置复用 US-018 已有机制）
+- THE SYSTEM SHALL 复用 US-018 已有的 MPT 端查询接口（GET /api/mpt/mdm/ingestion/v1/log），支持按 entityType=SUPPLIER 过滤查询
+
 ## 5. Constraints & Assumptions
 
 ### 业务约束
@@ -499,6 +655,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **Variant code 长度上限**：为给 Configuration 自动拼接 7 位序号留足空间，Variant code 长度上限为 57 字符（57 + 7 = 64）
 - **Option Code 归属**：Option Code 必须归属于一个 Option Family
 - **删除前置依赖**：任何实体在物理删除前，须校验不存在下层实体或绑定关系的引用
+- **Party MDM 共享基础设施**：Party MDM 与 Product MDM 共享同一 edd-mdm 服务实例、同一数据库 schema 前缀（mdm_*）、同一 Outbox / Ingestion Log / 权威源配置基础设施；角色定义（MDM-User / MDM-Admin / Upstream-System / Service-Caller / System）全部复用，不新增角色
 
 ### 前置条件
 
@@ -518,8 +675,8 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | 编号 | 内容 | 原因 |
 |------|------|------|
 | OS-1 | VMD 的 VIN / 零部件 / 生命周期 | 仍由 VMD 持有 |
-| OS-2 | Customer / Material / Employee / Location MDM 子域 | 未来扩展 |
-| OS-3 | Manufacturer / Supplier | 留待后续 CR |
+| OS-2 | Customer / Material / Employee / Location MDM 子域 | 未来扩展。Customer 未来归属 Party MDM；Material 未来归属 Product MDM；Employee 未来归属 Org MDM；Location 未来归属 Location MDM |
+| OS-3 | Manufacturer | 留待后续 CR |
 | OS-4 | 字段级多源合并裁决（field-level merge） | 首期采用单一权威源策略，每条主数据由唯一权威源写入；支持多上游接入但不做字段级合并 |
 | OS-5 | 数据质量打分引擎 | 未来扩展 |
 | OS-6 | 跨系统 ID 映射表 | 留待后续 CR |
@@ -529,6 +686,8 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | OS-10 | 选项码间的依赖/排斥规则引擎（如选了 A 则必须选 B、不能选 C） | 属于销售配置器/CPQ 领域能力，不在 MDM 范围 |
 | OS-11 | 选项码定价与商务属性 | 属于销售/财务域，MDM 仅管理主数据标识 |
 | OS-12 | 配置与车辆实例（VIN）的关联 | 仍由 VMD 持有 |
+| OS-13 | Party MDM 下的 Dealer / Customer / 其他业务伙伴实体 | 本期不做，留待后续 CR |
+| OS-14 | Supplier 与 Part / Device / Manufacturer 的关联关系 | 本期不做，留待 Product MDM 纳入物料/设备时统一设计 |
 
 ## 7. Open Questions
 
@@ -541,6 +700,10 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | Q5 | Variant 与 Option Code 绑定的"同一 Option Family 互斥"约束，是否在所有 Variant 上都强制？是否存在例外场景？ | US-021 | 待定 |
 | Q6 | Configuration 绑定的 Option Code 集合，是否要求"覆盖所有必选 Option Family"？还是允许部分缺失？ | US-023 | 待定 |
 | Q7 | 按 Option Code 组合反查 Configuration 的匹配语义，是"精确匹配"还是"包含匹配"？是否支持模糊/通配？ | US-024 | 待定 |
+| Q8 | Supplier 的核心字段中，哪些属于 Golden Record 必备字段、哪些属于业务系统私有字段？（影响 schema 设计与上游接入 payload 契约） | US-031 | 建议首期全量纳入 US-031 定义的字段集，后续按业务反馈裁剪（待业务确认） |
+| Q9 | 同一公司在不同业务场景下（如零部件供应商 vs 服务供应商）是否需要拆成多条 Supplier 记录？还是用 supplier_type 字段在一条记录上区分？ | US-031 | 建议用 supplier_type 区分，同一公司一条记录（待业务确认） |
+| Q10 | Supplier 的状态机除 ACTIVE / INACTIVE / DRAFT 外，是否需要 BLACKLISTED（黑名单/冻结）等业务状态？ | US-031 | 建议首期仅 DRAFT / ACTIVE / INACTIVE 三态，BLACKLISTED 留待后续 CR（待业务确认） |
+| Q11 | 失效（deactivate）一个 Supplier 时，是否需要校验下层引用（如 Part / 采购订单等）？由于这些实体不在 MDM 内，建议失效时仅发布事件，由下游各自决定是否拒绝引用 | US-031 | 建议不校验下层引用，仅发布 deactivated 事件（已在 US-031 AC 中采纳此方向，待业务确认） |
 
 ## 8. Impact Analysis（业务层影响）
 
@@ -549,17 +712,20 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - VMD 侧的车型 / 版本 / 配置 / 选项族 / 选项码后台维护能力需降级为**只读**（数据来源切换为 MDM 本地投影副本）
 - VMD 侧的车型 / 版本 / 配置查询能力需切换为消费 MDM 事件 + 本地副本模式（沿用 CR-010 已落地的本地投影副本模式）
 - VMD 侧对应的下游迁移由 VMD-CR-011 承接
+- VMD-CR-012 承接 Supplier 从 VMD 迁移至 MDM 的下游改造：VMD 侧 Supplier 数据切换为消费 MDM Party 事件 + 本地投影副本模式（参考 VMD-CR-010 的 source / external_ref_id / external_version / last_sync_time 投影副本模式）
 
 ### 下游消费方
 
 - VSO（车辆销售订单）、订单域、生产域、销售域需要扩展 Kafka 订阅范围，新增 Model / Variant / Configuration / Option Family / Option Code 5 类事件的消费
 - 下游需扩展 Feign 全量快照对账范围，覆盖 5 类新实体
 - 按选项码组合反查配置（US-024）为订单/销售域核心高频能力，下游需对接该查询接口
+- 采购系统 / SRM / 财务系统需订阅 Party MDM Supplier 事件（`mdm.party.supplier.*`），完成供应商主数据的本地同步或引用切换
 
 ### 上游系统
 
 - 需评估是否新增产品主数据的上游推送通道（如 PLM、CPQ、产品定义系统）
 - 若存在上游系统直接维护车型/版本/配置/选项族/选项码，需完成来源注册与权威源配置
+- 需评估是否新增 ERP / SRM / 集团供应商主数据平台作为 Supplier 的上游推送方，完成来源注册与权威源配置
 
 ## 9. Changelog
 
@@ -570,3 +736,4 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | 2026-05-26 | CR-003 | Modified | 补充 US-004 历史版本快照需求：新增 MPT 后台查询接口定义（GET /api/mpt/mdm/{entity}/v1/{code}/history），支持 Brand / CarLine / Platform 历史版本按 version 降序查询，响应包含来源字段 |
 | 2026-05-27 | CR-004 | Added | 纳入产品树底层 5 类主数据（Model / Variant / Configuration / Option Family / Option Code）：新增术语表（§3）；新增域 6~10 共 12 条 US（US-019 ~ US-030）覆盖 CRUD、引用校验、Option Code 绑定/互斥、按选项码反查配置、事件发布、全量快照、历史追溯、上游接入扩展；修改 NG1 和 OS-1 移除已纳入实体的非目标声明；新增 G9/G10 业务目标；补充业务约束与 Out of Scope（OS-9 ~ OS-12）；新增 Open Questions（Q1 ~ Q7）与 Impact Analysis。VMD 侧对应的下游迁移由 VMD-CR-011 承接 |
 | 2026-05-27 | CR-005 | Modified | 细化 Configuration code 自动生成规则：(1) US-022 重写 CRUD AC：Configuration code 改为系统按 `{variantCode}` + 7 位零填充自增序号自动生成、code 不可变、DRAFT 物理删除不回收序号、序号溢出返回 807014；(2) US-020 新增 Variant code 长度上限 57 字符的约束（超限返回 807015），保证 Configuration code 拼接后不超过 64 字符；(3) US-030 新增上游 ingest Configuration 时的 code 决策规则（两层判定：先按 (source_system, source_id) 幂等更新保持原 code；未命中再按 code 是否被占用决定直采上游 code 或本地兜底生成 + 告警）；(4) §5 业务约束补充 Configuration code 生成规则与 Variant code 长度上限；(5) 新增错误码 807014（Configuration 序号溢出）/ 807015（Variant code 长度超限） |
+| 2026-05-27 | CR-006 | Added | 引入 Party MDM 子域，纳入 Supplier 作为首个实体：(1) §1 Overview 改写为多子域 MDM 平台定位；(2) §2 新增 G11/G12 目标，NG7 移除 Supplier；(3) §3 Glossary 新增 Party / Supplier 术语；(4) §4 新增"域 11: Party MDM - 供应商管理"含 US-031 ~ US-038，覆盖 CRUD / 历史快照 / 事件发布 / 全量快照 / 上游接入（Kafka + Feign）/ 来源记录与权威源裁决（复用既有机制）/ 接入审计与监控；(5) §5 业务约束补充 Party 与 Product 共享同一服务实例；(6) §6 OS-3 移除 Supplier，新增 OS-13/OS-14；(7) §7 新增 Q8 ~ Q11；(8) §8 补充对采购/SRM/财务系统及 VMD-CR-012 的影响；(9) 错误码 807020（Supplier code 重复）按需新增 |

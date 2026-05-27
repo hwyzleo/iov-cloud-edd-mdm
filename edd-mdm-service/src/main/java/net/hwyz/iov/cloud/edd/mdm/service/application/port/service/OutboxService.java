@@ -6,6 +6,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 
 /**
@@ -161,4 +162,25 @@ public interface OutboxService {
      * @param configuration 配置聚合根
      */
     void publishConfigurationDeactivatedEvent(Configuration configuration);
+
+    /**
+     * 发布供应商创建事件
+     *
+     * @param supplier 供应商聚合根
+     */
+    void publishSupplierCreatedEvent(Supplier supplier);
+
+    /**
+     * 发布供应商更新事件
+     *
+     * @param supplier 供应商聚合根
+     */
+    void publishSupplierUpdatedEvent(Supplier supplier);
+
+    /**
+     * 发布供应商失效事件
+     *
+     * @param supplier 供应商聚合根
+     */
+    void publishSupplierDeactivatedEvent(Supplier supplier);
 }

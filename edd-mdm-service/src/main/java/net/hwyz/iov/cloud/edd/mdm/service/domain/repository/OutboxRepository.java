@@ -18,6 +18,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyDeactiv
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
@@ -177,6 +180,27 @@ public interface OutboxRepository {
      * @param event 配置失效事件
      */
     void saveConfigurationDeactivatedEvent(ConfigurationDeactivatedEvent event);
+
+    /**
+     * 保存供应商创建事件
+     *
+     * @param event 供应商创建事件
+     */
+    void saveSupplierCreatedEvent(SupplierCreatedEvent event);
+
+    /**
+     * 保存供应商更新事件
+     *
+     * @param event 供应商更新事件
+     */
+    void saveSupplierUpdatedEvent(SupplierUpdatedEvent event);
+
+    /**
+     * 保存供应商失效事件
+     *
+     * @param event 供应商失效事件
+     */
+    void saveSupplierDeactivatedEvent(SupplierDeactivatedEvent event);
 
     /**
      * 获取待发送的事件列表

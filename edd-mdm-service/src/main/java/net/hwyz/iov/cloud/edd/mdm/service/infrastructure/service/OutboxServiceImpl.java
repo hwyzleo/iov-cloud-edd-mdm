@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
@@ -28,6 +29,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyDeactiv
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
@@ -362,5 +366,50 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.saveConfigurationDeactivatedEvent(event);
         log.info("发布配置失效事件: {}", configuration.getCode());
+    }
+
+    @Override
+    public void publishSupplierCreatedEvent(Supplier supplier) {
+        SupplierCreatedEvent event = SupplierCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.party.supplier.created")
+                .occurredAt(new Date())
+                .entityId(supplier.getCode())
+                .version(supplier.getVersion())
+                .payload(supplier)
+                .build();
+
+        outboxRepository.saveSupplierCreatedEvent(event);
+        log.info("发布供应商创建事件: {}", supplier.getCode());
+    }
+
+    @Override
+    public void publishSupplierUpdatedEvent(Supplier supplier) {
+        SupplierUpdatedEvent event = SupplierUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.party.supplier.updated")
+                .occurredAt(new Date())
+                .entityId(supplier.getCode())
+                .version(supplier.getVersion())
+                .payload(supplier)
+                .build();
+
+        outboxRepository.saveSupplierUpdatedEvent(event);
+        log.info("发布供应商更新事件: {}", supplier.getCode());
+    }
+
+    @Override
+    public void publishSupplierDeactivatedEvent(Supplier supplier) {
+        SupplierDeactivatedEvent event = SupplierDeactivatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.party.supplier.deactivated")
+                .occurredAt(new Date())
+                .entityId(supplier.getCode())
+                .version(supplier.getVersion())
+                .payload(supplier)
+                .build();
+
+        outboxRepository.saveSupplierDeactivatedEvent(event);
+        log.info("发布供应商失效事件: {}", supplier.getCode());
     }
 }

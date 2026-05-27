@@ -6,5 +6,8 @@ public enum EntityType {
     PLATFORM,
     MODEL,
     VARIANT,
-    CONFIGURATION
+    CONFIGURATION,
+    OPTION_FAMILY,
+    OPTION_CODE,
+    SUPPLIER
 }
