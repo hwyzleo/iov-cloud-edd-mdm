@@ -86,7 +86,7 @@ public class ProductDomainService {
                 foundedYear, effectiveFrom, effectiveTo, createBy);
 
         // 保存品牌
-        return brandRepository.save(brand);
+        return brandRepository.save(brand, "CREATE");
     }
 
     /**
@@ -118,7 +118,7 @@ public class ProductDomainService {
                 effectiveFrom, effectiveTo, modifyBy);
 
         // 保存品牌
-        return brandRepository.save(brand);
+        return brandRepository.save(brand, "UPDATE");
     }
 
     /**
@@ -138,7 +138,7 @@ public class ProductDomainService {
         brand.deactivate(modifyBy);
 
         // 保存品牌
-        return brandRepository.save(brand);
+        return brandRepository.save(brand, "DEACTIVATE");
     }
 
     /**
@@ -156,8 +156,8 @@ public class ProductDomainService {
         // 删除品牌
         brand.delete(modifyBy);
 
-        // 保存品牌
-        brandRepository.save(brand);
+        // 保存品牌（删除不写历史快照）
+        brandRepository.save(brand, null);
     }
 
     /**
@@ -234,7 +234,7 @@ public class ProductDomainService {
                 effectiveFrom, effectiveTo, createBy);
 
         // 保存车系
-        return carLineRepository.save(carLine);
+        return carLineRepository.save(carLine, "CREATE");
     }
 
     /**
@@ -268,7 +268,7 @@ public class ProductDomainService {
                 effectiveFrom, effectiveTo, modifyBy);
 
         // 保存车系
-        return carLineRepository.save(carLine);
+        return carLineRepository.save(carLine, "UPDATE");
     }
 
     /**
@@ -288,7 +288,7 @@ public class ProductDomainService {
         carLine.deactivate(modifyBy);
 
         // 保存车系
-        return carLineRepository.save(carLine);
+        return carLineRepository.save(carLine, "DEACTIVATE");
     }
 
     /**
@@ -307,7 +307,7 @@ public class ProductDomainService {
         carLine.delete(modifyBy);
 
         // 保存车系
-        carLineRepository.save(carLine);
+        carLineRepository.save(carLine, null);
     }
 
     /**
@@ -375,7 +375,7 @@ public class ProductDomainService {
                 architecture, effectiveFrom, effectiveTo, createBy);
 
         // 保存平台
-        return platformRepository.save(platform);
+        return platformRepository.save(platform, "CREATE");
     }
 
     /**
@@ -406,7 +406,7 @@ public class ProductDomainService {
                 architecture, effectiveFrom, effectiveTo, modifyBy);
 
         // 保存平台
-        return platformRepository.save(platform);
+        return platformRepository.save(platform, "UPDATE");
     }
 
     /**
@@ -426,7 +426,7 @@ public class ProductDomainService {
         platform.deactivate(modifyBy);
 
         // 保存平台
-        return platformRepository.save(platform);
+        return platformRepository.save(platform, "DEACTIVATE");
     }
 
     /**
@@ -445,7 +445,7 @@ public class ProductDomainService {
         platform.delete(modifyBy);
 
         // 保存平台
-        platformRepository.save(platform);
+        platformRepository.save(platform, null);
     }
 
     /**
@@ -539,7 +539,7 @@ public class ProductDomainService {
         }
         OptionFamily optionFamily = OptionFamily.create(code, name, nameLocal, description,
                 effectiveFrom, effectiveTo, createBy);
-        return optionFamilyRepository.save(optionFamily);
+        return optionFamilyRepository.save(optionFamily, "CREATE");
     }
 
     /**
@@ -550,7 +550,7 @@ public class ProductDomainService {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
         optionFamily.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
-        return optionFamilyRepository.save(optionFamily);
+        return optionFamilyRepository.save(optionFamily, "UPDATE");
     }
 
     /**
@@ -560,7 +560,7 @@ public class ProductDomainService {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
         optionFamily.deactivate(modifyBy);
-        return optionFamilyRepository.save(optionFamily);
+        return optionFamilyRepository.save(optionFamily, "DEACTIVATE");
     }
 
     /**
@@ -570,7 +570,7 @@ public class ProductDomainService {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
         optionFamily.delete(modifyBy);
-        optionFamilyRepository.save(optionFamily);
+        optionFamilyRepository.save(optionFamily, null);
     }
 
     /**
@@ -630,7 +630,7 @@ public class ProductDomainService {
         }
         Model model = Model.create(code, name, nameLocal, carLineCode, platformCode,
                 modelYear, description, effectiveFrom, effectiveTo, createBy);
-        return modelRepository.save(model);
+        return modelRepository.save(model, "CREATE");
     }
 
     /**
@@ -641,7 +641,7 @@ public class ProductDomainService {
         Model model = modelRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
         model.update(name, nameLocal, modelYear, description, effectiveFrom, effectiveTo, modifyBy);
-        return modelRepository.save(model);
+        return modelRepository.save(model, "UPDATE");
     }
 
     /**
@@ -651,7 +651,7 @@ public class ProductDomainService {
         Model model = modelRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
         model.deactivate(modifyBy);
-        return modelRepository.save(model);
+        return modelRepository.save(model, "DEACTIVATE");
     }
 
     /**
@@ -661,7 +661,7 @@ public class ProductDomainService {
         Model model = modelRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
         model.delete(modifyBy);
-        modelRepository.save(model);
+        modelRepository.save(model, null);
     }
 
     /**
@@ -719,7 +719,7 @@ public class ProductDomainService {
         }
         Variant variant = Variant.create(code, name, nameLocal, modelCode, description,
                 effectiveFrom, effectiveTo, createBy);
-        return variantRepository.save(variant);
+        return variantRepository.save(variant, "CREATE");
     }
 
     /**
@@ -730,7 +730,7 @@ public class ProductDomainService {
         Variant variant = variantRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
         variant.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
-        return variantRepository.save(variant);
+        return variantRepository.save(variant, "UPDATE");
     }
 
     /**
@@ -740,7 +740,7 @@ public class ProductDomainService {
         Variant variant = variantRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
         variant.deactivate(modifyBy);
-        return variantRepository.save(variant);
+        return variantRepository.save(variant, "DEACTIVATE");
     }
 
     /**
@@ -750,7 +750,7 @@ public class ProductDomainService {
         Variant variant = variantRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
         variant.delete(modifyBy);
-        variantRepository.save(variant);
+        variantRepository.save(variant, null);
     }
 
     /**
@@ -856,7 +856,7 @@ public class ProductDomainService {
         }
         Configuration configuration = Configuration.create(code, name, nameLocal, variantCode, description,
                 effectiveFrom, effectiveTo, createBy);
-        return configurationRepository.save(configuration);
+        return configurationRepository.save(configuration, "CREATE");
     }
 
     /**
@@ -867,7 +867,7 @@ public class ProductDomainService {
         Configuration configuration = configurationRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
         configuration.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
-        return configurationRepository.save(configuration);
+        return configurationRepository.save(configuration, "UPDATE");
     }
 
     /**
@@ -877,7 +877,7 @@ public class ProductDomainService {
         Configuration configuration = configurationRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
         configuration.deactivate(modifyBy);
-        return configurationRepository.save(configuration);
+        return configurationRepository.save(configuration, "DEACTIVATE");
     }
 
     /**
@@ -887,7 +887,7 @@ public class ProductDomainService {
         Configuration configuration = configurationRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
         configuration.delete(modifyBy);
-        configurationRepository.save(configuration);
+        configurationRepository.save(configuration, null);
     }
 
     /**

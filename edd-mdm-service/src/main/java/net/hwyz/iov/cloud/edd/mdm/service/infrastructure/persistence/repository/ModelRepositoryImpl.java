@@ -15,6 +15,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.ModelPo;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,12 +35,44 @@ public class ModelRepositoryImpl implements ModelRepository {
     private final ModelHistoryConverter modelHistoryConverter;
 
     @Override
-    public Model save(Model model) {
+    public Model save(Model model, String operationType) {
         ModelPo po = modelConverter.toPo(model);
         if (po.getId() == null) {
             modelMapper.insert(po);
         } else {
             modelMapper.updateById(po);
+        }
+        if (operationType != null) {
+            ModelHistoryPo historyPo = ModelHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .carLineCode(po.getCarLineCode())
+                    .platformCode(po.getPlatformCode())
+                    .modelYear(po.getModelYear())
+                    .description(po.getDescription())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            modelHistoryMapper.insert(historyPo);
         }
         return modelConverter.toDomain(po);
     }

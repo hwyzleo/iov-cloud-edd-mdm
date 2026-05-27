@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public interface OptionFamilyRepository {
 
-    OptionFamily save(OptionFamily optionFamily);
+    OptionFamily save(OptionFamily optionFamily, String operationType);
 
     Optional<OptionFamily> findById(Long id);
 

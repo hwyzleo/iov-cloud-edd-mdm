@@ -14,6 +14,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.Platform
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.PlatformPo;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,12 +34,42 @@ public class PlatformRepositoryImpl implements PlatformRepository {
     private final PlatformHistoryConverter platformHistoryConverter;
 
     @Override
-    public Platform save(Platform platform) {
+    public Platform save(Platform platform, String operationType) {
         PlatformPo po = platformConverter.toPo(platform);
         if (po.getId() == null) {
             platformMapper.insert(po);
         } else {
             platformMapper.updateById(po);
+        }
+        if (operationType != null) {
+            PlatformHistoryPo historyPo = PlatformHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .platformType(po.getPlatformType())
+                    .architecture(po.getArchitecture())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            platformHistoryMapper.insert(historyPo);
         }
         return platformConverter.toDomain(po);
     }

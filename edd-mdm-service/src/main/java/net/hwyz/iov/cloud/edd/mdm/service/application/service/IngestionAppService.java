@@ -132,14 +132,14 @@ public class IngestionAppService {
             brand = Brand.createFromUpstream(code, name, nameLocal, description, logo, country,
                     foundedYear, cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            brand = brandRepository.save(brand);
+            brand = brandRepository.save(brand, "CREATE");
             outboxService.publishBrandCreatedEvent(brand);
             operationType = "CREATED";
         } else {
             existing.updateFromUpstream(name, nameLocal, description, logo, country,
                     foundedYear, cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            brand = brandRepository.save(existing);
+            brand = brandRepository.save(existing, "UPDATE");
             outboxService.publishBrandUpdatedEvent(brand);
             operationType = "UPDATED";
         }
@@ -188,14 +188,14 @@ public class IngestionAppService {
             carLine = CarLine.createFromUpstream(code, name, nameLocal, brandCode,
                     null, null, null, cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            carLine = carLineRepository.save(carLine);
+            carLine = carLineRepository.save(carLine, "CREATE");
             outboxService.publishCarLineCreatedEvent(carLine);
             operationType = "CREATED";
         } else {
             existing.updateFromUpstream(name, nameLocal, null, null, null,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            carLine = carLineRepository.save(existing);
+            carLine = carLineRepository.save(existing, "UPDATE");
             outboxService.publishCarLineUpdatedEvent(carLine);
             operationType = "UPDATED";
         }
@@ -243,14 +243,14 @@ public class IngestionAppService {
             platform = Platform.createFromUpstream(code, name, nameLocal,
                     null, null, cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            platform = platformRepository.save(platform);
+            platform = platformRepository.save(platform, "CREATE");
             outboxService.publishPlatformCreatedEvent(platform);
             operationType = "CREATED";
         } else {
             existing.updateFromUpstream(name, nameLocal, null, null,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            platform = platformRepository.save(existing);
+            platform = platformRepository.save(existing, "UPDATE");
             outboxService.publishPlatformUpdatedEvent(platform);
             operationType = "UPDATED";
         }
@@ -344,14 +344,14 @@ public class IngestionAppService {
             model = Model.createFromUpstream(code, name, nameLocal, carLineCode, platformCode,
                     modelYear, description, cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            model = modelRepository.save(model);
+            model = modelRepository.save(model, "CREATE");
             outboxService.publishModelCreatedEvent(model);
             operationType = "CREATED";
         } else {
             existing.updateFromUpstream(name, nameLocal, modelYear, description,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            model = modelRepository.save(existing);
+            model = modelRepository.save(existing, "UPDATE");
             outboxService.publishModelUpdatedEvent(model);
             operationType = "UPDATED";
         }
@@ -401,14 +401,14 @@ public class IngestionAppService {
             variant = Variant.createFromUpstream(code, name, nameLocal, modelCode, description,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            variant = variantRepository.save(variant);
+            variant = variantRepository.save(variant, "CREATE");
             outboxService.publishVariantCreatedEvent(variant);
             operationType = "CREATED";
         } else {
             existing.updateFromUpstream(name, nameLocal, description,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            variant = variantRepository.save(existing);
+            variant = variantRepository.save(existing, "UPDATE");
             outboxService.publishVariantUpdatedEvent(variant);
             operationType = "UPDATED";
         }
@@ -465,7 +465,7 @@ public class IngestionAppService {
             existing.updateFromUpstream(name, nameLocal, description,
                     cmd.getOccurredAt(), null,
                     sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            Configuration saved = configurationRepository.save(existing);
+            Configuration saved = configurationRepository.save(existing, "UPDATE");
             outboxService.publishConfigurationUpdatedEvent(saved);
 
             ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
@@ -506,7 +506,7 @@ public class IngestionAppService {
                 finalCode, name, nameLocal, variantCode, description,
                 cmd.getOccurredAt(), null,
                 sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-        Configuration saved = configurationRepository.save(configuration);
+        Configuration saved = configurationRepository.save(configuration, "CREATE");
         outboxService.publishConfigurationCreatedEvent(saved);
 
         // 在 ingestionLog 的 errorMessage 字段记录 code 决策结果（便于排查；非 ERROR 状态）

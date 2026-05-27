@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public interface OptionCodeRepository {
 
-    OptionCode save(OptionCode optionCode);
+    OptionCode save(OptionCode optionCode, String operationType);
 
     Optional<OptionCode> findById(Long id);
 

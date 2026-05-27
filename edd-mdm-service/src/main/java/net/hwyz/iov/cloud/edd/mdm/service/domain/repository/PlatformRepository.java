@@ -19,7 +19,7 @@ public interface PlatformRepository {
      * @param platform 平台聚合根
      * @return 保存后的平台
      */
-    Platform save(Platform platform);
+    Platform save(Platform platform, String operationType);
 
     /**
      * 根据ID查找平台

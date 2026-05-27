@@ -15,6 +15,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OptionCo
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,12 +35,42 @@ public class OptionCodeRepositoryImpl implements OptionCodeRepository {
     private final OptionCodeHistoryConverter optionCodeHistoryConverter;
 
     @Override
-    public OptionCode save(OptionCode optionCode) {
+    public OptionCode save(OptionCode optionCode, String operationType) {
         OptionCodePo po = optionCodeConverter.toPo(optionCode);
         if (po.getId() == null) {
             optionCodeMapper.insert(po);
         } else {
             optionCodeMapper.updateById(po);
+        }
+        if (operationType != null) {
+            OptionCodeHistoryPo historyPo = OptionCodeHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .optionFamilyCode(po.getOptionFamilyCode())
+                    .description(po.getDescription())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            optionCodeHistoryMapper.insert(historyPo);
         }
         return optionCodeConverter.toDomain(po);
     }

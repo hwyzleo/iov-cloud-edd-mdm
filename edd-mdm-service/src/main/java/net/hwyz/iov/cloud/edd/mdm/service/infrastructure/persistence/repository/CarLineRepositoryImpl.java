@@ -15,6 +15,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.CarLineP
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,12 +35,44 @@ public class CarLineRepositoryImpl implements CarLineRepository {
     private final CarLineHistoryConverter carLineHistoryConverter;
 
     @Override
-    public CarLine save(CarLine carLine) {
+    public CarLine save(CarLine carLine, String operationType) {
         CarLinePo po = carLineConverter.toPo(carLine);
         if (po.getId() == null) {
             carLineMapper.insert(po);
         } else {
             carLineMapper.updateById(po);
+        }
+        if (operationType != null) {
+            CarLineHistoryPo historyPo = CarLineHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .brandCode(po.getBrandCode())
+                    .carLineType(po.getCarLineType())
+                    .lifecycleStatus(po.getLifecycleStatus())
+                    .targetMarket(po.getTargetMarket())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            carLineHistoryMapper.insert(historyPo);
         }
         return carLineConverter.toDomain(po);
     }

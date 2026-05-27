@@ -60,7 +60,7 @@ public class OptionCodeAppService {
                 cmd.getOptionFamilyCode(), cmd.getDescription(),
                 cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
 
-        optionCode = optionCodeRepository.save(optionCode);
+        optionCode = optionCodeRepository.save(optionCode, "CREATE");
         return convertToDto(optionCode);
     }
 
@@ -79,7 +79,7 @@ public class OptionCodeAppService {
         optionCode.update(cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
                 cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
 
-        optionCode = optionCodeRepository.save(optionCode);
+        optionCode = optionCodeRepository.save(optionCode, "UPDATE");
         return convertToDto(optionCode);
     }
 
@@ -95,7 +95,7 @@ public class OptionCodeAppService {
                 .orElseThrow(() -> new IllegalArgumentException("选项码不存在: " + code));
 
         optionCode.deactivate(modifyBy);
-        optionCode = optionCodeRepository.save(optionCode);
+        optionCode = optionCodeRepository.save(optionCode, "DEACTIVATE");
         return convertToDto(optionCode);
     }
 
@@ -111,7 +111,7 @@ public class OptionCodeAppService {
                 .orElseThrow(() -> new IllegalArgumentException("选项码不存在: " + code));
 
         optionCode.delete(modifyBy);
-        optionCodeRepository.save(optionCode);
+        optionCodeRepository.save(optionCode, null);
     }
 
     public OptionCodeDto getOptionCodeByCode(String code) {

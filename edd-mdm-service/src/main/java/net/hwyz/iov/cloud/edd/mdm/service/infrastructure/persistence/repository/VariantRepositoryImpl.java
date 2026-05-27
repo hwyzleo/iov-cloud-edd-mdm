@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,12 +39,42 @@ public class VariantRepositoryImpl implements VariantRepository {
     private final ModelMapper modelMapper;
 
     @Override
-    public Variant save(Variant variant) {
+    public Variant save(Variant variant, String operationType) {
         VariantPo po = variantConverter.toPo(variant);
         if (po.getId() == null) {
             variantMapper.insert(po);
         } else {
             variantMapper.updateById(po);
+        }
+        if (operationType != null) {
+            VariantHistoryPo historyPo = VariantHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .modelCode(po.getModelCode())
+                    .description(po.getDescription())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            variantHistoryMapper.insert(historyPo);
         }
         return variantConverter.toDomain(po);
     }

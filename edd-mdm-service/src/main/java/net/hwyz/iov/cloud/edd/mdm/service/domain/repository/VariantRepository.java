@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public interface VariantRepository {
 
-    Variant save(Variant variant);
+    Variant save(Variant variant, String operationType);
 
     Optional<Variant> findById(Long id);
 

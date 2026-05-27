@@ -14,6 +14,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OptionFa
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OptionFamilyPo;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,12 +34,41 @@ public class OptionFamilyRepositoryImpl implements OptionFamilyRepository {
     private final OptionFamilyHistoryConverter optionFamilyHistoryConverter;
 
     @Override
-    public OptionFamily save(OptionFamily optionFamily) {
+    public OptionFamily save(OptionFamily optionFamily, String operationType) {
         OptionFamilyPo po = optionFamilyConverter.toPo(optionFamily);
         if (po.getId() == null) {
             optionFamilyMapper.insert(po);
         } else {
             optionFamilyMapper.updateById(po);
+        }
+        if (operationType != null) {
+            OptionFamilyHistoryPo historyPo = OptionFamilyHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .description(po.getDescription())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            optionFamilyHistoryMapper.insert(historyPo);
         }
         return optionFamilyConverter.toDomain(po);
     }

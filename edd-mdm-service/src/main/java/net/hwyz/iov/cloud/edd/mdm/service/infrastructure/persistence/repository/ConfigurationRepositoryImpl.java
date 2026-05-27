@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,12 +36,42 @@ public class ConfigurationRepositoryImpl implements ConfigurationRepository {
     private final ConfigurationHistoryConverter configurationHistoryConverter;
 
     @Override
-    public Configuration save(Configuration configuration) {
+    public Configuration save(Configuration configuration, String operationType) {
         ConfigurationPo po = configurationConverter.toPo(configuration);
         if (po.getId() == null) {
             configurationMapper.insert(po);
         } else {
             configurationMapper.updateById(po);
+        }
+        if (operationType != null) {
+            ConfigurationHistoryPo historyPo = ConfigurationHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .variantCode(po.getVariantCode())
+                    .description(po.getDescription())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            configurationHistoryMapper.insert(historyPo);
         }
         return configurationConverter.toDomain(po);
     }

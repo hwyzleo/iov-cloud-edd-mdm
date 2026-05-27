@@ -19,7 +19,7 @@ public interface CarLineRepository {
      * @param carLine 车系聚合根
      * @return 保存后的车系
      */
-    CarLine save(CarLine carLine);
+    CarLine save(CarLine carLine, String operationType);
 
     /**
      * 根据ID查找车系

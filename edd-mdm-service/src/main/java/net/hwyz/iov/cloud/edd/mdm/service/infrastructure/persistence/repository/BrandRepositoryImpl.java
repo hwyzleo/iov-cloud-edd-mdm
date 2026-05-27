@@ -14,6 +14,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.BrandHis
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.BrandPo;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,12 +34,45 @@ public class BrandRepositoryImpl implements BrandRepository {
     private final BrandHistoryConverter brandHistoryConverter;
 
     @Override
-    public Brand save(Brand brand) {
+    public Brand save(Brand brand, String operationType) {
         BrandPo po = brandConverter.toPo(brand);
         if (po.getId() == null) {
             brandMapper.insert(po);
         } else {
             brandMapper.updateById(po);
+        }
+        // 写入历史快照
+        if (operationType != null) {
+            BrandHistoryPo historyPo = BrandHistoryPo.builder()
+                    .entityId(po.getId())
+                    .code(po.getCode())
+                    .name(po.getName())
+                    .nameLocal(po.getNameLocal())
+                    .description(po.getDescription())
+                    .logo(po.getLogo())
+                    .country(po.getCountry())
+                    .foundedYear(po.getFoundedYear())
+                    .sourceSystem(po.getSourceSystem())
+                    .sourceId(po.getSourceId())
+                    .sourceVersion(po.getSourceVersion())
+                    .ingestionChannel(po.getIngestionChannel())
+                    .ingestionTime(po.getIngestionTime())
+                    .sourcePayloadHash(po.getSourcePayloadHash())
+                    .version(po.getVersion())
+                    .effectiveFrom(po.getEffectiveFrom())
+                    .effectiveTo(po.getEffectiveTo())
+                    .status(po.getStatus())
+                    .operationType(operationType)
+                    .snapshotTime(new Date())
+                    .operator(po.getModifyBy())
+                    .createBy(po.getModifyBy())
+                    .createTime(new Date())
+                    .modifyBy(po.getModifyBy())
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            brandHistoryMapper.insert(historyPo);
         }
         return brandConverter.toDomain(po);
     }

@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public interface ConfigurationRepository {
 
-    Configuration save(Configuration configuration);
+    Configuration save(Configuration configuration, String operationType);
 
     Optional<Configuration> findById(Long id);
 

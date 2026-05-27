@@ -14,12 +14,13 @@ import java.util.Optional;
 public interface BrandRepository {
 
     /**
-     * 保存品牌
+     * 保存品牌并写入历史快照
      *
-     * @param brand 品牌聚合根
+     * @param brand         品牌聚合根
+     * @param operationType 操作类型（CREATE/UPDATE/DEACTIVATE）
      * @return 保存后的品牌
      */
-    Brand save(Brand brand);
+    Brand save(Brand brand, String operationType);
 
     /**
      * 根据ID查找品牌

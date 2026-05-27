@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public interface ModelRepository {
 
-    Model save(Model model);
+    Model save(Model model, String operationType);
 
     Optional<Model> findById(Long id);
 
