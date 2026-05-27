@@ -61,6 +61,20 @@ public class ConfigurationRepositoryImpl implements ConfigurationRepository {
     }
 
     @Override
+    public Optional<Configuration> findBySourceSystemAndSourceId(String sourceSystem, String sourceId) {
+        if (sourceSystem == null || sourceId == null) {
+            return Optional.empty();
+        }
+        LambdaQueryWrapper<ConfigurationPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ConfigurationPo::getSourceSystem, sourceSystem);
+        wrapper.eq(ConfigurationPo::getSourceId, sourceId);
+        wrapper.eq(ConfigurationPo::getRowValid, true);
+        wrapper.last("LIMIT 1");
+        ConfigurationPo po = configurationMapper.selectOne(wrapper);
+        return Optional.ofNullable(configurationConverter.toDomain(po));
+    }
+
+    @Override
     public boolean existsByCode(String code) {
         LambdaQueryWrapper<ConfigurationPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ConfigurationPo::getCode, code);

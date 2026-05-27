@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 配置创建命令
+ * 配置创建命令（CR-005：code 由系统自动生成，不接受调用方传入）
  *
  * @author hwyz_leo
  */
@@ -18,7 +18,6 @@ import java.util.Date;
 @AllArgsConstructor
 public class ConfigurationCreateCmd {
 
-    private String code;
     private String name;
     private String nameLocal;
     private String variantCode;

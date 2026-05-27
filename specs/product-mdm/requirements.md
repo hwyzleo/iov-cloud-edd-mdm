@@ -327,6 +327,7 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 - WHEN MDM-User 创建 Variant 且 code 唯一且 modelCode 指向已存在且 status=ACTIVE 的 Model THEN THE SYSTEM SHALL 持久化 Variant 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
 - WHEN MDM-User 创建 Variant 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 创建 Variant 且 code 长度大于 57 字符 THEN THE SYSTEM SHALL 返回错误码 807015 并拒绝创建（为下层 Configuration code 自动拼接 7 位序号预留空间，保证 Configuration code 最大长度不超过 64 字符）
 - WHEN MDM-User 创建 Variant 且 modelCode 指向不存在或 status≠ACTIVE 的 Model THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
 - WHEN MDM-User 更新 Variant 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
 - WHEN MDM-User 失效 Variant 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
@@ -354,16 +355,21 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 
 **As a** MDM-User, **I want** CRUD Configuration（含按版本过滤），**so that** 管理配置 Golden Record。
 
+> **Configuration code 生成规则（CR-005）**：Configuration 的 code 不由调用方传入，由系统按规则自动生成，规则为 `{variantCode}` + **7 位零填充自增序号**（同一 Variant 下从 0000001 起步、严格单调递增）。例如 variantCode = `XREHSLA26PA` → 该 Variant 下首个配置 code = `XREHSLA26PA0000001`，第二个 = `XREHSLA26PA0000002`。Configuration code 全局唯一且不可变。序号由独立的序列表（mdm_configuration_seq）按 variant_code 维度维护，DRAFT 状态物理删除时**不回收**序号（避免 history / outbox / 下游订阅出现"同 code 不同实体"的歧义）。
+
 **Acceptance Criteria** (EARS 语法):
 
-- WHEN MDM-User 创建 Configuration 且 code 唯一且 variantCode 指向已存在且 status=ACTIVE 的 Variant THEN THE SYSTEM SHALL 持久化 Configuration 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
-- WHEN MDM-User 创建 Configuration 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 创建 Configuration 且 variantCode 指向已存在且 status=ACTIVE 的 Variant THEN THE SYSTEM SHALL 在同一本地事务内执行：(1) 对 mdm_configuration_seq 按 variant_code 行锁自增 next_seq；(2) 拼接 code = `{variantCode}` + 自增序号零填充至 7 位；(3) 持久化 Configuration 记录并设置 version=1，自动填充 create_by、create_time、modify_by、modify_time
+- WHEN MDM-User 创建 Configuration 且请求体携带 code 字段 THEN THE SYSTEM SHALL 静默忽略该字段并仍按系统规则生成 code（DTO 不暴露 code 入参，REST 风格）
 - WHEN MDM-User 创建 Configuration 且 variantCode 指向不存在或 status≠ACTIVE 的 Variant THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
-- WHEN MDM-User 更新 Configuration 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
+- WHEN MDM-User 创建 Configuration 且系统生成 code 在 mdm_configuration 表已存在（理论不应发生，UK 兜底）THEN THE SYSTEM SHALL 自动重试一次序号自增；仍冲突则返回错误码 807001 并告警
+- WHEN MDM-User 创建 Configuration 且对应 Variant 的序号已超出 9,999,999（7 位上限）THEN THE SYSTEM SHALL 返回错误码 807014 并拒绝创建
+- WHEN MDM-User 更新 Configuration 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，**忽略入参中的 code 字段**（保留原 code 不变），并自动填充 modify_by、modify_time
 - WHEN MDM-User 失效 Configuration 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
-- WHEN MDM-User 删除 Configuration 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Configuration 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录，**不回退 mdm_configuration_seq.next_seq**（序号只增不复用）
 - WHEN MDM-User 删除 Configuration 且 status≠DRAFT THEN THE SYSTEM SHALL 拒绝删除并返回业务错误
 - WHEN MDM-User 查询 Configuration 列表 THEN THE SYSTEM SHALL 支持按 variantCode、status 过滤
+- WHEN 创建/更新接口返回响应 THEN THE SYSTEM SHALL 在响应体中回填本次操作产生或保持的 code 字段
 - IF Configuration 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 拒绝保存并返回业务错误
 
 #### US-023: Configuration 绑定 / 解绑 Option Code
@@ -469,6 +475,14 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - THE SYSTEM SHALL 对 5 类新实体的上游推送执行与本地维护一致的互斥约束校验（Variant / Configuration 下同一 Option Family 最多一个 Option Code）
 - THE SYSTEM SHALL 在 mdm_ingestion_log 中记录 5 类新实体的每一次接入处理结果
 - THE SYSTEM SHALL 暴露 5 类新实体的 Prometheus 接入监控指标，与现有指标维度一致
+- WHEN 上游推送 Configuration 主数据 THEN THE SYSTEM SHALL 按以下两层规则决定本地 code（CR-005）：
+    - **第 1 层：幂等更新**——按 (source_system, source_id) 在本地查找；命中本地记录则走更新流程，本地 code 保持不变（即便上游本次 payload 的 code 与本地不同，亦不改 code，仅记录告警提示上游 code 漂移）
+    - **第 2 层：未命中 → 进入新增流程**：
+        - 若上游 payload 未携带 code → 由系统按 US-022 规则生成（`{variantCode}` + 7 位零填充自增序号）
+        - 若上游 payload 携带 code 且该 code 在 MDM 全局**未被占用** → 直接采用上游 code 入库
+        - 若上游 payload 携带 code 且该 code 在 MDM 全局**已被占用**（无论被占记录的来源是 LOCAL 还是其他上游 source）→ 视为 **code 命名空间冲突**，本地按 US-022 规则生成新 code 兜底入库，记录告警日志、累加监控指标 `mdm.configuration.code.upstream_conflict`，并在 mdm_ingestion_log 中记录 codeOverride=true 与 upstreamCode / finalCode
+- WHEN 上游推送的 Configuration code 长度超过 64 字符 THEN THE SYSTEM SHALL 视同上游未携带 code，由系统按 US-022 规则生成本地 code，并在 mdm_ingestion_log 中记录告警
+- WHEN 上游推送 Model / Variant / Option Family / Option Code 主数据（非 Configuration）THEN THE SYSTEM SHALL 沿用 US-013 / US-014 既有 code 处理策略，不应用本条 Configuration 专属规则
 
 ## 5. Constraints & Assumptions
 
@@ -481,6 +495,8 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **Model 双归属**：Model 同时归属于 CarLine 和 Platform，创建时两者均须为 ACTIVE 状态
 - **Option Family 互斥**：同一 Variant 下，同一 Option Family 最多只能绑定一个 Option Code；同一 Configuration 下同理
 - **Configuration 归属**：Configuration 必须归属于一个 Variant
+- **Configuration code 生成规则（CR-005）**：Configuration 的 code 不接受调用方传入；LOCAL 路径下系统按 `{variantCode}` + 7 位零填充自增序号生成（同一 Variant 下严格单调递增）；上游 ingest 路径下按 US-030 两层规则决定（命中 (source_system, source_id) 走幂等更新保持原 code；未命中按 code 是否被占用决定直采上游 code 或本地兜底生成）；code 全局唯一、不可变、序号只增不复用（DRAFT 物理删除不回收）
+- **Variant code 长度上限**：为给 Configuration 自动拼接 7 位序号留足空间，Variant code 长度上限为 57 字符（57 + 7 = 64）
 - **Option Code 归属**：Option Code 必须归属于一个 Option Family
 - **删除前置依赖**：任何实体在物理删除前，须校验不存在下层实体或绑定关系的引用
 
@@ -553,3 +569,4 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | 2026-05-26 | CR-002 | Added | 新增"域 5: 上游系统数据接入"（US-013 ~ US-018）：支持通过 Kafka / Feign 接收上游推送，新增数据来源字段（source_system / source_id / source_version / ingestion_channel / ingestion_time / source_payload_hash），新增幂等处理、权威源配置与冲突裁决（REJECT / AUDIT_ONLY）、接入审计表 mdm_ingestion_log 与监控指标；新增错误码 807010（消息 schema 非法）/ 807011（来源鉴权失败）/ 807012（同版本冲突）/ 807013（非权威源写入被拒绝）；新增角色 Upstream-System、MDM-Admin |
 | 2026-05-26 | CR-003 | Modified | 补充 US-004 历史版本快照需求：新增 MPT 后台查询接口定义（GET /api/mpt/mdm/{entity}/v1/{code}/history），支持 Brand / CarLine / Platform 历史版本按 version 降序查询，响应包含来源字段 |
 | 2026-05-27 | CR-004 | Added | 纳入产品树底层 5 类主数据（Model / Variant / Configuration / Option Family / Option Code）：新增术语表（§3）；新增域 6~10 共 12 条 US（US-019 ~ US-030）覆盖 CRUD、引用校验、Option Code 绑定/互斥、按选项码反查配置、事件发布、全量快照、历史追溯、上游接入扩展；修改 NG1 和 OS-1 移除已纳入实体的非目标声明；新增 G9/G10 业务目标；补充业务约束与 Out of Scope（OS-9 ~ OS-12）；新增 Open Questions（Q1 ~ Q7）与 Impact Analysis。VMD 侧对应的下游迁移由 VMD-CR-011 承接 |
+| 2026-05-27 | CR-005 | Modified | 细化 Configuration code 自动生成规则：(1) US-022 重写 CRUD AC：Configuration code 改为系统按 `{variantCode}` + 7 位零填充自增序号自动生成、code 不可变、DRAFT 物理删除不回收序号、序号溢出返回 807014；(2) US-020 新增 Variant code 长度上限 57 字符的约束（超限返回 807015），保证 Configuration code 拼接后不超过 64 字符；(3) US-030 新增上游 ingest Configuration 时的 code 决策规则（两层判定：先按 (source_system, source_id) 幂等更新保持原 code；未命中再按 code 是否被占用决定直采上游 code 或本地兜底生成 + 告警）；(4) §5 业务约束补充 Configuration code 生成规则与 Variant code 长度上限；(5) 新增错误码 807014（Configuration 序号溢出）/ 807015（Variant code 长度超限） |

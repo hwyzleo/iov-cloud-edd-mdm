@@ -41,8 +41,8 @@ public class MptConfigurationController {
 
     @PutMapping("/{code}")
     public ApiResponse<ConfigurationResponse> update(@PathVariable String code, @RequestBody ConfigurationUpdateCmd cmd) {
-        cmd.setCode(code);
-        ConfigurationDto configuration = configurationAppService.updateConfiguration(cmd);
+        // CR-005：code 不可变，仅由 path 参数定位记录；ConfigurationUpdateCmd 已不含 code 字段
+        ConfigurationDto configuration = configurationAppService.updateConfiguration(code, cmd);
         return ApiResponse.ok(configurationAssembler.toResponse(configuration));
     }
 

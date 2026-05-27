@@ -28,6 +28,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.CarLineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.AuthoritativeSourceService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.IngestionDomainService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class IngestionAppService {
     private final IngestionAuthService ingestionAuthService;
     private final AuthoritativeSourceService authoritativeSourceService;
     private final IngestionDomainService ingestionDomainService;
+    private final ProductDomainService productDomainService;
     private final BrandRepository brandRepository;
     private final CarLineRepository carLineRepository;
     private final PlatformRepository platformRepository;
@@ -71,7 +73,8 @@ public class IngestionAppService {
 
         // 3. 权威源校验
         EntityType et = EntityType.valueOf(entityType);
-        String code = extractCodeFromPayload(cmd.getPayload());
+        // CR-005：CONFIGURATION 类型允许 payload.code 为空（由系统按规则生成或冲突兜底生成）
+        String code = extractCodeFromPayload(cmd.getPayload(), et);
         authoritativeSourceService.validateAuthoritativeSource(et, code, sourceSystem);
 
         // 4. 计算payload哈希
@@ -288,9 +291,13 @@ public class IngestionAppService {
                 .build();
     }
 
-    private String extractCodeFromPayload(Map<String, Object> payload) {
+    private String extractCodeFromPayload(Map<String, Object> payload, EntityType entityType) {
         Object code = payload.get("code");
         if (code == null) {
+            // CR-005：CONFIGURATION 类型允许 payload 不携带 code（由系统按规则生成）
+            if (entityType == EntityType.CONFIGURATION) {
+                return null;
+            }
             throw new IngestionSchemaException("payload中缺少code字段");
         }
         return code.toString();
@@ -412,7 +419,7 @@ public class IngestionAppService {
         return IngestionResult.builder().entityId(variant.getId()).version(variant.getVersion()).operationType(operationType).build();
     }
 
-    private IngestionResult processConfiguration(IngestCmd cmd, String code, String payloadHash) {
+    private IngestionResult processConfiguration(IngestCmd cmd, String upstreamCode, String payloadHash) {
         String sourceSystem = cmd.getSourceSystem();
         String sourceId = cmd.getSourceId();
         String sourceVersion = cmd.getSourceVersion();
@@ -420,52 +427,102 @@ public class IngestionAppService {
         String messageId = cmd.getMessageId();
         Map<String, Object> payload = cmd.getPayload();
 
-        Configuration existing = configurationRepository.findByCode(code).orElse(null);
-        String localVersion = existing != null ? existing.getSourceVersion() : null;
-        String localHash = existing != null ? existing.getSourcePayloadHash() : null;
+        // ===== CR-005 第 1 层：用 (sourceSystem, sourceId) 定位本地记录（幂等更新锚） =====
+        Configuration existing = configurationRepository
+                .findBySourceSystemAndSourceId(sourceSystem, sourceId).orElse(null);
 
-        IngestionStatus idempotentResult = ingestionDomainService.checkIdempotent(
-                sourceSystem, sourceId, sourceVersion, localVersion, payloadHash, localHash);
+        // 命中本地记录 → 走幂等校验 + 更新（保持本地 code 不变）
+        if (existing != null) {
+            String localVersion = existing.getSourceVersion();
+            String localHash = existing.getSourcePayloadHash();
+            IngestionStatus idempotentResult = ingestionDomainService.checkIdempotent(
+                    sourceSystem, sourceId, sourceVersion, localVersion, payloadHash, localHash);
 
-        if (idempotentResult == IngestionStatus.DUPLICATED) {
+            if (idempotentResult == IngestionStatus.DUPLICATED) {
+                ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                        EntityType.CONFIGURATION, existing.getCode(), ingestionChannel,
+                        IngestionStatus.DUPLICATED, null, null, payloadHash);
+                return IngestionResult.builder().entityId(existing.getId())
+                        .version(existing.getVersion()).operationType("DUPLICATED").build();
+            }
+            if (idempotentResult == IngestionStatus.OUTDATED) {
+                ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                        EntityType.CONFIGURATION, existing.getCode(), ingestionChannel,
+                        IngestionStatus.OUTDATED, null, null, payloadHash);
+                return IngestionResult.builder().entityId(existing.getId())
+                        .version(existing.getVersion()).operationType("OUTDATED").build();
+            }
+
+            // 上游 code 漂移：payload 携带的 code 与本地已有 code 不一致 → 仅记录告警，不改 code
+            if (upstreamCode != null && !upstreamCode.equals(existing.getCode())) {
+                log.warn("上游 Configuration code 漂移：sourceSystem={}, sourceId={}, localCode={}, upstreamCode={}（保持本地 code 不变）",
+                        sourceSystem, sourceId, existing.getCode(), upstreamCode);
+            }
+
+            String name = (String) payload.get("name");
+            String nameLocal = (String) payload.get("nameLocal");
+            String description = (String) payload.get("description");
+            existing.updateFromUpstream(name, nameLocal, description,
+                    cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            Configuration saved = configurationRepository.save(existing);
+            outboxService.publishConfigurationUpdatedEvent(saved);
+
             ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
-                    EntityType.CONFIGURATION, code, ingestionChannel, IngestionStatus.DUPLICATED, null, null, payloadHash);
-            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
-                    .version(existing != null ? existing.getVersion() : null).operationType("DUPLICATED").build();
-        }
-        if (idempotentResult == IngestionStatus.OUTDATED) {
-            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
-                    EntityType.CONFIGURATION, code, ingestionChannel, IngestionStatus.OUTDATED, null, null, payloadHash);
-            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
-                    .version(existing != null ? existing.getVersion() : null).operationType("OUTDATED").build();
+                    EntityType.CONFIGURATION, saved.getCode(), ingestionChannel,
+                    IngestionStatus.SUCCESS, null, null, payloadHash);
+            return IngestionResult.builder().entityId(saved.getId())
+                    .version(saved.getVersion()).operationType("UPDATED").build();
         }
 
+        // ===== CR-005 第 2 层：未命中（视为新增），决策 code =====
         String name = (String) payload.get("name");
         String nameLocal = (String) payload.get("nameLocal");
         String variantCode = (String) payload.get("variantCode");
         String description = (String) payload.get("description");
 
-        Configuration configuration;
-        String operationType;
-        if (existing == null) {
-            configuration = Configuration.createFromUpstream(code, name, nameLocal, variantCode, description,
-                    cmd.getOccurredAt(), null,
-                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            configuration = configurationRepository.save(configuration);
-            outboxService.publishConfigurationCreatedEvent(configuration);
-            operationType = "CREATED";
+        String finalCode;
+        boolean codeOverride = false;
+        if (upstreamCode == null || upstreamCode.length() > 64) {
+            // 上游未带 code 或 code 超长 → 系统按规则生成
+            if (upstreamCode != null && upstreamCode.length() > 64) {
+                log.warn("上游 Configuration code 长度超限（>64）: sourceSystem={}, sourceId={}, upstreamCode={}（按系统规则生成）",
+                        sourceSystem, sourceId, upstreamCode);
+            }
+            finalCode = productDomainService.generateConfigurationCode(variantCode);
+        } else if (configurationRepository.existsByCode(upstreamCode)) {
+            // 上游 code 在 MDM 全局已被占用 → 视为命名空间冲突，本地按规则生成新 code 兜底，告警 + 监控
+            finalCode = productDomainService.generateConfigurationCode(variantCode);
+            codeOverride = true;
+            log.warn("Configuration code 命名空间冲突，本地兜底生成: sourceSystem={}, sourceId={}, upstreamCode={}, finalCode={}",
+                    sourceSystem, sourceId, upstreamCode, finalCode);
+            // 监控指标 mdm.configuration.code.upstream_conflict（待 Prometheus 接入后绑定 Counter）
         } else {
-            existing.updateFromUpstream(name, nameLocal, description,
-                    cmd.getOccurredAt(), null,
-                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
-            configuration = configurationRepository.save(existing);
-            outboxService.publishConfigurationUpdatedEvent(configuration);
-            operationType = "UPDATED";
+            // 上游 code 未被占用 → 直采上游 code
+            finalCode = upstreamCode;
         }
 
-        ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
-                EntityType.CONFIGURATION, code, ingestionChannel, IngestionStatus.SUCCESS, null, null, payloadHash);
+        Configuration configuration = Configuration.createFromUpstream(
+                finalCode, name, nameLocal, variantCode, description,
+                cmd.getOccurredAt(), null,
+                sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+        Configuration saved = configurationRepository.save(configuration);
+        outboxService.publishConfigurationCreatedEvent(saved);
 
-        return IngestionResult.builder().entityId(configuration.getId()).version(configuration.getVersion()).operationType(operationType).build();
+        // 在 ingestionLog 的 errorMessage 字段记录 code 决策结果（便于排查；非 ERROR 状态）
+        String decisionNote;
+        if (codeOverride) {
+            decisionNote = String.format("codeOverride=true, upstreamCode=%s, finalCode=%s", upstreamCode, finalCode);
+        } else if (upstreamCode == null) {
+            decisionNote = "code generated by system: " + finalCode;
+        } else {
+            decisionNote = "code adopted from upstream: " + finalCode;
+        }
+        ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                EntityType.CONFIGURATION, saved.getCode(), ingestionChannel,
+                IngestionStatus.SUCCESS, null, decisionNote, payloadHash);
+
+        return IngestionResult.builder().entityId(saved.getId())
+                .version(saved.getVersion()).operationType("CREATED").build();
     }
 }

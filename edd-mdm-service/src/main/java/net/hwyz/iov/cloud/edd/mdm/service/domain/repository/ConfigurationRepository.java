@@ -19,6 +19,16 @@ public interface ConfigurationRepository {
 
     Optional<Configuration> findByCode(String code);
 
+    /**
+     * 按 (source_system, source_id) 查找上游推送的本地记录。
+     * 用于 CR-005 上游 ingest 第 1 层幂等更新判定。
+     *
+     * @param sourceSystem 来源系统编码
+     * @param sourceId     上游业务主键
+     * @return 命中的本地 Configuration（若存在）
+     */
+    Optional<Configuration> findBySourceSystemAndSourceId(String sourceSystem, String sourceId);
+
     boolean existsByCode(String code);
 
     boolean existsByVariantCode(String variantCode);

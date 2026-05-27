@@ -1,8 +1,10 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.BrandNotFoundException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.ConfigurationSeqOverflowException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VariantCodeTooLongException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
@@ -21,6 +23,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.CarLineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationSeqRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ModelRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionFamilyRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
@@ -50,6 +53,7 @@ public class ProductDomainService {
     private final VariantRepository variantRepository;
     private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
     private final ConfigurationRepository configurationRepository;
+    private final ConfigurationSeqRepository configurationSeqRepository;
     private final ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
 
     /**
@@ -699,6 +703,11 @@ public class ProductDomainService {
      */
     public Variant createVariant(String code, String name, String nameLocal, String modelCode,
                                  String description, Date effectiveFrom, Date effectiveTo, String createBy) {
+        // CR-005：Variant code 长度上限 57（为下层 Configuration code 自动拼接 7 位序号预留空间，保证总长 ≤ 64）
+        if (code != null && code.length() > 57) {
+            throw new VariantCodeTooLongException(
+                    "Variant code 长度超限（>57）: code=" + code + ", length=" + code.length());
+        }
         if (variantRepository.existsByCode(code)) {
             throw new DuplicateCodeException("版本code已存在: " + code);
         }
@@ -802,18 +811,48 @@ public class ProductDomainService {
     // ==================== 配置相关方法 ====================
 
     /**
-     * 创建配置
+     * Configuration code 7 位零填充上限（CR-005）
      */
-    public Configuration createConfiguration(String code, String name, String nameLocal, String variantCode,
-                                             String description, Date effectiveFrom, Date effectiveTo, String createBy) {
-        if (configurationRepository.existsByCode(code)) {
-            throw new DuplicateCodeException("配置code已存在: " + code);
+    private static final long CONFIGURATION_SEQ_MAX = 9_999_999L;
+
+    /**
+     * 生成 Configuration code（CR-005）
+     * <p>
+     * 规则：{variantCode} + 7 位零填充自增序号（按 variant 维度独立计数）。
+     * 使用 mdm_configuration_seq 行锁原子自增，与业务事务在同一本地事务内执行；
+     * 序号 > 9,999,999 时抛出 ConfigurationSeqOverflowException（错误码 807014）。
+     *
+     * @param variantCode 版本 code
+     * @return 生成的 Configuration code（如 "XREHSLA26PA0000001"）
+     */
+    public String generateConfigurationCode(String variantCode) {
+        long seq = configurationSeqRepository.allocateNextSeq(variantCode);
+        if (seq > CONFIGURATION_SEQ_MAX) {
+            throw new ConfigurationSeqOverflowException(
+                    "Configuration 序号溢出（>9,999,999）: variantCode=" + variantCode + ", seq=" + seq);
         }
-        // 校验variantCode存在且ACTIVE
+        return variantCode + String.format("%07d", seq);
+    }
+
+    /**
+     * 创建配置（CR-005：code 由系统自动生成）
+     */
+    public Configuration createConfiguration(String name, String nameLocal, String variantCode,
+                                             String description, Date effectiveFrom, Date effectiveTo, String createBy) {
+        // 校验 variantCode 存在且 ACTIVE
         Variant variant = variantRepository.findByCode(variantCode)
                 .orElseThrow(() -> new IllegalArgumentException("版本不存在: " + variantCode));
         if (variant.getStatus() != net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VariantStatus.ACTIVE) {
             throw new IllegalArgumentException("版本状态不是ACTIVE: " + variantCode);
+        }
+        // 系统按规则生成 code
+        String code = generateConfigurationCode(variantCode);
+        if (configurationRepository.existsByCode(code)) {
+            // UK 兜底重试一次
+            code = generateConfigurationCode(variantCode);
+            if (configurationRepository.existsByCode(code)) {
+                throw new DuplicateCodeException("配置code已存在（重试后仍冲突）: " + code);
+            }
         }
         Configuration configuration = Configuration.create(code, name, nameLocal, variantCode, description,
                 effectiveFrom, effectiveTo, createBy);

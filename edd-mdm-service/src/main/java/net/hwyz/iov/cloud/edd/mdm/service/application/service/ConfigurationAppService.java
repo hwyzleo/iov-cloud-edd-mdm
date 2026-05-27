@@ -37,13 +37,14 @@ public class ConfigurationAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public ConfigurationDto createConfiguration(ConfigurationCreateCmd cmd) {
-        log.info("创建配置: {}", cmd.getCode());
+        log.info("创建配置: variantCode={}, name={}", cmd.getVariantCode(), cmd.getName());
         String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
         }
+        // CR-005：code 由系统按 {variantCode}+7位零填充自增序号生成，不再接受外部传入
         Configuration configuration = productDomainService.createConfiguration(
-                cmd.getCode(), cmd.getName(), cmd.getNameLocal(),
+                cmd.getName(), cmd.getNameLocal(),
                 cmd.getVariantCode(), cmd.getDescription(),
                 cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
         outboxService.publishConfigurationCreatedEvent(configuration);
@@ -51,14 +52,15 @@ public class ConfigurationAppService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ConfigurationDto updateConfiguration(ConfigurationUpdateCmd cmd) {
-        log.info("更新配置: {}", cmd.getCode());
+    public ConfigurationDto updateConfiguration(String code, ConfigurationUpdateCmd cmd) {
+        log.info("更新配置: {}", code);
         String modifyBy = cmd.getModifyBy();
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
         }
+        // CR-005：code 来自 path 参数，不可变；cmd 中不再含 code 字段
         Configuration configuration = productDomainService.updateConfiguration(
-                cmd.getCode(), cmd.getName(), cmd.getNameLocal(),
+                code, cmd.getName(), cmd.getNameLocal(),
                 cmd.getDescription(), cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
         outboxService.publishConfigurationUpdatedEvent(configuration);
         return convertToDto(configuration);
