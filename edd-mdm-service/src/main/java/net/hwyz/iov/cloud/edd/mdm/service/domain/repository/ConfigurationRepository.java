@@ -1,0 +1,35 @@
+package net.hwyz.iov.cloud.edd.mdm.service.domain.repository;
+
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.ConfigurationHistory;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 配置仓储接口
+ *
+ * @author hwyz_leo
+ */
+public interface ConfigurationRepository {
+
+    Configuration save(Configuration configuration);
+
+    Optional<Configuration> findById(Long id);
+
+    Optional<Configuration> findByCode(String code);
+
+    boolean existsByCode(String code);
+
+    boolean existsByVariantCode(String variantCode);
+
+    List<Configuration> findAll(int page, int size, String variantCode, boolean includeInactive);
+
+    long count(String variantCode, boolean includeInactive);
+
+    void delete(Configuration configuration);
+
+    List<ConfigurationHistory> findHistoryByCode(String code);
+
+    List<Configuration> findByCodes(List<String> codes, boolean onlyActive);
+}

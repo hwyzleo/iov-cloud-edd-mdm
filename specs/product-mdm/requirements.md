@@ -2,9 +2,13 @@
 
 ## 1. Overview
 
-edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主数据（Brand / CarLine / Platform）的 Golden Record。本 feature 建立 Product MDM 子域，承接原 VMD 项目侧的品牌 / 车系 / 平台主数据 SSOT 上移至 edd-mdm，实现主数据统一治理与分发能力。
+edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主数据的 Golden Record。本 feature 建立 Product MDM 子域，承接原 VMD 项目侧的产品树主数据 SSOT 上移至 edd-mdm，实现主数据统一治理与分发能力。
 
-主数据的来源分为两类：(1) **本地维护**：由 MDM-User 通过后台直接 CRUD 录入；(2) **上游系统接入**：由具备业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台）通过 Kafka 消息或 Feign / HTTP 接口推送至 edd-mdm，由 edd-mdm 统一治理、版本化并对外分发。本 feature 同时支持上述两类来源，并在主数据上记录来源系统、来源 ID、来源版本、接收通道与接收时间等信息以支持幂等校验、冲突裁决与全链路审计。
+产品树主数据覆盖以下 8 类实体：
+- **已落地**（CR-001 / CR-002 / CR-003）：Brand（品牌）、CarLine（车系）、Platform（平台）
+- **本期纳入**（CR-004）：Model（车型）、Variant（版本）、Configuration（配置）、Option Family（选项族）、Option Code（选项码）
+
+主数据的来源分为两类：(1) **本地维护**：由 MDM-User 通过后台直接 CRUD 录入；(2) **上游系统接入**：由具备业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台 / CPQ）通过 Kafka 消息或 Feign / HTTP 接口推送至 edd-mdm，由 edd-mdm 统一治理、版本化并对外分发。本 feature 同时支持上述两类来源，并在主数据上记录来源系统、来源 ID、来源版本、接收通道与接收时间等信息以支持幂等校验、冲突裁决与全链路审计。
 
 **业务属性**：横向  
 **领域**：企业数字底座  
@@ -26,10 +30,12 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **G6**：遵循 DDD 设计原则，保持与 VMD 项目架构风格一致
 - **G7**：支持上游系统通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / CarLine / Platform 主数据至 edd-mdm，并在主数据与对外事件 payload 中记录来源系统、来源 ID、来源版本、接收通道、接收时间等字段，支持审计与下游识别
 - **G8**：对上游推送的数据实施 schema 校验、来源鉴权、权威源校验、幂等校验与冲突裁决，保证 Golden Record 的一致性、可追溯性与可监控性
+- **G9**：将产品树底层 5 类主数据（Model / Variant / Configuration / Option Family / Option Code）纳入 edd-mdm 统一治理，建立完整的产品树 SSOT，消除上下游对产品树底层数据的冗余维护
+- **G10**：提供按选项码组合反查配置的能力，支撑订单 / 销售域的核心高频业务场景
 
 ### 非目标（明确不做）
 
-- **NG1**：不接管 VMD 的车辆实例（VIN）/ 零部件 / 生命周期 / 车型（Model）/ 基础车型（BaseModel）/ 生产配置（BuildConfig）/ 特征族（FeatureFamily）/ 制造厂商（Manufacturer）/ 供应商（Supplier）等领域
+- **NG1**：不接管 VMD 的车辆实例（VIN）/ 零部件 / 生命周期 / 制造厂商（Manufacturer）/ 供应商（Supplier）等领域
 - **NG2**：不接管 Customer / Material / Employee / Location 等其他 MDM 子域
 - **NG3**：不实施跨系统主数据的字段级合并裁决（multi-source field-level merge）。首期采用 **单一权威源（Single Authoritative Source）** 策略：每条主数据在任一时刻仅由配置中指定的一个权威源（LOCAL 或某个上游系统）负责写入；非权威源的推送将被拒绝或仅记录审计日志，不更新主表
 - **NG4**：不实施数据质量打分引擎
@@ -38,7 +44,22 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **NG7**：不实施 Manufacturer / Supplier（留待后续 CR）
 - **NG8**：不实施对账机制（留待后续 CR）
 
-## 3. User Stories
+## 3. Glossary（术语表）
+
+| 英文 | 中文 | 行业对齐说明 |
+|------|------|-------------|
+| Brand | 品牌 | 已在 CR-001 落地 |
+| Carline | 车系 | 已在 CR-002 落地，等价于 SAP Model Family |
+| Platform | 平台 | 已在 CR-003 落地 |
+| Model | 车型 | CR-004 纳入。指车系下的代次/年款层（如"2024 款理想 L9"），对应 SAP Vehicle Model |
+| Variant | 版本 | CR-004 纳入。指车型下的差异化版本（如 Pro / Max / Ultra、Long Range / Performance），等价于 SAP / PLM 通用语境下的 Variant / Trim |
+| Configuration | 配置 | CR-004 纳入。指具体的可生产规格组合，等价于 SAP Sales Configuration |
+| Option Family | 选项族 | CR-004 纳入。等价于 SAP Characteristic Family、GM RPO Family、VW PR-Familie |
+| Option Code | 选项码 | CR-004 纳入。等价于 SAP Characteristic Value、GM RPO Code、VW PR-Nummer |
+
+> **语义说明**："选项族 / 选项码"在 MDM 体系内承载**两种语义**：既可代表"版本/配置的标配识别特征"，也可代表"客户选装项"。MDM 不区分这两种语义，由消费方根据上下文使用。
+
+## 4. User Stories
 
 ### 域 1: MDM 后台维护
 
@@ -276,13 +297,192 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - THE SYSTEM SHALL 提供 MPT 端查询接口 GET /api/mpt/mdm/ingestion/v1/log，支持按 sourceSystem / entityType / status / 时间窗 过滤分页查询
 - THE SYSTEM SHALL 提供 MPT 端查询接口 GET /api/mpt/mdm/ingestion/v1/{messageId} 查询单条接入处理的明细
 
-## 4. Constraints & Assumptions
+### 域 6: 车型（Model）管理
+
+#### US-019: CRUD Model
+
+**As a** MDM-User, **I want** CRUD Model（含按车系、平台组合过滤），**so that** 管理车型 Golden Record。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 创建 Model 且 code 唯一且 carlineCode 指向已存在且 status=ACTIVE 的 CarLine 且 platformCode 指向已存在且 status=ACTIVE 的 Platform THEN THE SYSTEM SHALL 持久化 Model 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
+- WHEN MDM-User 创建 Model 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 创建 Model 且 carlineCode 指向不存在或 status≠ACTIVE 的 CarLine THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
+- WHEN MDM-User 创建 Model 且 platformCode 指向不存在或 status≠ACTIVE 的 Platform THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
+- WHEN MDM-User 更新 Model 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
+- WHEN MDM-User 失效 Model 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
+- WHEN MDM-User 删除 Model 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Model 且 status≠DRAFT THEN THE SYSTEM SHALL 拒绝删除并返回业务错误
+- WHEN MDM-User 删除 Model 且存在下层 Variant 引用该 Model THEN THE SYSTEM SHALL 拒绝删除并返回引用依赖错误
+- WHEN MDM-User 查询 Model 列表 THEN THE SYSTEM SHALL 支持按 carlineCode、platformCode、status 任意组合过滤
+- IF Model 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 拒绝保存并返回业务错误
+
+### 域 7: 版本（Variant）管理
+
+#### US-020: CRUD Variant
+
+**As a** MDM-User, **I want** CRUD Variant（含按平台、车系、车型任意组合过滤），**so that** 管理版本 Golden Record。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 创建 Variant 且 code 唯一且 modelCode 指向已存在且 status=ACTIVE 的 Model THEN THE SYSTEM SHALL 持久化 Variant 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
+- WHEN MDM-User 创建 Variant 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 创建 Variant 且 modelCode 指向不存在或 status≠ACTIVE 的 Model THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
+- WHEN MDM-User 更新 Variant 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
+- WHEN MDM-User 失效 Variant 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
+- WHEN MDM-User 删除 Variant 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Variant 且 status≠DRAFT THEN THE SYSTEM SHALL 拒绝删除并返回业务错误
+- WHEN MDM-User 删除 Variant 且存在下层 Configuration 引用该 Variant THEN THE SYSTEM SHALL 拒绝删除并返回引用依赖错误
+- WHEN MDM-User 查询 Variant 列表 THEN THE SYSTEM SHALL 支持按 modelCode、carlineCode、platformCode、status 任意组合过滤
+- IF Variant 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 拒绝保存并返回业务错误
+
+#### US-021: Variant 绑定 / 解绑 Option Code
+
+**As a** MDM-User, **I want** 为 Variant 绑定或解绑 Option Code，**so that** 标识该版本的标配/识别特征。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 为 Variant 绑定 Option Code 且该 Option Code 存在且 status=ACTIVE THEN THE SYSTEM SHALL 建立绑定关系并自增 Variant 的 version
+- WHEN MDM-User 为 Variant 绑定 Option Code 且该 Option Code 不存在或 status≠ACTIVE THEN THE SYSTEM SHALL 拒绝绑定并返回引用完整性错误
+- WHEN MDM-User 为 Variant 绑定 Option Code 且该 Variant 下已存在同一 Option Family 的另一个 Option Code THEN THE SYSTEM SHALL 拒绝绑定并返回互斥约束错误
+- WHEN MDM-User 为 Variant 解绑 Option Code THEN THE SYSTEM SHALL 移除绑定关系并自增 Variant 的 version
+- WHEN MDM-User 为 Variant 解绑 Option Code 且该绑定关系不存在 THEN THE SYSTEM SHALL 拒绝解绑并返回业务错误
+
+### 域 8: 配置（Configuration）管理
+
+#### US-022: CRUD Configuration
+
+**As a** MDM-User, **I want** CRUD Configuration（含按版本过滤），**so that** 管理配置 Golden Record。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 创建 Configuration 且 code 唯一且 variantCode 指向已存在且 status=ACTIVE 的 Variant THEN THE SYSTEM SHALL 持久化 Configuration 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
+- WHEN MDM-User 创建 Configuration 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 创建 Configuration 且 variantCode 指向不存在或 status≠ACTIVE 的 Variant THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
+- WHEN MDM-User 更新 Configuration 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
+- WHEN MDM-User 失效 Configuration 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
+- WHEN MDM-User 删除 Configuration 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Configuration 且 status≠DRAFT THEN THE SYSTEM SHALL 拒绝删除并返回业务错误
+- WHEN MDM-User 查询 Configuration 列表 THEN THE SYSTEM SHALL 支持按 variantCode、status 过滤
+- IF Configuration 的 effectiveFrom > effectiveTo THEN THE SYSTEM SHALL 拒绝保存并返回业务错误
+
+#### US-023: Configuration 绑定 / 解绑 Option Code
+
+**As a** MDM-User, **I want** 为 Configuration 绑定或解绑 Option Code，**so that** 描述该配置的全量特征规格。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 为 Configuration 绑定 Option Code 且该 Option Code 存在且 status=ACTIVE THEN THE SYSTEM SHALL 建立绑定关系并自增 Configuration 的 version
+- WHEN MDM-User 为 Configuration 绑定 Option Code 且该 Option Code 不存在或 status≠ACTIVE THEN THE SYSTEM SHALL 拒绝绑定并返回引用完整性错误
+- WHEN MDM-User 为 Configuration 绑定 Option Code 且该 Configuration 下已存在同一 Option Family 的另一个 Option Code THEN THE SYSTEM SHALL 拒绝绑定并返回互斥约束错误
+- WHEN MDM-User 为 Configuration 解绑 Option Code THEN THE SYSTEM SHALL 移除绑定关系并自增 Configuration 的 version
+- WHEN MDM-User 为 Configuration 解绑 Option Code 且该绑定关系不存在 THEN THE SYSTEM SHALL 拒绝解绑并返回业务错误
+
+#### US-024: 按 Option Code 组合反查 Configuration
+
+**As a** Service-Caller, **I want** 给定一组 Option Code，反查匹配的 Configuration 列表，**so that** 支撑订单/销售域根据客户选择的选项码组合定位可生产配置。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Service-Caller 提供一组 Option Code 进行反查 THEN THE SYSTEM SHALL 返回所有绑定的 Option Code 集合完全包含所提供组合的 Configuration 列表（包含匹配）
+- WHEN Service-Caller 提供一组 Option Code 进行反查且无匹配结果 THEN THE SYSTEM SHALL 返回空列表
+- WHEN Service-Caller 提供一组 Option Code 进行反查 THEN THE SYSTEM SHALL 仅返回 status=ACTIVE 的 Configuration
+- WHEN Service-Caller 提供空的 Option Code 集合 THEN THE SYSTEM SHALL 拒绝查询并返回参数校验错误
+
+### 域 9: 选项族（Option Family）与选项码（Option Code）管理
+
+#### US-025: CRUD Option Family
+
+**As a** MDM-User, **I want** CRUD Option Family，**so that** 管理选项的分组维度。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 创建 Option Family 且 code 唯一 THEN THE SYSTEM SHALL 持久化 Option Family 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
+- WHEN MDM-User 创建 Option Family 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 更新 Option Family 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
+- WHEN MDM-User 失效 Option Family 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
+- WHEN MDM-User 删除 Option Family 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Option Family 且 status≠DRAFT THEN THE SYSTEM SHALL 拒绝删除并返回业务错误
+- WHEN MDM-User 删除 Option Family 且存在下层 Option Code 引用该 Option Family THEN THE SYSTEM SHALL 拒绝删除并返回引用依赖错误
+
+#### US-026: CRUD Option Code
+
+**As a** MDM-User, **I want** CRUD Option Code，**so that** 管理选项族下的具体取值。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN MDM-User 创建 Option Code 且 code 唯一且 optionFamilyCode 指向已存在且 status=ACTIVE 的 Option Family THEN THE SYSTEM SHALL 持久化 Option Code 记录并设置 version=1，并自动填充 create_by、create_time、modify_by、modify_time
+- WHEN MDM-User 创建 Option Code 且 code 已存在 THEN THE SYSTEM SHALL 拒绝创建并返回业务错误
+- WHEN MDM-User 创建 Option Code 且 optionFamilyCode 指向不存在或 status≠ACTIVE 的 Option Family THEN THE SYSTEM SHALL 拒绝创建并返回引用完整性错误
+- WHEN MDM-User 更新 Option Code 且记录存在 THEN THE SYSTEM SHALL 自增 version 并更新记录，并自动填充 modify_by、modify_time
+- WHEN MDM-User 失效 Option Code 且 status=ACTIVE THEN THE SYSTEM SHALL 设置 status=INACTIVE 和 effectiveTo=now() 并自增 version，并自动填充 modify_by、modify_time
+- WHEN MDM-User 删除 Option Code 且 status=DRAFT THEN THE SYSTEM SHALL 物理删除记录
+- WHEN MDM-User 删除 Option Code 且 status≠DRAFT THEN THE SYSTEM SHALL 拒绝删除并返回业务错误
+- WHEN MDM-User 删除 Option Code 且存在 Variant 或 Configuration 绑定该 Option Code THEN THE SYSTEM SHALL 拒绝删除并返回引用依赖错误
+
+### 域 10: CR-004 新增实体的跨切面能力
+
+#### US-027: 5 类新实体的事件发布
+
+**As a** System, **I want** 在 Model / Variant / Configuration / Option Family / Option Code 发生变更时通过事务性发件箱发布事件，**so that** 下游可订阅同步产品树底层主数据变更。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Model / Variant / Configuration / Option Family / Option Code 被创建且 status=ACTIVE THEN THE SYSTEM SHALL 写入 Outbox 事件（eventType 含实体类型与操作类型）
+- WHEN Model / Variant / Configuration / Option Family / Option Code 被更新（含失效）THEN THE SYSTEM SHALL 写入 Outbox 事件
+- WHEN 事件写入 Outbox THEN THE SYSTEM SHALL 与业务变更在同一本地事务内完成
+- WHEN 事件 payload 构建 THEN THE SYSTEM SHALL 包含 eventId / eventType / occurredAt / entityId / version / payload 主体字段及来源字段
+- WHEN Variant 或 Configuration 的 Option Code 绑定关系发生变更 THEN THE SYSTEM SHALL 写入对应实体的 updated 事件
+
+#### US-028: 5 类新实体的全量快照消费
+
+**As a** Service-Caller, **I want** 通过 Feign 拉取 Model / Variant / Configuration / Option Family / Option Code 的全量快照，**so that** 下游可执行 Bootstrap 与对账。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Service-Caller 调用全量快照接口且未传 includeInactive 参数 THEN THE SYSTEM SHALL 仅返回 status=ACTIVE 的记录
+- WHEN Service-Caller 调用全量快照接口且 includeInactive=true THEN THE SYSTEM SHALL 返回所有状态的记录
+- WHEN 返回结果 THEN THE SYSTEM SHALL 支持分页
+- WHEN Service-Caller 按 code 单点查询且记录存在且 status=ACTIVE THEN THE SYSTEM SHALL 返回实体详情
+- WHEN Service-Caller 按 code 单点查询且记录不存在或 status≠ACTIVE THEN THE SYSTEM SHALL 返回空
+- WHEN Feign 调用失败 THEN THE SYSTEM SHALL 通过 FallbackFactory 返回空列表或 null 并记录日志
+
+#### US-029: 5 类新实体的历史版本追溯
+
+**As a** System, **I want** 每次 Model / Variant / Configuration / Option Family / Option Code 发生变更时生成历史版本快照，**so that** 支持回溯与审计。
+
+**Acceptance Criteria** (EARS 语法):
+
+- WHEN Model / Variant / Configuration / Option Family / Option Code 发生创建、更新、失效操作 THEN THE SYSTEM SHALL 在对应 history 表插入一条完整快照记录
+- WHEN history 表插入快照 THEN THE SYSTEM SHALL 记录变更时间、操作人、变更前后的 version
+- WHEN 查询历史版本 THEN THE SYSTEM SHALL 按 entityId 和 version 降序返回快照列表，响应包含来源字段
+- WHEN Variant 或 Configuration 的 Option Code 绑定关系发生变更 THEN THE SYSTEM SHALL 在对应实体的 history 表中记录快照
+
+#### US-030: 5 类新实体的上游接入扩展
+
+**As an** Upstream-System, **I want** 通过 Kafka 或 Feign / HTTP 向 edd-mdm 推送 Model / Variant / Configuration / Option Family / Option Code 主数据，**so that** 由 edd-mdm 统一治理产品树底层主数据。
+
+**Acceptance Criteria** (EARS 语法):
+
+- THE SYSTEM SHALL 复用 US-013 / US-014 已建立的上游接入处理链路（schema 校验 → 来源鉴权 → 权威源校验 → 幂等校验 → 业务校验 → upsert + history + outbox）
+- THE SYSTEM SHALL 对 5 类新实体的上游推送执行与本地维护一致的引用完整性校验
+- THE SYSTEM SHALL 对 5 类新实体的上游推送执行与本地维护一致的互斥约束校验（Variant / Configuration 下同一 Option Family 最多一个 Option Code）
+- THE SYSTEM SHALL 在 mdm_ingestion_log 中记录 5 类新实体的每一次接入处理结果
+- THE SYSTEM SHALL 暴露 5 类新实体的 Prometheus 接入监控指标，与现有指标维度一致
+
+## 5. Constraints & Assumptions
 
 ### 业务约束
 
 - **横向治理层定位**：edd-mdm 是横向主数据治理层，不替代业务系统主权
 - **单一权威源**：首期只支持单一权威源（由 edd-mdm 内部 CRUD 维护），不实施多源合并
 - **VMD 对齐**：架构风格与 VMD 项目保持一致
+- **产品树层级关系**：Brand → CarLine → Model → Variant → Configuration，上层失效/删除时须校验下层无引用
+- **Model 双归属**：Model 同时归属于 CarLine 和 Platform，创建时两者均须为 ACTIVE 状态
+- **Option Family 互斥**：同一 Variant 下，同一 Option Family 最多只能绑定一个 Option Code；同一 Configuration 下同理
+- **Configuration 归属**：Configuration 必须归属于一个 Variant
+- **Option Code 归属**：Option Code 必须归属于一个 Option Family
+- **删除前置依赖**：任何实体在物理删除前，须校验不存在下层实体或绑定关系的引用
 
 ### 前置条件
 
@@ -297,11 +497,11 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 - **Upstream-System**：业务源头权威的上游系统（如 PLM / DMS / 集团主数据平台），通过 Kafka 消息或 Feign / HTTP 接口推送 Brand / CarLine / Platform 主数据至 edd-mdm；每个上游系统对应唯一的 sourceSystem 编码
 - **MDM-Admin**：MDM 管理员，持有 `mdm:admin:*` 权限点，负责权威源配置、上游来源注册、接入审计与监控查询等运维操作
 
-## 5. Out of Scope
+## 6. Out of Scope
 
 | 编号 | 内容 | 原因 |
 |------|------|------|
-| OS-1 | VMD 的 VIN / 零部件 / 生命周期 / 车型 / 基础车型 / 生产配置 / 特征族 | 仍由 VMD 持有 |
+| OS-1 | VMD 的 VIN / 零部件 / 生命周期 | 仍由 VMD 持有 |
 | OS-2 | Customer / Material / Employee / Location MDM 子域 | 未来扩展 |
 | OS-3 | Manufacturer / Supplier | 留待后续 CR |
 | OS-4 | 字段级多源合并裁决（field-level merge） | 首期采用单一权威源策略，每条主数据由唯一权威源写入；支持多上游接入但不做字段级合并 |
@@ -309,11 +509,47 @@ edd-mdm 是企业数字底座领域的横向微服务，负责承载产品树主
 | OS-6 | 跨系统 ID 映射表 | 留待后续 CR |
 | OS-7 | 审批工作流 | 留待后续 CR；首期 CRUD 即发布 |
 | OS-8 | 对账机制 | 留待后续 CR |
+| OS-9 | 跨车型的选项码兼容矩阵（哪些选项码可用于哪些车型） | 业务复杂度高，留待后续 CR |
+| OS-10 | 选项码间的依赖/排斥规则引擎（如选了 A 则必须选 B、不能选 C） | 属于销售配置器/CPQ 领域能力，不在 MDM 范围 |
+| OS-11 | 选项码定价与商务属性 | 属于销售/财务域，MDM 仅管理主数据标识 |
+| OS-12 | 配置与车辆实例（VIN）的关联 | 仍由 VMD 持有 |
 
-## 6. Changelog
+## 7. Open Questions
+
+| 编号 | 问题 | 影响范围 | 建议（待业务确认） |
+|------|------|----------|-------------------|
+| Q1 | 上层失效（如 Model → INACTIVE）时，是否级联失效下层（Variant / Configuration）？还是仅校验阻止？ | US-019 / US-020 / US-022 | 待定 |
+| Q2 | Configuration 的**物理删除**应限定在何种状态？MDM 内无法感知车辆实例的引用情况。 | US-022 | 建议只允许 DRAFT 状态删除，ACTIVE / INACTIVE 仅支持失效，由业务方确认 |
+| Q3 | 下层引用上层时，是否要求上层 status = ACTIVE？还是允许引用 INACTIVE 状态的上层？ | US-019 ~ US-026 | 待定 |
+| Q4 | Option Code 是否需要跨车型/版本/配置的全局唯一性？还是允许在不同上下文中复用同一 Option Code？ | US-026 | 待定 |
+| Q5 | Variant 与 Option Code 绑定的"同一 Option Family 互斥"约束，是否在所有 Variant 上都强制？是否存在例外场景？ | US-021 | 待定 |
+| Q6 | Configuration 绑定的 Option Code 集合，是否要求"覆盖所有必选 Option Family"？还是允许部分缺失？ | US-023 | 待定 |
+| Q7 | 按 Option Code 组合反查 Configuration 的匹配语义，是"精确匹配"还是"包含匹配"？是否支持模糊/通配？ | US-024 | 待定 |
+
+## 8. Impact Analysis（业务层影响）
+
+### VMD 项目
+
+- VMD 侧的车型 / 版本 / 配置 / 选项族 / 选项码后台维护能力需降级为**只读**（数据来源切换为 MDM 本地投影副本）
+- VMD 侧的车型 / 版本 / 配置查询能力需切换为消费 MDM 事件 + 本地副本模式（沿用 CR-010 已落地的本地投影副本模式）
+- VMD 侧对应的下游迁移由 VMD-CR-011 承接
+
+### 下游消费方
+
+- VSO（车辆销售订单）、订单域、生产域、销售域需要扩展 Kafka 订阅范围，新增 Model / Variant / Configuration / Option Family / Option Code 5 类事件的消费
+- 下游需扩展 Feign 全量快照对账范围，覆盖 5 类新实体
+- 按选项码组合反查配置（US-024）为订单/销售域核心高频能力，下游需对接该查询接口
+
+### 上游系统
+
+- 需评估是否新增产品主数据的上游推送通道（如 PLM、CPQ、产品定义系统）
+- 若存在上游系统直接维护车型/版本/配置/选项族/选项码，需完成来源注册与权威源配置
+
+## 9. Changelog
 
 | Date | Change ID | Type | Description |
 |------|-----------|------|-------------|
 | 2026-05-26 | CR-001 | Added | 首版产出：建立 Product MDM 子域（Brand / CarLine / Platform）需求文档 |
 | 2026-05-26 | CR-002 | Added | 新增"域 5: 上游系统数据接入"（US-013 ~ US-018）：支持通过 Kafka / Feign 接收上游推送，新增数据来源字段（source_system / source_id / source_version / ingestion_channel / ingestion_time / source_payload_hash），新增幂等处理、权威源配置与冲突裁决（REJECT / AUDIT_ONLY）、接入审计表 mdm_ingestion_log 与监控指标；新增错误码 807010（消息 schema 非法）/ 807011（来源鉴权失败）/ 807012（同版本冲突）/ 807013（非权威源写入被拒绝）；新增角色 Upstream-System、MDM-Admin |
 | 2026-05-26 | CR-003 | Modified | 补充 US-004 历史版本快照需求：新增 MPT 后台查询接口定义（GET /api/mpt/mdm/{entity}/v1/{code}/history），支持 Brand / CarLine / Platform 历史版本按 version 降序查询，响应包含来源字段 |
+| 2026-05-27 | CR-004 | Added | 纳入产品树底层 5 类主数据（Model / Variant / Configuration / Option Family / Option Code）：新增术语表（§3）；新增域 6~10 共 12 条 US（US-019 ~ US-030）覆盖 CRUD、引用校验、Option Code 绑定/互斥、按选项码反查配置、事件发布、全量快照、历史追溯、上游接入扩展；修改 NG1 和 OS-1 移除已纳入实体的非目标声明；新增 G9/G10 业务目标；补充业务约束与 Out of Scope（OS-9 ~ OS-12）；新增 Open Questions（Q1 ~ Q7）与 Impact Analysis。VMD 侧对应的下游迁移由 VMD-CR-011 承接 |

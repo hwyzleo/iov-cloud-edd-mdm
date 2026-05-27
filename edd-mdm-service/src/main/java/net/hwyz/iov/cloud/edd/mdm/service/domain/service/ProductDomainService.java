@@ -5,13 +5,27 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeExceptio
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.BrandHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.CarLineHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.ConfigurationHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.ModelHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.OptionFamilyHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PlatformHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.VariantHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.CarLineRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ModelRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionFamilyRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +45,12 @@ public class ProductDomainService {
     private final BrandRepository brandRepository;
     private final CarLineRepository carLineRepository;
     private final PlatformRepository platformRepository;
+    private final OptionFamilyRepository optionFamilyRepository;
+    private final ModelRepository modelRepository;
+    private final VariantRepository variantRepository;
+    private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
+    private final ConfigurationRepository configurationRepository;
+    private final ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
 
     /**
      * 创建品牌
@@ -501,5 +521,401 @@ public class ProductDomainService {
             throw new BrandNotFoundException("平台不存在: " + code);
         }
         return platformRepository.findHistoryByCode(code);
+    }
+
+    // ==================== 选项族相关方法 ====================
+
+    /**
+     * 创建选项族
+     */
+    public OptionFamily createOptionFamily(String code, String name, String nameLocal, String description,
+                                           Date effectiveFrom, Date effectiveTo, String createBy) {
+        if (optionFamilyRepository.existsByCode(code)) {
+            throw new DuplicateCodeException("选项族code已存在: " + code);
+        }
+        OptionFamily optionFamily = OptionFamily.create(code, name, nameLocal, description,
+                effectiveFrom, effectiveTo, createBy);
+        return optionFamilyRepository.save(optionFamily);
+    }
+
+    /**
+     * 更新选项族
+     */
+    public OptionFamily updateOptionFamily(String code, String name, String nameLocal, String description,
+                                           Date effectiveFrom, Date effectiveTo, String modifyBy) {
+        OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+        optionFamily.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
+        return optionFamilyRepository.save(optionFamily);
+    }
+
+    /**
+     * 失效选项族
+     */
+    public OptionFamily deactivateOptionFamily(String code, String modifyBy) {
+        OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+        optionFamily.deactivate(modifyBy);
+        return optionFamilyRepository.save(optionFamily);
+    }
+
+    /**
+     * 删除选项族
+     */
+    public void deleteOptionFamily(String code, String modifyBy) {
+        OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+        optionFamily.delete(modifyBy);
+        optionFamilyRepository.save(optionFamily);
+    }
+
+    /**
+     * 根据code获取选项族
+     */
+    public OptionFamily getOptionFamilyByCode(String code) {
+        return optionFamilyRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+    }
+
+    /**
+     * 分页查询选项族列表
+     */
+    public List<OptionFamily> listOptionFamilies(int page, int size, boolean includeInactive) {
+        return optionFamilyRepository.findAll(page, size, includeInactive);
+    }
+
+    /**
+     * 查询选项族总数
+     */
+    public long countOptionFamilies(boolean includeInactive) {
+        return optionFamilyRepository.count(includeInactive);
+    }
+
+    /**
+     * 查询选项族历史版本列表
+     */
+    public List<OptionFamilyHistory> listOptionFamilyHistory(String code) {
+        if (!optionFamilyRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("选项族不存在: " + code);
+        }
+        return optionFamilyRepository.findHistoryByCode(code);
+    }
+
+    // ==================== 车型相关方法 ====================
+
+    /**
+     * 创建车型
+     */
+    public Model createModel(String code, String name, String nameLocal, String carLineCode,
+                             String platformCode, String modelYear, String description,
+                             Date effectiveFrom, Date effectiveTo, String createBy) {
+        if (modelRepository.existsByCode(code)) {
+            throw new DuplicateCodeException("车型code已存在: " + code);
+        }
+        // 校验carLineCode存在且ACTIVE
+        CarLine carLine = carLineRepository.findByCode(carLineCode)
+                .orElseThrow(() -> new IllegalArgumentException("车系不存在: " + carLineCode));
+        if (carLine.getStatus() != net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineStatus.ACTIVE) {
+            throw new IllegalArgumentException("车系状态不是ACTIVE: " + carLineCode);
+        }
+        // 校验platformCode存在且ACTIVE
+        Platform platform = platformRepository.findByCode(platformCode)
+                .orElseThrow(() -> new IllegalArgumentException("平台不存在: " + platformCode));
+        if (platform.getStatus() != net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PlatformStatus.ACTIVE) {
+            throw new IllegalArgumentException("平台状态不是ACTIVE: " + platformCode);
+        }
+        Model model = Model.create(code, name, nameLocal, carLineCode, platformCode,
+                modelYear, description, effectiveFrom, effectiveTo, createBy);
+        return modelRepository.save(model);
+    }
+
+    /**
+     * 更新车型
+     */
+    public Model updateModel(String code, String name, String nameLocal, String modelYear,
+                             String description, Date effectiveFrom, Date effectiveTo, String modifyBy) {
+        Model model = modelRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
+        model.update(name, nameLocal, modelYear, description, effectiveFrom, effectiveTo, modifyBy);
+        return modelRepository.save(model);
+    }
+
+    /**
+     * 失效车型
+     */
+    public Model deactivateModel(String code, String modifyBy) {
+        Model model = modelRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
+        model.deactivate(modifyBy);
+        return modelRepository.save(model);
+    }
+
+    /**
+     * 删除车型
+     */
+    public void deleteModel(String code, String modifyBy) {
+        Model model = modelRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
+        model.delete(modifyBy);
+        modelRepository.save(model);
+    }
+
+    /**
+     * 根据code获取车型
+     */
+    public Model getModelByCode(String code) {
+        return modelRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
+    }
+
+    /**
+     * 分页查询车型列表
+     */
+    public List<Model> listModels(int page, int size, String carLineCode, String platformCode, boolean includeInactive) {
+        return modelRepository.findAll(page, size, carLineCode, platformCode, includeInactive);
+    }
+
+    /**
+     * 查询车型总数
+     */
+    public long countModels(String carLineCode, String platformCode, boolean includeInactive) {
+        return modelRepository.count(carLineCode, platformCode, includeInactive);
+    }
+
+    /**
+     * 查询车型历史版本列表
+     */
+    public List<ModelHistory> listModelHistory(String code) {
+        if (!modelRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("车型不存在: " + code);
+        }
+        return modelRepository.findHistoryByCode(code);
+    }
+
+    // ==================== 版本相关方法 ====================
+
+    /**
+     * 创建版本
+     */
+    public Variant createVariant(String code, String name, String nameLocal, String modelCode,
+                                 String description, Date effectiveFrom, Date effectiveTo, String createBy) {
+        if (variantRepository.existsByCode(code)) {
+            throw new DuplicateCodeException("版本code已存在: " + code);
+        }
+        // 校验modelCode存在且ACTIVE
+        Model model = modelRepository.findByCode(modelCode)
+                .orElseThrow(() -> new IllegalArgumentException("车型不存在: " + modelCode));
+        if (model.getStatus() != net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.ModelStatus.ACTIVE) {
+            throw new IllegalArgumentException("车型状态不是ACTIVE: " + modelCode);
+        }
+        Variant variant = Variant.create(code, name, nameLocal, modelCode, description,
+                effectiveFrom, effectiveTo, createBy);
+        return variantRepository.save(variant);
+    }
+
+    /**
+     * 更新版本
+     */
+    public Variant updateVariant(String code, String name, String nameLocal, String description,
+                                 Date effectiveFrom, Date effectiveTo, String modifyBy) {
+        Variant variant = variantRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
+        variant.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
+        return variantRepository.save(variant);
+    }
+
+    /**
+     * 失效版本
+     */
+    public Variant deactivateVariant(String code, String modifyBy) {
+        Variant variant = variantRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
+        variant.deactivate(modifyBy);
+        return variantRepository.save(variant);
+    }
+
+    /**
+     * 删除版本
+     */
+    public void deleteVariant(String code, String modifyBy) {
+        Variant variant = variantRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
+        variant.delete(modifyBy);
+        variantRepository.save(variant);
+    }
+
+    /**
+     * 根据code获取版本
+     */
+    public Variant getVariantByCode(String code) {
+        return variantRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
+    }
+
+    /**
+     * 分页查询版本列表
+     */
+    public List<Variant> listVariants(int page, int size, String modelCode, String carLineCode, String platformCode, boolean includeInactive) {
+        return variantRepository.findAll(page, size, modelCode, carLineCode, platformCode, includeInactive);
+    }
+
+    /**
+     * 查询版本总数
+     */
+    public long countVariants(String modelCode, String carLineCode, String platformCode, boolean includeInactive) {
+        return variantRepository.count(modelCode, carLineCode, platformCode, includeInactive);
+    }
+
+    /**
+     * 查询版本历史版本列表
+     */
+    public List<VariantHistory> listVariantHistory(String code) {
+        if (!variantRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("版本不存在: " + code);
+        }
+        return variantRepository.findHistoryByCode(code);
+    }
+
+    /**
+     * 绑定版本选项码
+     */
+    public void bindVariantOptionCode(String variantCode, String optionCodeCode, String optionFamilyCode, String operator) {
+        // 校验版本存在
+        variantRepository.findByCode(variantCode)
+                .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + variantCode));
+        // 互斥约束：同一版本下同一选项族只能绑定一个选项码
+        if (variantOptionCodeBindingRepository.existsByVariantCodeAndOptionFamilyCode(variantCode, optionFamilyCode)) {
+            throw new IllegalStateException("同一版本下同一选项族只能绑定一个选项码");
+        }
+        variantOptionCodeBindingRepository.bind(variantCode, optionCodeCode, optionFamilyCode, operator);
+    }
+
+    /**
+     * 解绑版本选项码
+     */
+    public void unbindVariantOptionCode(String variantCode, String optionCodeCode, String operator) {
+        variantRepository.findByCode(variantCode)
+                .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + variantCode));
+        variantOptionCodeBindingRepository.unbind(variantCode, optionCodeCode, operator);
+    }
+
+    // ==================== 配置相关方法 ====================
+
+    /**
+     * 创建配置
+     */
+    public Configuration createConfiguration(String code, String name, String nameLocal, String variantCode,
+                                             String description, Date effectiveFrom, Date effectiveTo, String createBy) {
+        if (configurationRepository.existsByCode(code)) {
+            throw new DuplicateCodeException("配置code已存在: " + code);
+        }
+        // 校验variantCode存在且ACTIVE
+        Variant variant = variantRepository.findByCode(variantCode)
+                .orElseThrow(() -> new IllegalArgumentException("版本不存在: " + variantCode));
+        if (variant.getStatus() != net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VariantStatus.ACTIVE) {
+            throw new IllegalArgumentException("版本状态不是ACTIVE: " + variantCode);
+        }
+        Configuration configuration = Configuration.create(code, name, nameLocal, variantCode, description,
+                effectiveFrom, effectiveTo, createBy);
+        return configurationRepository.save(configuration);
+    }
+
+    /**
+     * 更新配置
+     */
+    public Configuration updateConfiguration(String code, String name, String nameLocal, String description,
+                                             Date effectiveFrom, Date effectiveTo, String modifyBy) {
+        Configuration configuration = configurationRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
+        configuration.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
+        return configurationRepository.save(configuration);
+    }
+
+    /**
+     * 失效配置
+     */
+    public Configuration deactivateConfiguration(String code, String modifyBy) {
+        Configuration configuration = configurationRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
+        configuration.deactivate(modifyBy);
+        return configurationRepository.save(configuration);
+    }
+
+    /**
+     * 删除配置
+     */
+    public void deleteConfiguration(String code, String modifyBy) {
+        Configuration configuration = configurationRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
+        configuration.delete(modifyBy);
+        configurationRepository.save(configuration);
+    }
+
+    /**
+     * 根据code获取配置
+     */
+    public Configuration getConfigurationByCode(String code) {
+        return configurationRepository.findByCode(code)
+                .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + code));
+    }
+
+    /**
+     * 分页查询配置列表
+     */
+    public List<Configuration> listConfigurations(int page, int size, String variantCode, boolean includeInactive) {
+        return configurationRepository.findAll(page, size, variantCode, includeInactive);
+    }
+
+    /**
+     * 查询配置总数
+     */
+    public long countConfigurations(String variantCode, boolean includeInactive) {
+        return configurationRepository.count(variantCode, includeInactive);
+    }
+
+    /**
+     * 查询配置历史版本列表
+     */
+    public List<ConfigurationHistory> listConfigurationHistory(String code) {
+        if (!configurationRepository.existsByCode(code)) {
+            throw new BrandNotFoundException("配置不存在: " + code);
+        }
+        return configurationRepository.findHistoryByCode(code);
+    }
+
+    /**
+     * 绑定配置选项码
+     */
+    public void bindConfigurationOptionCode(String configurationCode, String optionCodeCode, String optionFamilyCode, String operator) {
+        configurationRepository.findByCode(configurationCode)
+                .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + configurationCode));
+        // 互斥约束：同一配置下同一选项族只能绑定一个选项码
+        if (configurationOptionCodeBindingRepository.existsByConfigurationCodeAndOptionFamilyCode(configurationCode, optionFamilyCode)) {
+            throw new IllegalStateException("同一配置下同一选项族只能绑定一个选项码");
+        }
+        configurationOptionCodeBindingRepository.bind(configurationCode, optionCodeCode, optionFamilyCode, operator);
+    }
+
+    /**
+     * 解绑配置选项码
+     */
+    public void unbindConfigurationOptionCode(String configurationCode, String optionCodeCode, String operator) {
+        configurationRepository.findByCode(configurationCode)
+                .orElseThrow(() -> new BrandNotFoundException("配置不存在: " + configurationCode));
+        configurationOptionCodeBindingRepository.unbind(configurationCode, optionCodeCode, operator);
+    }
+
+    /**
+     * 根据选项码组合反查配置（包含匹配，仅返回ACTIVE状态）
+     */
+    public List<Configuration> findConfigurationsByOptionCodes(List<String> optionCodes) {
+        if (optionCodes == null || optionCodes.isEmpty()) {
+            return List.of();
+        }
+        List<String> codes = configurationOptionCodeBindingRepository.findConfigurationCodesByOptionCodes(optionCodes, optionCodes.size());
+        if (codes.isEmpty()) {
+            return List.of();
+        }
+        return configurationRepository.findByCodes(codes, true);
     }
 }

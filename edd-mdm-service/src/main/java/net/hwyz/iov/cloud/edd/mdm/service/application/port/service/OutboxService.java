@@ -2,7 +2,11 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.port.service;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 
 /**
  * 事件发件箱服务端口
@@ -73,4 +77,88 @@ public interface OutboxService {
      * @param platform 平台聚合根
      */
     void publishPlatformDeactivatedEvent(Platform platform);
+
+    /**
+     * 发布选项族创建事件
+     *
+     * @param optionFamily 选项族聚合根
+     */
+    void publishOptionFamilyCreatedEvent(OptionFamily optionFamily);
+
+    /**
+     * 发布选项族更新事件
+     *
+     * @param optionFamily 选项族聚合根
+     */
+    void publishOptionFamilyUpdatedEvent(OptionFamily optionFamily);
+
+    /**
+     * 发布选项族失效事件
+     *
+     * @param optionFamily 选项族聚合根
+     */
+    void publishOptionFamilyDeactivatedEvent(OptionFamily optionFamily);
+
+    /**
+     * 发布车型创建事件
+     *
+     * @param model 车型聚合根
+     */
+    void publishModelCreatedEvent(Model model);
+
+    /**
+     * 发布车型更新事件
+     *
+     * @param model 车型聚合根
+     */
+    void publishModelUpdatedEvent(Model model);
+
+    /**
+     * 发布车型失效事件
+     *
+     * @param model 车型聚合根
+     */
+    void publishModelDeactivatedEvent(Model model);
+
+    /**
+     * 发布版本创建事件
+     *
+     * @param variant 版本聚合根
+     */
+    void publishVariantCreatedEvent(Variant variant);
+
+    /**
+     * 发布版本更新事件
+     *
+     * @param variant 版本聚合根
+     */
+    void publishVariantUpdatedEvent(Variant variant);
+
+    /**
+     * 发布版本失效事件
+     *
+     * @param variant 版本聚合根
+     */
+    void publishVariantDeactivatedEvent(Variant variant);
+
+    /**
+     * 发布配置创建事件
+     *
+     * @param configuration 配置聚合根
+     */
+    void publishConfigurationCreatedEvent(Configuration configuration);
+
+    /**
+     * 发布配置更新事件
+     *
+     * @param configuration 配置聚合根
+     */
+    void publishConfigurationUpdatedEvent(Configuration configuration);
+
+    /**
+     * 发布配置失效事件
+     *
+     * @param configuration 配置聚合根
+     */
+    void publishConfigurationDeactivatedEvent(Configuration configuration);
 }

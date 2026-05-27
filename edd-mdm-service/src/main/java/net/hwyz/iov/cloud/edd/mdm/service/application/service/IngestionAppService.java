@@ -12,14 +12,20 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService
 import net.hwyz.iov.cloud.edd.mdm.service.common.enums.IngestionStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.IngestionSchemaException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.IngestionLog;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.EntityType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.BrandRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.IngestionLogRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ModelRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.CarLineRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.AuthoritativeSourceService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.IngestionDomainService;
 import org.springframework.stereotype.Service;
@@ -40,6 +46,9 @@ public class IngestionAppService {
     private final BrandRepository brandRepository;
     private final CarLineRepository carLineRepository;
     private final PlatformRepository platformRepository;
+    private final ModelRepository modelRepository;
+    private final VariantRepository variantRepository;
+    private final ConfigurationRepository configurationRepository;
     private final OutboxService outboxService;
     private final IngestionLogRepository ingestionLogRepository;
     private final ObjectMapper objectMapper;
@@ -73,6 +82,9 @@ public class IngestionAppService {
             case BRAND -> processBrand(cmd, code, payloadHash);
             case SERIES -> processCarLine(cmd, code, payloadHash);
             case PLATFORM -> processPlatform(cmd, code, payloadHash);
+            case MODEL -> processModel(cmd, code, payloadHash);
+            case VARIANT -> processVariant(cmd, code, payloadHash);
+            case CONFIGURATION -> processConfiguration(cmd, code, payloadHash);
         };
     }
 
@@ -282,5 +294,178 @@ public class IngestionAppService {
             throw new IngestionSchemaException("payload中缺少code字段");
         }
         return code.toString();
+    }
+
+    private IngestionResult processModel(IngestCmd cmd, String code, String payloadHash) {
+        String sourceSystem = cmd.getSourceSystem();
+        String sourceId = cmd.getSourceId();
+        String sourceVersion = cmd.getSourceVersion();
+        String ingestionChannel = cmd.getIngestionChannel();
+        String messageId = cmd.getMessageId();
+        Map<String, Object> payload = cmd.getPayload();
+
+        Model existing = modelRepository.findByCode(code).orElse(null);
+        String localVersion = existing != null ? existing.getSourceVersion() : null;
+        String localHash = existing != null ? existing.getSourcePayloadHash() : null;
+
+        IngestionStatus idempotentResult = ingestionDomainService.checkIdempotent(
+                sourceSystem, sourceId, sourceVersion, localVersion, payloadHash, localHash);
+
+        if (idempotentResult == IngestionStatus.DUPLICATED) {
+            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                    EntityType.MODEL, code, ingestionChannel, IngestionStatus.DUPLICATED, null, null, payloadHash);
+            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
+                    .version(existing != null ? existing.getVersion() : null).operationType("DUPLICATED").build();
+        }
+        if (idempotentResult == IngestionStatus.OUTDATED) {
+            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                    EntityType.MODEL, code, ingestionChannel, IngestionStatus.OUTDATED, null, null, payloadHash);
+            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
+                    .version(existing != null ? existing.getVersion() : null).operationType("OUTDATED").build();
+        }
+
+        String name = (String) payload.get("name");
+        String nameLocal = (String) payload.get("nameLocal");
+        String carLineCode = (String) payload.get("carLineCode");
+        String platformCode = (String) payload.get("platformCode");
+        String modelYear = (String) payload.get("modelYear");
+        String description = (String) payload.get("description");
+
+        Model model;
+        String operationType;
+        if (existing == null) {
+            model = Model.createFromUpstream(code, name, nameLocal, carLineCode, platformCode,
+                    modelYear, description, cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            model = modelRepository.save(model);
+            outboxService.publishModelCreatedEvent(model);
+            operationType = "CREATED";
+        } else {
+            existing.updateFromUpstream(name, nameLocal, modelYear, description,
+                    cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            model = modelRepository.save(existing);
+            outboxService.publishModelUpdatedEvent(model);
+            operationType = "UPDATED";
+        }
+
+        ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                EntityType.MODEL, code, ingestionChannel, IngestionStatus.SUCCESS, null, null, payloadHash);
+
+        return IngestionResult.builder().entityId(model.getId()).version(model.getVersion()).operationType(operationType).build();
+    }
+
+    private IngestionResult processVariant(IngestCmd cmd, String code, String payloadHash) {
+        String sourceSystem = cmd.getSourceSystem();
+        String sourceId = cmd.getSourceId();
+        String sourceVersion = cmd.getSourceVersion();
+        String ingestionChannel = cmd.getIngestionChannel();
+        String messageId = cmd.getMessageId();
+        Map<String, Object> payload = cmd.getPayload();
+
+        Variant existing = variantRepository.findByCode(code).orElse(null);
+        String localVersion = existing != null ? existing.getSourceVersion() : null;
+        String localHash = existing != null ? existing.getSourcePayloadHash() : null;
+
+        IngestionStatus idempotentResult = ingestionDomainService.checkIdempotent(
+                sourceSystem, sourceId, sourceVersion, localVersion, payloadHash, localHash);
+
+        if (idempotentResult == IngestionStatus.DUPLICATED) {
+            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                    EntityType.VARIANT, code, ingestionChannel, IngestionStatus.DUPLICATED, null, null, payloadHash);
+            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
+                    .version(existing != null ? existing.getVersion() : null).operationType("DUPLICATED").build();
+        }
+        if (idempotentResult == IngestionStatus.OUTDATED) {
+            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                    EntityType.VARIANT, code, ingestionChannel, IngestionStatus.OUTDATED, null, null, payloadHash);
+            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
+                    .version(existing != null ? existing.getVersion() : null).operationType("OUTDATED").build();
+        }
+
+        String name = (String) payload.get("name");
+        String nameLocal = (String) payload.get("nameLocal");
+        String modelCode = (String) payload.get("modelCode");
+        String description = (String) payload.get("description");
+
+        Variant variant;
+        String operationType;
+        if (existing == null) {
+            variant = Variant.createFromUpstream(code, name, nameLocal, modelCode, description,
+                    cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            variant = variantRepository.save(variant);
+            outboxService.publishVariantCreatedEvent(variant);
+            operationType = "CREATED";
+        } else {
+            existing.updateFromUpstream(name, nameLocal, description,
+                    cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            variant = variantRepository.save(existing);
+            outboxService.publishVariantUpdatedEvent(variant);
+            operationType = "UPDATED";
+        }
+
+        ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                EntityType.VARIANT, code, ingestionChannel, IngestionStatus.SUCCESS, null, null, payloadHash);
+
+        return IngestionResult.builder().entityId(variant.getId()).version(variant.getVersion()).operationType(operationType).build();
+    }
+
+    private IngestionResult processConfiguration(IngestCmd cmd, String code, String payloadHash) {
+        String sourceSystem = cmd.getSourceSystem();
+        String sourceId = cmd.getSourceId();
+        String sourceVersion = cmd.getSourceVersion();
+        String ingestionChannel = cmd.getIngestionChannel();
+        String messageId = cmd.getMessageId();
+        Map<String, Object> payload = cmd.getPayload();
+
+        Configuration existing = configurationRepository.findByCode(code).orElse(null);
+        String localVersion = existing != null ? existing.getSourceVersion() : null;
+        String localHash = existing != null ? existing.getSourcePayloadHash() : null;
+
+        IngestionStatus idempotentResult = ingestionDomainService.checkIdempotent(
+                sourceSystem, sourceId, sourceVersion, localVersion, payloadHash, localHash);
+
+        if (idempotentResult == IngestionStatus.DUPLICATED) {
+            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                    EntityType.CONFIGURATION, code, ingestionChannel, IngestionStatus.DUPLICATED, null, null, payloadHash);
+            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
+                    .version(existing != null ? existing.getVersion() : null).operationType("DUPLICATED").build();
+        }
+        if (idempotentResult == IngestionStatus.OUTDATED) {
+            ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                    EntityType.CONFIGURATION, code, ingestionChannel, IngestionStatus.OUTDATED, null, null, payloadHash);
+            return IngestionResult.builder().entityId(existing != null ? existing.getId() : null)
+                    .version(existing != null ? existing.getVersion() : null).operationType("OUTDATED").build();
+        }
+
+        String name = (String) payload.get("name");
+        String nameLocal = (String) payload.get("nameLocal");
+        String variantCode = (String) payload.get("variantCode");
+        String description = (String) payload.get("description");
+
+        Configuration configuration;
+        String operationType;
+        if (existing == null) {
+            configuration = Configuration.createFromUpstream(code, name, nameLocal, variantCode, description,
+                    cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            configuration = configurationRepository.save(configuration);
+            outboxService.publishConfigurationCreatedEvent(configuration);
+            operationType = "CREATED";
+        } else {
+            existing.updateFromUpstream(name, nameLocal, description,
+                    cmd.getOccurredAt(), null,
+                    sourceSystem, sourceId, sourceVersion, ingestionChannel, payloadHash, sourceSystem);
+            configuration = configurationRepository.save(existing);
+            outboxService.publishConfigurationUpdatedEvent(configuration);
+            operationType = "UPDATED";
+        }
+
+        ingestionDomainService.logIngestion(messageId, sourceSystem, sourceId, sourceVersion,
+                EntityType.CONFIGURATION, code, ingestionChannel, IngestionStatus.SUCCESS, null, null, payloadHash);
+
+        return IngestionResult.builder().entityId(configuration.getId()).version(configuration.getVersion()).operationType(operationType).build();
     }
 }

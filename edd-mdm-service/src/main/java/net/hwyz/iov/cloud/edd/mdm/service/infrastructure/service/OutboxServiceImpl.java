@@ -5,16 +5,32 @@ import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.CarLineDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ConfigurationCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ConfigurationUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ConfigurationDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ModelCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ModelUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ModelDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -166,5 +182,185 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.savePlatformDeactivatedEvent(event);
         log.info("发布平台失效事件: {}", platform.getCode());
+    }
+
+    @Override
+    public void publishOptionFamilyCreatedEvent(OptionFamily optionFamily) {
+        OptionFamilyCreatedEvent event = OptionFamilyCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.optionFamily.created")
+                .occurredAt(new Date())
+                .entityId(optionFamily.getCode())
+                .version(optionFamily.getVersion())
+                .payload(optionFamily)
+                .build();
+
+        outboxRepository.saveOptionFamilyCreatedEvent(event);
+        log.info("发布选项族创建事件: {}", optionFamily.getCode());
+    }
+
+    @Override
+    public void publishOptionFamilyUpdatedEvent(OptionFamily optionFamily) {
+        OptionFamilyUpdatedEvent event = OptionFamilyUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.optionFamily.updated")
+                .occurredAt(new Date())
+                .entityId(optionFamily.getCode())
+                .version(optionFamily.getVersion())
+                .payload(optionFamily)
+                .build();
+
+        outboxRepository.saveOptionFamilyUpdatedEvent(event);
+        log.info("发布选项族更新事件: {}", optionFamily.getCode());
+    }
+
+    @Override
+    public void publishOptionFamilyDeactivatedEvent(OptionFamily optionFamily) {
+        OptionFamilyDeactivatedEvent event = OptionFamilyDeactivatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.optionFamily.deactivated")
+                .occurredAt(new Date())
+                .entityId(optionFamily.getCode())
+                .version(optionFamily.getVersion())
+                .payload(optionFamily)
+                .build();
+
+        outboxRepository.saveOptionFamilyDeactivatedEvent(event);
+        log.info("发布选项族失效事件: {}", optionFamily.getCode());
+    }
+
+    @Override
+    public void publishModelCreatedEvent(Model model) {
+        ModelCreatedEvent event = ModelCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.model.created")
+                .occurredAt(new Date())
+                .entityId(model.getCode())
+                .version(model.getVersion())
+                .payload(model)
+                .build();
+
+        outboxRepository.saveModelCreatedEvent(event);
+        log.info("发布车型创建事件: {}", model.getCode());
+    }
+
+    @Override
+    public void publishModelUpdatedEvent(Model model) {
+        ModelUpdatedEvent event = ModelUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.model.updated")
+                .occurredAt(new Date())
+                .entityId(model.getCode())
+                .version(model.getVersion())
+                .payload(model)
+                .build();
+
+        outboxRepository.saveModelUpdatedEvent(event);
+        log.info("发布车型更新事件: {}", model.getCode());
+    }
+
+    @Override
+    public void publishModelDeactivatedEvent(Model model) {
+        ModelDeactivatedEvent event = ModelDeactivatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.model.deactivated")
+                .occurredAt(new Date())
+                .entityId(model.getCode())
+                .version(model.getVersion())
+                .payload(model)
+                .build();
+
+        outboxRepository.saveModelDeactivatedEvent(event);
+        log.info("发布车型失效事件: {}", model.getCode());
+    }
+
+    @Override
+    public void publishVariantCreatedEvent(Variant variant) {
+        VariantCreatedEvent event = VariantCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.variant.created")
+                .occurredAt(new Date())
+                .entityId(variant.getCode())
+                .version(variant.getVersion())
+                .payload(variant)
+                .build();
+
+        outboxRepository.saveVariantCreatedEvent(event);
+        log.info("发布版本创建事件: {}", variant.getCode());
+    }
+
+    @Override
+    public void publishVariantUpdatedEvent(Variant variant) {
+        VariantUpdatedEvent event = VariantUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.variant.updated")
+                .occurredAt(new Date())
+                .entityId(variant.getCode())
+                .version(variant.getVersion())
+                .payload(variant)
+                .build();
+
+        outboxRepository.saveVariantUpdatedEvent(event);
+        log.info("发布版本更新事件: {}", variant.getCode());
+    }
+
+    @Override
+    public void publishVariantDeactivatedEvent(Variant variant) {
+        VariantDeactivatedEvent event = VariantDeactivatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.variant.deactivated")
+                .occurredAt(new Date())
+                .entityId(variant.getCode())
+                .version(variant.getVersion())
+                .payload(variant)
+                .build();
+
+        outboxRepository.saveVariantDeactivatedEvent(event);
+        log.info("发布版本失效事件: {}", variant.getCode());
+    }
+
+    @Override
+    public void publishConfigurationCreatedEvent(Configuration configuration) {
+        ConfigurationCreatedEvent event = ConfigurationCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.configuration.created")
+                .occurredAt(new Date())
+                .entityId(configuration.getCode())
+                .version(configuration.getVersion())
+                .payload(configuration)
+                .build();
+
+        outboxRepository.saveConfigurationCreatedEvent(event);
+        log.info("发布配置创建事件: {}", configuration.getCode());
+    }
+
+    @Override
+    public void publishConfigurationUpdatedEvent(Configuration configuration) {
+        ConfigurationUpdatedEvent event = ConfigurationUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.configuration.updated")
+                .occurredAt(new Date())
+                .entityId(configuration.getCode())
+                .version(configuration.getVersion())
+                .payload(configuration)
+                .build();
+
+        outboxRepository.saveConfigurationUpdatedEvent(event);
+        log.info("发布配置更新事件: {}", configuration.getCode());
+    }
+
+    @Override
+    public void publishConfigurationDeactivatedEvent(Configuration configuration) {
+        ConfigurationDeactivatedEvent event = ConfigurationDeactivatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.configuration.deactivated")
+                .occurredAt(new Date())
+                .entityId(configuration.getCode())
+                .version(configuration.getVersion())
+                .payload(configuration)
+                .build();
+
+        outboxRepository.saveConfigurationDeactivatedEvent(event);
+        log.info("发布配置失效事件: {}", configuration.getCode());
     }
 }
