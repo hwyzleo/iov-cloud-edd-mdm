@@ -24,6 +24,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivated
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
@@ -225,6 +228,27 @@ public interface OutboxRepository {
      * @param event 车载节点删除事件
      */
     void saveVehicleNodeDeletedEvent(VehicleNodeDeletedEvent event);
+
+    /**
+     * 保存工厂创建事件（Org 子域）
+     *
+     * @param event 工厂创建事件
+     */
+    void savePlantCreatedEvent(PlantCreatedEvent event);
+
+    /**
+     * 保存工厂更新事件（Org 子域）
+     *
+     * @param event 工厂更新事件
+     */
+    void savePlantUpdatedEvent(PlantUpdatedEvent event);
+
+    /**
+     * 保存工厂删除事件（Org 子域）
+     *
+     * @param event 工厂删除事件
+     */
+    void savePlantDeletedEvent(PlantDeletedEvent event);
 
     /**
      * 获取待发送的事件列表

@@ -29,6 +29,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivated
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
@@ -757,6 +760,81 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存车载节点删除事件失败", e);
             throw new RuntimeException("保存车载节点删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void savePlantCreatedEvent(PlantCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("PLANT")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存工厂创建事件失败", e);
+            throw new RuntimeException("保存工厂创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void savePlantUpdatedEvent(PlantUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("PLANT")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存工厂更新事件失败", e);
+            throw new RuntimeException("保存工厂更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void savePlantDeletedEvent(PlantDeletedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("PLANT")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存工厂删除事件失败", e);
+            throw new RuntimeException("保存工厂删除事件失败", e);
         }
     }
 }

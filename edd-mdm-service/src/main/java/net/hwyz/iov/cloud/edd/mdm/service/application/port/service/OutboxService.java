@@ -8,6 +8,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 
 /**
@@ -206,4 +207,26 @@ public interface OutboxService {
      * @param forceDelete   是否 force 旁路删除
      */
     void publishVehicleNodeDeletedEvent(VehicleNode vehicleNode, boolean forceDelete);
+
+    /**
+     * 发布工厂创建事件（Org 子域）
+     *
+     * @param plant 工厂聚合根
+     */
+    void publishPlantCreatedEvent(Plant plant);
+
+    /**
+     * 发布工厂更新事件（含失效，Org 子域）
+     *
+     * @param plant 工厂聚合根
+     */
+    void publishPlantUpdatedEvent(Plant plant);
+
+    /**
+     * 发布工厂删除事件（Org 子域）
+     *
+     * @param plant       工厂聚合根（删除前最后一份快照）
+     * @param forceDelete 是否 force 旁路删除
+     */
+    void publishPlantDeletedEvent(Plant plant, boolean forceDelete);
 }

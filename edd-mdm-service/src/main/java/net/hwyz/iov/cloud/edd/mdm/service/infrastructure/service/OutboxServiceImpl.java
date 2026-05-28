@@ -11,6 +11,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
@@ -36,6 +37,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivated
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
@@ -461,5 +465,51 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.saveVehicleNodeDeletedEvent(event);
         log.info("发布车载节点删除事件: {} forceDelete={}", vehicleNode.getNodeCode(), forceDelete);
+    }
+
+    @Override
+    public void publishPlantCreatedEvent(Plant plant) {
+        PlantCreatedEvent event = PlantCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PlantCreated")
+                .occurredAt(new Date())
+                .entityId(plant.getCode())
+                .version(plant.getVersion())
+                .payload(plant)
+                .build();
+
+        outboxRepository.savePlantCreatedEvent(event);
+        log.info("发布工厂创建事件: {}", plant.getCode());
+    }
+
+    @Override
+    public void publishPlantUpdatedEvent(Plant plant) {
+        PlantUpdatedEvent event = PlantUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PlantUpdated")
+                .occurredAt(new Date())
+                .entityId(plant.getCode())
+                .version(plant.getVersion())
+                .payload(plant)
+                .build();
+
+        outboxRepository.savePlantUpdatedEvent(event);
+        log.info("发布工厂更新事件: {}", plant.getCode());
+    }
+
+    @Override
+    public void publishPlantDeletedEvent(Plant plant, boolean forceDelete) {
+        PlantDeletedEvent event = PlantDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PlantDeleted")
+                .occurredAt(new Date())
+                .entityId(plant.getCode())
+                .version(plant.getVersion())
+                .payload(plant)
+                .forceDelete(forceDelete)
+                .build();
+
+        outboxRepository.savePlantDeletedEvent(event);
+        log.info("发布工厂删除事件: {} forceDelete={}", plant.getCode(), forceDelete);
     }
 }
