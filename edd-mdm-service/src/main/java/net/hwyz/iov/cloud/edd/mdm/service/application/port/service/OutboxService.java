@@ -8,6 +8,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 
 /**
  * 事件发件箱服务端口
@@ -183,4 +184,26 @@ public interface OutboxService {
      * @param supplier 供应商聚合根
      */
     void publishSupplierDeactivatedEvent(Supplier supplier);
+
+    /**
+     * 发布车载节点创建事件（EEAD 子域，topic: mdm.eead.vehicleNode.event）
+     *
+     * @param vehicleNode 车载节点聚合根
+     */
+    void publishVehicleNodeCreatedEvent(VehicleNode vehicleNode);
+
+    /**
+     * 发布车载节点更新事件（含失效，EEAD 子域）
+     *
+     * @param vehicleNode 车载节点聚合根
+     */
+    void publishVehicleNodeUpdatedEvent(VehicleNode vehicleNode);
+
+    /**
+     * 发布车载节点删除事件（EEAD 子域）
+     *
+     * @param vehicleNode   车载节点聚合根（删除前最后一份快照）
+     * @param forceDelete   是否 force 旁路删除
+     */
+    void publishVehicleNodeDeletedEvent(VehicleNode vehicleNode, boolean forceDelete);
 }

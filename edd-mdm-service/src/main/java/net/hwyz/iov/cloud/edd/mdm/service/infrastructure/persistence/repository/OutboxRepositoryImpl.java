@@ -29,6 +29,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivated
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.OutboxMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
@@ -680,5 +683,80 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         wrapper.set(OutboxPo::getModifyBy, "system");
         wrapper.set(OutboxPo::getModifyTime, new Date());
         outboxMapper.update(null, wrapper);
+    }
+
+    @Override
+    public void saveVehicleNodeCreatedEvent(VehicleNodeCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("VEHICLE_NODE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存车载节点创建事件失败", e);
+            throw new RuntimeException("保存车载节点创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveVehicleNodeUpdatedEvent(VehicleNodeUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("VEHICLE_NODE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存车载节点更新事件失败", e);
+            throw new RuntimeException("保存车载节点更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveVehicleNodeDeletedEvent(VehicleNodeDeletedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("VEHICLE_NODE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存车载节点删除事件失败", e);
+            throw new RuntimeException("保存车载节点删除事件失败", e);
+        }
     }
 }

@@ -24,6 +24,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivated
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
 
 import java.util.List;
 
@@ -201,6 +204,27 @@ public interface OutboxRepository {
      * @param event 供应商失效事件
      */
     void saveSupplierDeactivatedEvent(SupplierDeactivatedEvent event);
+
+    /**
+     * 保存车载节点创建事件（EEAD 子域）
+     *
+     * @param event 车载节点创建事件
+     */
+    void saveVehicleNodeCreatedEvent(VehicleNodeCreatedEvent event);
+
+    /**
+     * 保存车载节点更新事件（EEAD 子域）
+     *
+     * @param event 车载节点更新事件
+     */
+    void saveVehicleNodeUpdatedEvent(VehicleNodeUpdatedEvent event);
+
+    /**
+     * 保存车载节点删除事件（EEAD 子域）
+     *
+     * @param event 车载节点删除事件
+     */
+    void saveVehicleNodeDeletedEvent(VehicleNodeDeletedEvent event);
 
     /**
      * 获取待发送的事件列表

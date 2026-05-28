@@ -2,14 +2,24 @@ package net.hwyz.iov.cloud.edd.mdm.service.adapter.task.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.hwyz.iov.cloud.edd.mdm.service.application.port.gateway.KafkaEventGateway;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 事件发件箱Relay定时任务
+ * <p>
+ * 每 5 秒扫描 mdm_outbox 表中未发送的事件，根据 aggregateType 路由到对应的 Kafka topic。
+ * <p>
+ * topic 路由规则：
+ * - VEHICLE_NODE → mdm.eead.vehicleNode.event（单一 topic + eventType discriminator）
+ * - 其他聚合类型 → eventType 作为 topic 名称（如 mdm.product.brand.created）
  *
  * @author hwyz_leo
  */
@@ -19,6 +29,21 @@ import java.util.List;
 public class OutboxRelayScheduler {
 
     private final OutboxRepository outboxRepository;
+    private final KafkaEventGateway kafkaEventGateway;
+
+    /**
+     * EEAD 子域 topic 映射：aggregateType → 单一 topic
+     */
+    private static final Map<String, String> EEAD_TOPIC_MAPPING = new HashMap<>();
+
+    static {
+        EEAD_TOPIC_MAPPING.put("VEHICLE_NODE", "mdm.eead.vehicleNode.event");
+    }
+
+    /**
+     * 最大重试次数
+     */
+    private static final int MAX_RETRY_COUNT = 3;
 
     /**
      * 定时扫描Outbox并发送事件到Kafka
@@ -33,23 +58,39 @@ public class OutboxRelayScheduler {
 
             log.info("扫描到{}条待发送事件", pendingEvents.size());
 
-            for (Object event : pendingEvents) {
+            for (Object obj : pendingEvents) {
+                OutboxPo event = (OutboxPo) obj;
                 try {
-                    // TODO: 发送事件到Kafka
-                    // kafkaGateway.send(event);
-
-                    // 标记事件为已发送
-                    // outboxRepository.markEventAsSent(event.getEventId());
-
-                    log.info("事件发送成功: {}", event);
+                    String topic = resolveTopic(event.getAggregateType(), event.getEventType());
+                    kafkaEventGateway.send(topic, event.getAggregateId(), event.getPayload());
+                    outboxRepository.markEventAsSent(String.valueOf(event.getId()));
+                    log.debug("事件发送成功: id={}, topic={}, aggregateId={}", event.getId(), topic, event.getAggregateId());
                 } catch (Exception e) {
-                    log.error("事件发送失败: {}", event, e);
-                    // 增加重试次数
-                    // outboxRepository.incrementRetryCount(event.getEventId());
+                    log.error("事件发送失败: id={}, aggregateType={}, eventType={}", event.getId(), event.getAggregateType(), event.getEventType(), e);
+                    outboxRepository.incrementRetryCount(String.valueOf(event.getId()));
+
+                    if (event.getRetryCount() != null && event.getRetryCount() >= MAX_RETRY_COUNT) {
+                        log.error("事件重试次数超限，移至死信: id={}, retryCount={}", event.getId(), event.getRetryCount());
+                    }
                 }
             }
         } catch (Exception e) {
             log.error("扫描Outbox事件失败", e);
         }
+    }
+
+    /**
+     * 根据聚合类型和事件类型解析目标 Kafka topic
+     *
+     * @param aggregateType 聚合类型
+     * @param eventType     事件类型
+     * @return Kafka topic 名称
+     */
+    private String resolveTopic(String aggregateType, String eventType) {
+        String topic = EEAD_TOPIC_MAPPING.get(aggregateType);
+        if (topic != null) {
+            return topic;
+        }
+        return eventType;
     }
 }

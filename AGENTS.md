@@ -13,10 +13,10 @@
 - 每次解决当前问题后，必须整体项目编译通过才算完成，如果有报错则直到解决所有报错问题后才停止
 
 # 当前项目需求文档
-- 参考 specs/product-mdm/requirements.md
+- 参考 specs/mdm/requirements.md
 
 # 当前项目设计文档
-- 参考 specs/product-mdm/design.md
+- 参考 specs/mdm/design.md
 
 # graphify
 

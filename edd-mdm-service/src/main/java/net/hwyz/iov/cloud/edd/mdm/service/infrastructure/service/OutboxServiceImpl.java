@@ -11,6 +11,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -35,6 +36,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SupplierDeactivated
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VariantDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -411,5 +415,51 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.saveSupplierDeactivatedEvent(event);
         log.info("发布供应商失效事件: {}", supplier.getCode());
+    }
+
+    @Override
+    public void publishVehicleNodeCreatedEvent(VehicleNode vehicleNode) {
+        VehicleNodeCreatedEvent event = VehicleNodeCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("VehicleNodeCreated")
+                .occurredAt(new Date())
+                .entityId(vehicleNode.getNodeCode())
+                .version(vehicleNode.getVersion())
+                .payload(vehicleNode)
+                .build();
+
+        outboxRepository.saveVehicleNodeCreatedEvent(event);
+        log.info("发布车载节点创建事件: {}", vehicleNode.getNodeCode());
+    }
+
+    @Override
+    public void publishVehicleNodeUpdatedEvent(VehicleNode vehicleNode) {
+        VehicleNodeUpdatedEvent event = VehicleNodeUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("VehicleNodeUpdated")
+                .occurredAt(new Date())
+                .entityId(vehicleNode.getNodeCode())
+                .version(vehicleNode.getVersion())
+                .payload(vehicleNode)
+                .build();
+
+        outboxRepository.saveVehicleNodeUpdatedEvent(event);
+        log.info("发布车载节点更新事件: {}", vehicleNode.getNodeCode());
+    }
+
+    @Override
+    public void publishVehicleNodeDeletedEvent(VehicleNode vehicleNode, boolean forceDelete) {
+        VehicleNodeDeletedEvent event = VehicleNodeDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("VehicleNodeDeleted")
+                .occurredAt(new Date())
+                .entityId(vehicleNode.getNodeCode())
+                .version(vehicleNode.getVersion())
+                .payload(vehicleNode)
+                .forceDelete(forceDelete)
+                .build();
+
+        outboxRepository.saveVehicleNodeDeletedEvent(event);
+        log.info("发布车载节点删除事件: {} forceDelete={}", vehicleNode.getNodeCode(), forceDelete);
     }
 }
