@@ -2,7 +2,7 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VehicleNodeHasDownstreamRefException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeHasDownstreamRefException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VmdServiceUnavailableException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.gateway.VehiclePartReverseLookupGateway;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
  * <ol>
  *   <li>DRAFT 状态：直接物理删除（下游尚未感知）</li>
  *   <li>ACTIVE/INACTIVE 状态 + forceDelete=false + 反查无引用：物理删除</li>
- *   <li>ACTIVE/INACTIVE 状态 + forceDelete=false + 反查有引用：抛 {@link VehicleNodeHasDownstreamRefException}（812003）</li>
+ *   <li>ACTIVE/INACTIVE 状态 + forceDelete=false + 反查有引用：抛 {@link VehicleNodeHasDownstreamRefException}（812303）</li>
  *   <li>ACTIVE/INACTIVE 状态 + forceDelete=false + 反查不可用（Feign 失败）：fail-safe 抛 {@link VmdServiceUnavailableException}</li>
  *   <li>ACTIVE/INACTIVE 状态 + forceDelete=true：跳过反查直接物理删除（旁路路径，需 mdm:eead:vehicleNode:remove:force 权限）</li>
  * </ol>
@@ -44,7 +44,7 @@ public class VehicleNodeDeletionDomainService {
      * @param node        待删除车载节点（聚合根）
      * @param operator    操作人
      * @param forceDelete 是否走 MDM-Admin force 旁路路径
-     * @throws VehicleNodeHasDownstreamRefException 存在下游引用时抛出（812003）
+     * @throws VehicleNodeHasDownstreamRefException 存在下游引用时抛出（812303）
      * @throws VmdServiceUnavailableException       VMD 反查不可用时抛出（fail-safe 路径）
      */
     public void checkAndDelete(VehicleNode node, String operator, boolean forceDelete) {

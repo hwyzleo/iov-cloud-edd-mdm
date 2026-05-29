@@ -2,7 +2,7 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.PlantHasDownstreamRefException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.PlantHasDownstreamRefException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VmdServiceUnavailableException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.gateway.PlantDownstreamLookupGateway;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;

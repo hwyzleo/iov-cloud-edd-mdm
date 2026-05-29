@@ -8,7 +8,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.PartQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PartDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PartHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.PartHasDownstreamRefException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.PartHasDownstreamRefException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.PartHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.KeyPartLevel;

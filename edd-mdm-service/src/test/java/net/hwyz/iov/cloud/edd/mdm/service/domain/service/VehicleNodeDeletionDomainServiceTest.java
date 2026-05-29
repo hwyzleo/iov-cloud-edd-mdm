@@ -1,6 +1,6 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VehicleNodeHasDownstreamRefException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeHasDownstreamRefException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VmdServiceUnavailableException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.gateway.VehiclePartReverseLookupGateway;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;

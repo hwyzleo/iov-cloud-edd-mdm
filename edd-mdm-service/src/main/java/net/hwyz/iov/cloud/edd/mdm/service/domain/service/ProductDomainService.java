@@ -1,16 +1,16 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.BrandHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.BrandHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.CarLineHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.ConfigurationSeqOverflowException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.ModelHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.PlatformHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VariantCodeTooLongException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VariantHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.BrandNotFoundException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.CarLineHasActiveChildrenException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.ConfigurationSeqOverflowException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.ModelHasActiveChildrenException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.OptionFamilyHasActiveChildrenException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.PlatformHasActiveChildrenException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VariantCodeTooLongException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VariantHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
@@ -861,7 +861,7 @@ public class ProductDomainService {
      * <p>
      * 规则：{variantCode} + 7 位零填充自增序号（按 variant 维度独立计数）。
      * 使用 mdm_configuration_seq 行锁原子自增，与业务事务在同一本地事务内执行；
-     * 序号 > 9,999,999 时抛出 ConfigurationSeqOverflowException（错误码 807014）。
+     * 序号 > 9,999,999 时抛出 ConfigurationSeqOverflowException（错误码 812114）。
      *
      * @param variantCode 版本 code
      * @return 生成的 Configuration code（如 "XREHSLA26PA0000001"）

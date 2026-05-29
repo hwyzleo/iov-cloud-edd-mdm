@@ -10,8 +10,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.VehicleNodeListB
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.VehicleNodeQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.VehicleNodeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VehicleNodeDuplicateCodeException;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VehicleNodeNotExistException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeDuplicateCodeException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.VehicleNodeHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.FunctionalDomain;

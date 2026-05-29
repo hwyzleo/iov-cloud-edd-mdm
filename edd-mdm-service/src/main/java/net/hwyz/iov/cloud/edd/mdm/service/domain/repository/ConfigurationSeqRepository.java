@@ -21,7 +21,7 @@ public interface ConfigurationSeqRepository {
      * </ul>
      *
      * @param variantCode 版本 code
-     * @return 分配到的新序号（已自增）；若超过 9,999,999 由调用方按 807014 处理
+     * @return 分配到的新序号（已自增）；若超过 9,999,999 由调用方按 812114 处理
      */
     long allocateNextSeq(String variantCode);
 }
