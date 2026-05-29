@@ -13,6 +13,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -43,6 +45,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -511,5 +519,97 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.savePlantDeletedEvent(event);
         log.info("发布工厂删除事件: {} forceDelete={}", plant.getCode(), forceDelete);
+    }
+
+    @Override
+    public void publishMaterialCategoryCreatedEvent(MaterialCategory category) {
+        MaterialCategoryCreatedEvent event = MaterialCategoryCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("MaterialCategoryCreated")
+                .occurredAt(new Date())
+                .entityId(category.getCode())
+                .version(category.getVersion())
+                .payload(category)
+                .build();
+
+        outboxRepository.saveMaterialCategoryCreatedEvent(event);
+        log.info("发布物料分类创建事件: {}", category.getCode());
+    }
+
+    @Override
+    public void publishMaterialCategoryUpdatedEvent(MaterialCategory category) {
+        MaterialCategoryUpdatedEvent event = MaterialCategoryUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("MaterialCategoryUpdated")
+                .occurredAt(new Date())
+                .entityId(category.getCode())
+                .version(category.getVersion())
+                .payload(category)
+                .build();
+
+        outboxRepository.saveMaterialCategoryUpdatedEvent(event);
+        log.info("发布物料分类更新事件: {}", category.getCode());
+    }
+
+    @Override
+    public void publishMaterialCategoryDeletedEvent(MaterialCategory category, boolean forceDelete) {
+        MaterialCategoryDeletedEvent event = MaterialCategoryDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("MaterialCategoryDeleted")
+                .occurredAt(new Date())
+                .entityId(category.getCode())
+                .version(category.getVersion())
+                .payload(category)
+                .forceDelete(forceDelete)
+                .build();
+
+        outboxRepository.saveMaterialCategoryDeletedEvent(event);
+        log.info("发布物料分类删除事件: {} forceDelete={}", category.getCode(), forceDelete);
+    }
+
+    @Override
+    public void publishPartCreatedEvent(Part part) {
+        PartCreatedEvent event = PartCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PartCreated")
+                .occurredAt(new Date())
+                .entityId(part.getCode())
+                .version(part.getVersion())
+                .payload(part)
+                .build();
+
+        outboxRepository.savePartCreatedEvent(event);
+        log.info("发布零件创建事件: {}", part.getCode());
+    }
+
+    @Override
+    public void publishPartUpdatedEvent(Part part) {
+        PartUpdatedEvent event = PartUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PartUpdated")
+                .occurredAt(new Date())
+                .entityId(part.getCode())
+                .version(part.getVersion())
+                .payload(part)
+                .build();
+
+        outboxRepository.savePartUpdatedEvent(event);
+        log.info("发布零件更新事件: {}", part.getCode());
+    }
+
+    @Override
+    public void publishPartDeletedEvent(Part part, boolean forceDelete) {
+        PartDeletedEvent event = PartDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PartDeleted")
+                .occurredAt(new Date())
+                .entityId(part.getCode())
+                .version(part.getVersion())
+                .payload(part)
+                .forceDelete(forceDelete)
+                .build();
+
+        outboxRepository.savePartDeletedEvent(event);
+        log.info("发布零件删除事件: {} forceDelete={}", part.getCode(), forceDelete);
     }
 }

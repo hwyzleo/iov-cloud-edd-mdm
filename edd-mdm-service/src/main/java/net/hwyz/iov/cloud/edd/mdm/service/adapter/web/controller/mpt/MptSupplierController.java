@@ -102,6 +102,20 @@ public class MptSupplierController {
     }
 
     /**
+     * 查询所有ACTIVE供应商
+     *
+     * @return 供应商响应列表
+     */
+    @GetMapping("/listAll")
+    public ApiResponse<List<SupplierResponse>> listAll() {
+        List<SupplierDto> dtoList = supplierAppService.listAllActive();
+        List<SupplierResponse> rows = dtoList.stream()
+                .map(supplierAssembler::toResponse)
+                .collect(Collectors.toList());
+        return ApiResponse.ok(rows);
+    }
+
+    /**
      * 分页查询供应商列表
      *
      * @param page            页码

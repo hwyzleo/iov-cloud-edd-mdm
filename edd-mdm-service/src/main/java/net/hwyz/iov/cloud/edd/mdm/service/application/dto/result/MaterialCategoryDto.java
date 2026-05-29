@@ -1,0 +1,120 @@
+package net.hwyz.iov.cloud.edd.mdm.service.application.dto.result;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Date;
+
+/**
+ * 物料分类DTO
+ *
+ * @author hwyz_leo
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class MaterialCategoryDto {
+
+    /**
+     * 主键ID
+     */
+    private Long id;
+
+    /**
+     * 业务主键（code）
+     */
+    private String code;
+
+    /**
+     * 分类名称
+     */
+    private String name;
+
+    /**
+     * 本地化名称
+     */
+    private String nameLocal;
+
+    /**
+     * 描述
+     */
+    private String description;
+
+    /**
+     * 父分类编码
+     */
+    private String parentCode;
+
+    /**
+     * 来源系统
+     */
+    private String sourceSystem;
+
+    /**
+     * 来源系统ID
+     */
+    private String sourceId;
+
+    /**
+     * 来源版本
+     */
+    private String sourceVersion;
+
+    /**
+     * 数据接入渠道
+     */
+    private String ingestionChannel;
+
+    /**
+     * 数据接入时间
+     */
+    private Date ingestionTime;
+
+    /**
+     * 来源数据哈希
+     */
+    private String sourcePayloadHash;
+
+    /**
+     * 业务版本号
+     */
+    private Integer version;
+
+    /**
+     * 生效开始时间
+     */
+    private Date effectiveFrom;
+
+    /**
+     * 生效结束时间
+     */
+    private Date effectiveTo;
+
+    /**
+     * 状态
+     */
+    private String status;
+
+    /**
+     * 创建人
+     */
+    private String createBy;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 修改人
+     */
+    private String modifyBy;
+
+    /**
+     * 修改时间
+     */
+    private Date modifyTime;
+}

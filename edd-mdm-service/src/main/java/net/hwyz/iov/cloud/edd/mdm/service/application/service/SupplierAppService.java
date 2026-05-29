@@ -183,6 +183,18 @@ public class SupplierAppService {
     }
 
     /**
+     * 查询所有ACTIVE供应商
+     *
+     * @return 供应商DTO列表
+     */
+    public List<SupplierDto> listAllActive() {
+        List<Supplier> suppliers = supplierRepository.findAllActive();
+        return suppliers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 查询供应商历史版本列表
      *
      * @param code 供应商code

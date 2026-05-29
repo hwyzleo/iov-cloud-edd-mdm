@@ -25,6 +25,8 @@ public interface SupplierRepository {
 
     List<Supplier> findAll(int page, int size, String supplierType, boolean includeInactive);
 
+    List<Supplier> findAllActive();
+
     long count(boolean includeInactive);
 
     void delete(Supplier supplier);

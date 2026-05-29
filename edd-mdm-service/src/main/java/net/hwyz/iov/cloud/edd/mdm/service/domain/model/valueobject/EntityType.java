@@ -9,5 +9,9 @@ public enum EntityType {
     CONFIGURATION,
     OPTION_FAMILY,
     OPTION_CODE,
-    SUPPLIER
+    SUPPLIER,
+    VEHICLE_NODE,
+    PLANT,
+    PART,
+    MATERIAL_CATEGORY
 }

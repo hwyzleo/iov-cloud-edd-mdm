@@ -30,6 +30,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlantDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.VehicleNodeDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
 
 import java.util.List;
 
@@ -249,6 +255,48 @@ public interface OutboxRepository {
      * @param event 工厂删除事件
      */
     void savePlantDeletedEvent(PlantDeletedEvent event);
+
+    /**
+     * 保存物料分类创建事件（Material 子域）
+     *
+     * @param event 物料分类创建事件
+     */
+    void saveMaterialCategoryCreatedEvent(MaterialCategoryCreatedEvent event);
+
+    /**
+     * 保存物料分类更新事件（Material 子域）
+     *
+     * @param event 物料分类更新事件
+     */
+    void saveMaterialCategoryUpdatedEvent(MaterialCategoryUpdatedEvent event);
+
+    /**
+     * 保存物料分类删除事件（Material 子域）
+     *
+     * @param event 物料分类删除事件
+     */
+    void saveMaterialCategoryDeletedEvent(MaterialCategoryDeletedEvent event);
+
+    /**
+     * 保存零件创建事件（Material 子域）
+     *
+     * @param event 零件创建事件
+     */
+    void savePartCreatedEvent(PartCreatedEvent event);
+
+    /**
+     * 保存零件更新事件（Material 子域）
+     *
+     * @param event 零件更新事件
+     */
+    void savePartUpdatedEvent(PartUpdatedEvent event);
+
+    /**
+     * 保存零件删除事件（Material 子域）
+     *
+     * @param event 零件删除事件
+     */
+    void savePartDeletedEvent(PartDeletedEvent event);
 
     /**
      * 获取待发送的事件列表

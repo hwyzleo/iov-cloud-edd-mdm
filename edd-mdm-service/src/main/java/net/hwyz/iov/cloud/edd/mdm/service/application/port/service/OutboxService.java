@@ -10,6 +10,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 
 /**
  * 事件发件箱服务端口
@@ -229,4 +231,48 @@ public interface OutboxService {
      * @param forceDelete 是否 force 旁路删除
      */
     void publishPlantDeletedEvent(Plant plant, boolean forceDelete);
+
+    /**
+     * 发布物料分类创建事件（Material 子域）
+     *
+     * @param category 物料分类聚合根
+     */
+    void publishMaterialCategoryCreatedEvent(MaterialCategory category);
+
+    /**
+     * 发布物料分类更新事件（Material 子域）
+     *
+     * @param category 物料分类聚合根
+     */
+    void publishMaterialCategoryUpdatedEvent(MaterialCategory category);
+
+    /**
+     * 发布物料分类删除事件（Material 子域）
+     *
+     * @param category    物料分类聚合根（删除前最后一份快照）
+     * @param forceDelete 是否 force 旁路删除
+     */
+    void publishMaterialCategoryDeletedEvent(MaterialCategory category, boolean forceDelete);
+
+    /**
+     * 发布零件创建事件（Material 子域）
+     *
+     * @param part 零件聚合根
+     */
+    void publishPartCreatedEvent(Part part);
+
+    /**
+     * 发布零件更新事件（Material 子域）
+     *
+     * @param part 零件聚合根
+     */
+    void publishPartUpdatedEvent(Part part);
+
+    /**
+     * 发布零件删除事件（Material 子域）
+     *
+     * @param part        零件聚合根（删除前最后一份快照）
+     * @param forceDelete 是否 force 旁路删除
+     */
+    void publishPartDeletedEvent(Part part, boolean forceDelete);
 }

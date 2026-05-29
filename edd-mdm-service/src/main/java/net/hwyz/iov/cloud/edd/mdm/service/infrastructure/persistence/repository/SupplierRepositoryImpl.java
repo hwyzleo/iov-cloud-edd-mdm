@@ -141,6 +141,18 @@ public class SupplierRepositoryImpl implements SupplierRepository {
     }
 
     @Override
+    public List<Supplier> findAllActive() {
+        LambdaQueryWrapper<SupplierPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SupplierPo::getRowValid, true);
+        wrapper.eq(SupplierPo::getStatus, "ACTIVE");
+        wrapper.orderByDesc(SupplierPo::getCreateTime);
+        List<SupplierPo> poList = supplierMapper.selectList(wrapper);
+        return poList.stream()
+                .map(supplierConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public long count(boolean includeInactive) {
         LambdaQueryWrapper<SupplierPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SupplierPo::getRowValid, true);

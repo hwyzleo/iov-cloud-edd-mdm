@@ -38,6 +38,9 @@ public class OutboxRelayScheduler {
 
     static {
         EEAD_TOPIC_MAPPING.put("VEHICLE_NODE", "mdm.eead.vehicleNode.event");
+        // Material 子域 topic 映射
+        EEAD_TOPIC_MAPPING.put("MATERIAL_CATEGORY", "mdm.material.category.event");
+        EEAD_TOPIC_MAPPING.put("PART", "mdm.material.part.event");
     }
 
     /**
