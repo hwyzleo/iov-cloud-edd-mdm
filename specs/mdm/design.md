@@ -30,7 +30,7 @@
 >
 > **EEAD 子域后续四块**（通讯矩阵 / 诊断架构 / 刷写 OTA 拓扑 / 信息安全架构）的 design 待各自独立 Design CR 立项补充，详见 requirements §6 OS-15。
 >
-> **错误码段位说明**：本 design §5.5 错误码表当前段位 `807XXX`（CR-001 ~ CR-006 历史已落，共 17 个错误码）、`812XXX`（CR-007 新分配，含 812001 / 812002 / 812003）、`813XXX`（CR-008 新分配，含 813001 ~ 813004）与 `814XXX`（CR-009 新分配，含 814001 ~ 814006 / 814010 ~ 814016）**共存**；段位历史漂移由 requirements §7 Q12 跟踪，未来通过独立 CR 统一对齐。
+> **错误码段位说明**：本 design §5.5 错误码表当前段位 `807XXX`（CR-001 ~ CR-006 历史已落 + CR-010 新增 6 个，共 23 个错误码）、`812XXX`（CR-007 新分配，含 812001 / 812002 / 812003）、`813XXX`（CR-008 新分配，含 813001 ~ 813004）与 `814XXX`（CR-009 新分配，含 814001 ~ 814006 / 814010 ~ 814016）**共存**；段位历史漂移由 requirements §7 Q12 跟踪，未来通过独立 CR 统一对齐。
 
 ## 1. Architecture Overview
 
@@ -1765,15 +1765,22 @@ sequenceDiagram
     participant Downstream as 下游系统
     
     User->>Service: 失效 Brand（status=INACTIVE）
-    Service->>DB: UPDATE mdm_brand SET status='INACTIVE', effective_to=now(), version=version+1
-    Service->>DB: INSERT mdm_brand_history
-    Service->>Outbox: INSERT event (eventType=brand.deactivated)
+    Service->>DB: 查询是否存在 ACTIVE 状态的子级 CarLine
+    alt 存在 ACTIVE 子级
+        Service-->>User: 返回错误码 807016（BrandHasActiveChildren），拒绝失效
+    else 无 ACTIVE 子级
+        Service->>DB: UPDATE mdm_brand SET status='INACTIVE', effective_to=now(), version=version+1
+        Service->>DB: INSERT mdm_brand_history
+        Service->>Outbox: INSERT event (eventType=brand.deactivated)
+    end
     
     Relay->>Outbox: 扫描并发送
     Relay->>Kafka: 发送 deactivated 事件
     Kafka->>Downstream: 消费 deactivated 事件
     Downstream->>Downstream: 更新本地副本 status=INACTIVE
 ```
+
+> **CR-010 失效依赖检查说明**：Product MDM 子域中所有具有上下层关系的实体（Brand→CarLine→Model→Variant→Configuration 与 OptionFamily→OptionCode）在失效时均执行 ACTIVE 子级依赖检查。错误码映射：807016（Brand）/ 807017（CarLine）/ 807018（Platform）/ 807019（Model）/ 807021（Variant）/ 807022（OptionFamily）。
 
 ### F5 - 上游 Kafka 消息接入流程
 
@@ -2637,7 +2644,13 @@ sequenceDiagram
 | 807013 | 非权威源写入被拒绝 | 403 Forbidden |
 | 807014 | Configuration 序号溢出（mdm_configuration_seq.next_seq > 9,999,999） | 409 Conflict |
 | 807015 | Variant code 长度超限（> 57 字符，影响 Configuration code 自动拼接） | 400 Bad Request |
+| 807016 | BrandHasActiveChildren：品牌下存在活跃车系，失效被拒绝（CR-010 失效依赖检查） | 409 Conflict |
+| 807017 | CarLineHasActiveChildren：车系下存在活跃车型，失效被拒绝（CR-010 失效依赖检查） | 409 Conflict |
+| 807018 | PlatformHasActiveChildren：平台下存在活跃车型，失效被拒绝（CR-010 失效依赖检查） | 409 Conflict |
+| 807019 | ModelHasActiveChildren：车型下存在活跃版本，失效被拒绝（CR-010 失效依赖检查） | 409 Conflict |
 | 807020 | Supplier code 重复 | 409 Conflict |
+| 807021 | VariantHasActiveChildren：版本下存在活跃配置，失效被拒绝（CR-010 失效依赖检查） | 409 Conflict |
+| 807022 | OptionFamilyHasActiveChildren：选项族下存在活跃选项码，失效被拒绝（CR-010 失效依赖检查） | 409 Conflict |
 | 807099 | 系统内部错误 | 500 Internal Server Error |
 | **812001** | **VEHICLE_NODE_NOT_EXIST：车载节点不存在（CR-007 EEAD 子域）** | **404 Not Found** |
 | **812002** | **VEHICLE_NODE_CODE_EXIST：车载节点 nodeCode 已存在（CR-007 EEAD 子域）** | **409 Conflict** |
@@ -2664,7 +2677,7 @@ sequenceDiagram
 | **814015** | **PART_LIFECYCLE_INVALID_TRANSITION：零件 lifecycleStage 状态机逆向跳转或 OBSOLETE 终态变更（CR-009 Material 子域）** | **400 Bad Request** |
 | **814016** | **PART_HAS_DOWNSTREAM_REF：零件存在下游引用（substitutePartCode），删除被拒绝（CR-009 Material 子域）** | **409 Conflict** |
 
-> **段位历史漂移说明（CR-007 / CR-008 / CR-009）**：MDM 服务规范段位为 812xxx，但 Product MDM / Party MDM 历史 CR-001 ~ CR-006 已使用 807xxx 段（共 17 个错误码），EEAD 子域本期使用 812xxx 段（3 个），Org 子域本期使用 813xxx 段（4 个 + 4 个预留），Material 子域本期使用 814xxx 段（6 个 + 7 个 = 13 个）。四段共存为历史遗留，未来由独立 CR 统一对齐（详见 requirements §7 Q12）。
+> **段位历史漂移说明（CR-007 / CR-008 / CR-009 / CR-010）**：MDM 服务规范段位为 812xxx，但 Product MDM / Party MDM 历史 CR-001 ~ CR-006 已使用 807xxx 段（共 17 个错误码），CR-010 新增 6 个失效依赖检查错误码（807016~807019 / 807021~807022），EEAD 子域本期使用 812xxx 段（3 个），Org 子域本期使用 813xxx 段（4 个 + 4 个预留），Material 子域本期使用 814xxx 段（6 个 + 7 个 = 13 个）。四段共存为历史遗留，未来由独立 CR 统一对齐（详见 requirements §7 Q12）。
 
 ### 5.6 跨服务依赖（CR-007 新增）
 
@@ -2960,6 +2973,7 @@ CR-008 沿用 CR-007 的反向 Feign 调用模式，但反查目标从 VehiclePa
 | 编号 | 问题 | 答案 | 状态 |
 |------|------|------|------|
 | OQ-1 | Outbox Relay 任务的扫描频率和批量大小如何配置？ | 扫描频率：5 秒，批量大小：100 条，支持 Nacos 动态配置 | 已确认 |
+| OQ-1-Q1 | Product MDM 上层失效时，是否级联失效下层？ | 采用方案 B（阻止失效 + 依赖检查）：失效父级时检查是否存在 ACTIVE 状态的子级，存在则拒绝失效并返回错误码（807016~807022）。Brand→CarLine→Model→Variant→Configuration 与 OptionFamily→OptionCode 两条链路均适用 | 已确认（CR-010） |
 | OQ-2 | Kafka 消息的 Key 如何选择？ | 使用 entity code（如 BRAND_001），保证同一实体事件在同一 Partition 内有序 | 已确认 |
 | OQ-3 | Feign 接口是否需要支持增量拉取（基于 modify_time）？ | 本期不实现，留待后续 CR。首期用 Kafka 事件实现增量同步，Feign 接口聚焦 Bootstrap 和对账 | 已确认 |
 | OQ-4 | 按选项码组合反查配置的匹配语义？ | 采用"包含匹配"：Configuration 绑定的 Option Code 集合完全包含所提供的组合即匹配。精确匹配和通配留待后续 CR | 已确认 |
@@ -2993,3 +3007,4 @@ CR-008 沿用 CR-007 的反向 Feign 调用模式，但反查目标从 VehiclePa
 | 2026-05-28 | CR-008 | Added | 引入 Org 子域，纳入 Plant 作为首个实体：(1) §1 覆盖范围声明追加 Org 子域 + 系统上下文补充段（Service Caller / Kafka 消费 / 上游空缺 / MDM→VMD Manufacturer 反向 Feign / 来源字段模式说明）；包结构新增"Org 子域类清单"段（API 模块 10 类 + Service 模块 DDD 四层 35 类，含 VmdPlantRefService 反向 Feign），明确 Org 共享层不重建 + 来源字段复用 Brand/Party 模式；(2) §2 新增 CR-008 技术决策表 14 行（包路径 / 表前缀 / Kafka topic 单一化 / Feign 路径 / 权限点 / **Plant 同步来源字段选型 Brand/Party 模式**（附与 EEAD 模式的对比决策理由）/ 删除策略方案 A / Feign fail-safe / PlantType 7 类 / 上游接入空缺 / Outbox 复用 / 权威源配置预留 / Flyway 命名 / 历史表独立）；(3) §3.1 新增 mdm_org_plant 主表（36 列含 source_system/source_id/source_version/ingestion_channel/ingestion_time/source_payload_hash 来源字段、3 个索引、4 条业务约束）；§3.2 历史表名列表追加 mdm_org_plant_history；§3.3 mdm_outbox.aggregate_type 扩展 PLANT 取值并追加 Org topic 路由表注记（含来源字段模式差异说明）；§3.4 / §3.5 entity_type 列预留 PLANT 取值（本期不写入）；(4) §4 新增 F12（Plant CRUD 差异化注记表，沿用 F1，含来源字段 Brand/Party 模式差异行）+ F13（Plant 删除前置依赖反查 mermaid 时序图，含 DRAFT 直删 / ACTIVE-INACTIVE 反查 VMD Manufacturer / Feign fail-safe / MDM-Admin force 旁路 4 个分支，附 5 个关键设计点）；(5) §5.1 新增 Plant MPT 接口 10 个含 force 旁路与 6 种细分权限点；§5.2 新增 Plant Service 接口 3 个（snapshot / byCode / listByType）路径硬约束 /api/service/mdm/org/v1/**；§5.5 错误码表标题改为段位 807XXX / 812XXX / 813XXX 共存，追加 813001~813004 + 813010~813013（预留）共 8 行；§5.6 跨服务依赖新增 MDM→VMD Manufacturer 反查接口契约（过渡期 + 目标期两套接口）；(6) §6 Coverage Mapping 追加 US-047 ~ US-055 共 9 行；(7) §7 Impact Analysis 追加"Org 子域上线对现有 design 的影响"段含 6 子小节；(8) §8 Open Questions 追加 OQ-10 ~ OQ-14（对应 requirements Q15~Q19）；(9) 顶部 banner 追加 Org 子域覆盖声明 + Org 物理隔离硬约束注记 |
 | 2026-05-29 | CR-009 | Added | 引入 Material 子域，纳入 MaterialCategory（物料品类）与 Part（零件）作为首批实体：(1) §1 覆盖范围声明追加 Material 子域 + Material 物理隔离硬约束注记（表前缀 `mdm_material_*` / Kafka topic `mdm.material.part.event` + `mdm.material.category.event` / Feign 路径 `/api/service/mdm/material/v1/**` / 权限点前缀 `mdm:material:*` / Flyway 命名 `V*_MATERIAL__*.sql` / 来源字段 Brand/Party 模式）+ 系统上下文补充段（Service Caller / Kafka 消费 / 上游空缺 / 无反向 Feign / 来源字段模式说明）；包结构新增"Material 子域类清单"段（API 模块 18 类 + Service 模块 DDD 四层 52 类），明确 Material 共享层不重建 + 来源字段复用 Brand/Party 模式；(2) §2 新增 CR-009 技术决策表 16 行（包路径 / 表前缀 / Kafka topic 单一化 / Feign 路径 / 权限点 / **Part 同步来源字段选型 Brand/Party 模式** / Part 引用完整性校验三字段 / Part 生命周期状态机 5 阶段单向推进 / Part 删除策略方案 A / Feign fail-safe / MaterialCategory 树形结构防环 / MaterialCategory 删除保护 / 上游接入空缺 / Outbox 复用 / 权威源配置预留 / Flyway 命名 / 历史表独立）；(3) §3.1 新增 mdm_material_category 主表（22 列含 parent_code 自关联、2 个索引、4 条业务约束）+ mdm_material_part 主表（35 列含 category_code/part_type/vehicle_node_code/supplier_code/is_software/fota_upgradeable/is_safety_critical/uom/drawing_no/drawing_version/weight/weight_uom/lifecycle_stage/substitute_part_code、5 个索引、7 条业务约束）；§3.2 历史表名列表追加 mdm_material_category_history + mdm_material_part_history；§3.3 mdm_outbox.aggregate_type 扩展 PART / MATERIAL_CATEGORY 取值并追加 Material topic 路由表注记；§3.4 / §3.5 entity_type 列预留 PART / MATERIAL_CATEGORY 取值（本期不写入）；(4) §4 新增 F14（MaterialCategory CRUD 差异化注记表，含树形查询/防环检测/删除保护行）+ F15（Part CRUD 差异化注记表，含引用完整性校验/生命周期状态机/替代件校验行）+ F16（Part 删除前置依赖检查 mermaid 时序图，含 DRAFT 直删 / ACTIVE-INACTIVE 检查 substitutePartCode 引用 / MDM-Admin force 旁路 3 个分支）；(5) §5.1 新增 MaterialCategory MPT 接口 8 个 + Part MPT 接口 10 个含 force 旁路与 12 种细分权限点；§5.2 新增 MaterialCategory Service 接口 3 个（snapshot / byCode / tree）+ Part Service 接口 5 个（snapshot / byCode / listByCategory / listByVehicleNode / listBySupplier）路径硬约束 /api/service/mdm/material/v1/**；§5.5 错误码表标题改为段位 807XXX / 812XXX / 813XXX / 814XXX 共存，追加 814001~814006（MaterialCategory）+ 814010~814016（Part）共 13 行；(6) §6 Coverage Mapping 追加 US-056 ~ US-070 共 15 行；(7) §7 Impact Analysis 追加"Material 子域上线对现有 design 的影响"段含 5 子小节（包结构/模块层 / 数据库层 / 错误码层 / 对下游 VMD-采购-OTA-BOM 制造系统的影响）；(8) §8 Open Questions 追加 OQ-15 ~ OQ-20（对应 requirements Q20~Q25）；(9) 顶部 banner 追加 Material 子域覆盖声明 + Material 物理隔离硬约束注记 |
 | 2026-05-29 | CR-009-Enh | Modified | Part 字段扩展：新增 12 个业务属性字段（is_key_part/is_regulatory_part/is_frame_part/is_accurately_traced/ffa_code/ffa_desc/is_digitate/initial_model/production_code/first_production_date/designer/designer_dept），mdm_material_part 表从 35 列扩展至 47 列；新增索引 IDX_PART_KEY_LEVEL (is_key_part, status)；同步更新 requirements.md US-059 字段定义与 AC（列表查询支持 isKeyPart 过滤） |
+| 2026-05-29 | CR-010 | Modified | 决议 Q1：Product MDM 上层失效时采用方案 B（阻止失效 + 依赖检查）。(1) §5.5 错误码表新增 807016~807019 / 807021~807022 共 6 个错误码（BrandHasActiveChildren / CarLineHasActiveChildren / PlatformHasActiveChildren / ModelHasActiveChildren / VariantHasActiveChildren / OptionFamilyHasActiveChildren）；(2) §8 Open Questions 新增 OQ-1-Q1 记录决议结果；(3) 实现层：Repository 接口新增 existsByXxxCodeAndStatusActive 方法，ProductDomainService 各 deactivate 方法新增依赖检查逻辑 |

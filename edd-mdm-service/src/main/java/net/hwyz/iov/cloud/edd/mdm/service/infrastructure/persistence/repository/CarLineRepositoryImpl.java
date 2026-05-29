@@ -101,6 +101,15 @@ public class CarLineRepositoryImpl implements CarLineRepository {
     }
 
     @Override
+    public boolean existsByBrandCodeAndStatusActive(String brandCode) {
+        LambdaQueryWrapper<CarLinePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CarLinePo::getBrandCode, brandCode);
+        wrapper.eq(CarLinePo::getStatus, "ACTIVE");
+        wrapper.eq(CarLinePo::getRowValid, true);
+        return carLineMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
     public List<CarLine> findAll(int page, int size, String brandCode, boolean includeInactive) {
         Page<CarLinePo> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<CarLinePo> wrapper = new LambdaQueryWrapper<>();

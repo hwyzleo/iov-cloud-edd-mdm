@@ -122,6 +122,15 @@ public class ConfigurationRepositoryImpl implements ConfigurationRepository {
     }
 
     @Override
+    public boolean existsByVariantCodeAndStatusActive(String variantCode) {
+        LambdaQueryWrapper<ConfigurationPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ConfigurationPo::getVariantCode, variantCode);
+        wrapper.eq(ConfigurationPo::getStatus, "ACTIVE");
+        wrapper.eq(ConfigurationPo::getRowValid, true);
+        return configurationMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
     public List<Configuration> findAll(int page, int size, String variantCode, boolean includeInactive) {
         Page<ConfigurationPo> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<ConfigurationPo> wrapper = new LambdaQueryWrapper<>();

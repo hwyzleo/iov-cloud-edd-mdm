@@ -1,10 +1,16 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.BrandHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.BrandNotFoundException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.CarLineHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.ConfigurationSeqOverflowException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.ModelHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.OptionFamilyHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.PlatformHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VariantCodeTooLongException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VariantHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Brand;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
@@ -25,6 +31,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionC
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationSeqRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ModelRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionFamilyRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
@@ -49,6 +56,7 @@ public class ProductDomainService {
     private final CarLineRepository carLineRepository;
     private final PlatformRepository platformRepository;
     private final OptionFamilyRepository optionFamilyRepository;
+    private final OptionCodeRepository optionCodeRepository;
     private final ModelRepository modelRepository;
     private final VariantRepository variantRepository;
     private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
@@ -133,6 +141,11 @@ public class ProductDomainService {
         // 查找品牌
         Brand brand = brandRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("品牌不存在: " + code));
+
+        // 检查是否存在活跃的子级车系
+        if (carLineRepository.existsByBrandCodeAndStatusActive(code)) {
+            throw new BrandHasActiveChildrenException(code, 1);
+        }
 
         // 失效品牌
         brand.deactivate(modifyBy);
@@ -284,6 +297,11 @@ public class ProductDomainService {
         CarLine carLine = carLineRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车系不存在: " + code));
 
+        // 检查是否存在活跃的子级车型
+        if (modelRepository.existsByCarLineCodeAndStatusActive(code)) {
+            throw new CarLineHasActiveChildrenException(code, 1);
+        }
+
         // 失效车系
         carLine.deactivate(modifyBy);
 
@@ -422,6 +440,11 @@ public class ProductDomainService {
         Platform platform = platformRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("平台不存在: " + code));
 
+        // 检查是否存在活跃的子级车型
+        if (modelRepository.existsByPlatformCodeAndStatusActive(code)) {
+            throw new PlatformHasActiveChildrenException(code, 1);
+        }
+
         // 失效平台
         platform.deactivate(modifyBy);
 
@@ -559,6 +582,12 @@ public class ProductDomainService {
     public OptionFamily deactivateOptionFamily(String code, String modifyBy) {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+
+        // 检查是否存在活跃的子级选项码
+        if (optionCodeRepository.existsByOptionFamilyCodeAndStatusActive(code)) {
+            throw new OptionFamilyHasActiveChildrenException(code, 1);
+        }
+
         optionFamily.deactivate(modifyBy);
         return optionFamilyRepository.save(optionFamily, "DEACTIVATE");
     }
@@ -650,6 +679,12 @@ public class ProductDomainService {
     public Model deactivateModel(String code, String modifyBy) {
         Model model = modelRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("车型不存在: " + code));
+
+        // 检查是否存在活跃的子级版本
+        if (variantRepository.existsByModelCodeAndStatusActive(code)) {
+            throw new ModelHasActiveChildrenException(code, 1);
+        }
+
         model.deactivate(modifyBy);
         return modelRepository.save(model, "DEACTIVATE");
     }
@@ -739,6 +774,12 @@ public class ProductDomainService {
     public Variant deactivateVariant(String code, String modifyBy) {
         Variant variant = variantRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("版本不存在: " + code));
+
+        // 检查是否存在活跃的子级配置
+        if (configurationRepository.existsByVariantCodeAndStatusActive(code)) {
+            throw new VariantHasActiveChildrenException(code, 1);
+        }
+
         variant.deactivate(modifyBy);
         return variantRepository.save(variant, "DEACTIVATE");
     }

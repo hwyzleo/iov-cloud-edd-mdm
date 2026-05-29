@@ -109,6 +109,24 @@ public class ModelRepositoryImpl implements ModelRepository {
     }
 
     @Override
+    public boolean existsByCarLineCodeAndStatusActive(String carLineCode) {
+        LambdaQueryWrapper<ModelPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ModelPo::getCarLineCode, carLineCode);
+        wrapper.eq(ModelPo::getStatus, "ACTIVE");
+        wrapper.eq(ModelPo::getRowValid, true);
+        return modelMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
+    public boolean existsByPlatformCodeAndStatusActive(String platformCode) {
+        LambdaQueryWrapper<ModelPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ModelPo::getPlatformCode, platformCode);
+        wrapper.eq(ModelPo::getStatus, "ACTIVE");
+        wrapper.eq(ModelPo::getRowValid, true);
+        return modelMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
     public List<Model> findAll(int page, int size, String carLineCode, String platformCode, boolean includeInactive) {
         Page<ModelPo> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<ModelPo> wrapper = new LambdaQueryWrapper<>();

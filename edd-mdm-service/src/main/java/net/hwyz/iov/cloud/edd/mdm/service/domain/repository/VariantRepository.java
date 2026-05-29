@@ -23,6 +23,14 @@ public interface VariantRepository {
 
     boolean existsByModelCode(String modelCode);
 
+    /**
+     * 检查是否存在指定车型下的活跃版本
+     *
+     * @param modelCode 车型code
+     * @return 是否存在ACTIVE状态的版本
+     */
+    boolean existsByModelCodeAndStatusActive(String modelCode);
+
     List<Variant> findAll(int page, int size, String modelCode, String carLineCode, String platformCode, boolean includeInactive);
 
     long count(String modelCode, String carLineCode, String platformCode, boolean includeInactive);

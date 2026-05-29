@@ -23,6 +23,22 @@ public interface ModelRepository {
 
     boolean existsByCarLineCode(String carLineCode);
 
+    /**
+     * 检查是否存在指定车系下的活跃车型
+     *
+     * @param carLineCode 车系code
+     * @return 是否存在ACTIVE状态的车型
+     */
+    boolean existsByCarLineCodeAndStatusActive(String carLineCode);
+
+    /**
+     * 检查是否存在指定平台下的活跃车型
+     *
+     * @param platformCode 平台code
+     * @return 是否存在ACTIVE状态的车型
+     */
+    boolean existsByPlatformCodeAndStatusActive(String platformCode);
+
     List<Model> findAll(int page, int size, String carLineCode, String platformCode, boolean includeInactive);
 
     long count(String carLineCode, String platformCode, boolean includeInactive);

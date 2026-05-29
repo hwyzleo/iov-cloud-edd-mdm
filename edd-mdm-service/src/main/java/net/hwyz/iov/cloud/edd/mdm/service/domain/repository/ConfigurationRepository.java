@@ -33,6 +33,14 @@ public interface ConfigurationRepository {
 
     boolean existsByVariantCode(String variantCode);
 
+    /**
+     * 检查是否存在指定版本下的活跃配置
+     *
+     * @param variantCode 版本code
+     * @return 是否存在ACTIVE状态的配置
+     */
+    boolean existsByVariantCodeAndStatusActive(String variantCode);
+
     List<Configuration> findAll(int page, int size, String variantCode, boolean includeInactive);
 
     long count(String variantCode, boolean includeInactive);

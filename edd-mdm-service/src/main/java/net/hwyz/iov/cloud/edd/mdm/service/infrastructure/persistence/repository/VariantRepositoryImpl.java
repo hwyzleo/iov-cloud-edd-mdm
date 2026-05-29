@@ -111,6 +111,15 @@ public class VariantRepositoryImpl implements VariantRepository {
     }
 
     @Override
+    public boolean existsByModelCodeAndStatusActive(String modelCode) {
+        LambdaQueryWrapper<VariantPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(VariantPo::getModelCode, modelCode);
+        wrapper.eq(VariantPo::getStatus, "ACTIVE");
+        wrapper.eq(VariantPo::getRowValid, true);
+        return variantMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
     public List<Variant> findAll(int page, int size, String modelCode, String carLineCode, String platformCode, boolean includeInactive) {
         // 如果按carLineCode或platformCode过滤，先查出对应的modelCode列表
         List<String> modelCodes = resolveModelCodes(modelCode, carLineCode, platformCode);

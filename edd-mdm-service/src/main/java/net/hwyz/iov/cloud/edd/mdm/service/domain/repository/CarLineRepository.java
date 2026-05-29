@@ -46,6 +46,14 @@ public interface CarLineRepository {
     boolean existsByCode(String code);
 
     /**
+     * 检查是否存在指定品牌下的活跃车系
+     *
+     * @param brandCode 品牌code
+     * @return 是否存在ACTIVE状态的车系
+     */
+    boolean existsByBrandCodeAndStatusActive(String brandCode);
+
+    /**
      * 分页查询车系列表
      *
      * @param page            页码

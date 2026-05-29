@@ -107,6 +107,15 @@ public class OptionCodeRepositoryImpl implements OptionCodeRepository {
     }
 
     @Override
+    public boolean existsByOptionFamilyCodeAndStatusActive(String optionFamilyCode) {
+        LambdaQueryWrapper<OptionCodePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OptionCodePo::getOptionFamilyCode, optionFamilyCode);
+        wrapper.eq(OptionCodePo::getStatus, "ACTIVE");
+        wrapper.eq(OptionCodePo::getRowValid, true);
+        return optionCodeMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
     public List<OptionCode> findAll(int page, int size, String optionFamilyCode, boolean includeInactive) {
         Page<OptionCodePo> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<OptionCodePo> wrapper = new LambdaQueryWrapper<>();

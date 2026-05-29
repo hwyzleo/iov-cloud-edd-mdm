@@ -23,6 +23,14 @@ public interface OptionCodeRepository {
 
     boolean existsByOptionFamilyCode(String optionFamilyCode);
 
+    /**
+     * 检查是否存在指定选项族下的活跃选项码
+     *
+     * @param optionFamilyCode 选项族code
+     * @return 是否存在ACTIVE状态的选项码
+     */
+    boolean existsByOptionFamilyCodeAndStatusActive(String optionFamilyCode);
+
     List<OptionCode> findAll(int page, int size, String optionFamilyCode, boolean includeInactive);
 
     long count(String optionFamilyCode, boolean includeInactive);
