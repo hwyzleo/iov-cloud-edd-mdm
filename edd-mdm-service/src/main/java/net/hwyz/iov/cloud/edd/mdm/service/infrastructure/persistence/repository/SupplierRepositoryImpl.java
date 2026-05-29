@@ -128,7 +128,7 @@ public class SupplierRepositoryImpl implements SupplierRepository {
         LambdaQueryWrapper<SupplierPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SupplierPo::getRowValid, true);
         if (supplierType != null && !supplierType.isBlank()) {
-            wrapper.eq(SupplierPo::getSupplierType, supplierType);
+            wrapper.apply("FIND_IN_SET({0}, supplier_type) > 0", supplierType);
         }
         if (!includeInactive) {
             wrapper.eq(SupplierPo::getStatus, "ACTIVE");

@@ -30,6 +30,7 @@ public class SupplierHistoryPo {
     private String name;
     private String nameLocal;
     private String shortName;
+    /** 业务分类，支持多选，逗号分隔（MATERIAL / COMPONENT / SERVICE / LOGISTICS / OTHER） */
     private String supplierType;
     private String country;
     private String businessLicenseNo;
