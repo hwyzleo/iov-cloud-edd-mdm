@@ -8,16 +8,20 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.ConfigurationUpdat
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.ConfigurationQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.ConfigurationDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.ConfigurationHistoryDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionCodeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.ConfigurationHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.ConfigurationOptionCodeBindingPo;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +38,7 @@ public class ConfigurationAppService {
     private final ProductDomainService productDomainService;
     private final OutboxService outboxService;
     private final ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
+    private final OptionCodeRepository optionCodeRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public ConfigurationDto createConfiguration(ConfigurationCreateCmd cmd) {
@@ -128,6 +133,43 @@ public class ConfigurationAppService {
 
     public List<ConfigurationOptionCodeBindingPo> listOptionCodes(String configurationCode) {
         return configurationOptionCodeBindingRepository.findByConfigurationCode(configurationCode);
+    }
+
+    public List<OptionCodeDto> listOptionCodeDetails(String configurationCode) {
+        List<ConfigurationOptionCodeBindingPo> bindings = configurationOptionCodeBindingRepository.findByConfigurationCode(configurationCode);
+        if (bindings.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> optionCodeCodes = bindings.stream()
+                .map(ConfigurationOptionCodeBindingPo::getOptionCodeCode)
+                .collect(Collectors.toList());
+        List<OptionCode> optionCodes = optionCodeRepository.findByCodes(optionCodeCodes);
+        return optionCodes.stream().map(this::convertOptionCodeToDto).collect(Collectors.toList());
+    }
+
+    private OptionCodeDto convertOptionCodeToDto(OptionCode optionCode) {
+        return OptionCodeDto.builder()
+                .id(optionCode.getId())
+                .code(optionCode.getCode())
+                .name(optionCode.getName())
+                .nameLocal(optionCode.getNameLocal())
+                .optionFamilyCode(optionCode.getOptionFamilyCode())
+                .description(optionCode.getDescription())
+                .sourceSystem(optionCode.getSourceSystem())
+                .sourceId(optionCode.getSourceId())
+                .sourceVersion(optionCode.getSourceVersion())
+                .ingestionChannel(optionCode.getIngestionChannel())
+                .ingestionTime(optionCode.getIngestionTime())
+                .sourcePayloadHash(optionCode.getSourcePayloadHash())
+                .version(optionCode.getVersion())
+                .effectiveFrom(optionCode.getEffectiveFrom())
+                .effectiveTo(optionCode.getEffectiveTo())
+                .status(optionCode.getStatus().name())
+                .createBy(optionCode.getCreateBy())
+                .createTime(optionCode.getCreateTime())
+                .modifyBy(optionCode.getModifyBy())
+                .modifyTime(optionCode.getModifyTime())
+                .build();
     }
 
     public List<ConfigurationDto> findByOptionCodes(List<String> optionCodes) {

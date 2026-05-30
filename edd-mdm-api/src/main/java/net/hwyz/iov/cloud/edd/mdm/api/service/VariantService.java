@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.api.service;
 
 import net.hwyz.iov.cloud.edd.mdm.api.fallback.VariantServiceFallbackFactory;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.VariantPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.VariantResponse;
 import net.hwyz.iov.cloud.framework.common.constant.ServiceNameConstants;
@@ -8,6 +9,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 /**
  * 版本相关服务接口
@@ -27,4 +30,7 @@ public interface VariantService {
 
     @GetMapping("/{code}")
     VariantResponse getByCode(@PathVariable String code);
+
+    @GetMapping("/{code}/optionCodes")
+    List<OptionCodeResponse> getOptionCodes(@PathVariable String code);
 }

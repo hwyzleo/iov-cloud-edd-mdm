@@ -91,6 +91,20 @@ public class OptionCodeRepositoryImpl implements OptionCodeRepository {
     }
 
     @Override
+    public List<OptionCode> findByCodes(List<String> codes) {
+        if (codes == null || codes.isEmpty()) {
+            return List.of();
+        }
+        LambdaQueryWrapper<OptionCodePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(OptionCodePo::getCode, codes);
+        wrapper.eq(OptionCodePo::getRowValid, true);
+        List<OptionCodePo> poList = optionCodeMapper.selectList(wrapper);
+        return poList.stream()
+                .map(optionCodeConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public boolean existsByCode(String code) {
         LambdaQueryWrapper<OptionCodePo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(OptionCodePo::getCode, code);

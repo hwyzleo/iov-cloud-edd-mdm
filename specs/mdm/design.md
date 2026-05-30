@@ -2465,6 +2465,7 @@ sequenceDiagram
 |--------|------|------|
 | GET | /api/service/variant/v1/listAll | 全量快照（支持分页、modelCode / carlineCode / platformCode 过滤） |
 | GET | /api/service/variant/v1/{code} | 按 code 单点查询 |
+| GET | /api/service/variant/v1/{code}/optionCodes | 查询版本已绑定的选项码列表 |
 
 #### Configuration 接口
 
@@ -2472,6 +2473,7 @@ sequenceDiagram
 |--------|------|------|
 | GET | /api/service/configuration/v1/listAll | 全量快照（支持分页、variantCode 过滤） |
 | GET | /api/service/configuration/v1/{code} | 按 code 单点查询 |
+| GET | /api/service/configuration/v1/{code}/optionCodes | 查询配置已绑定的选项码列表 |
 | POST | /api/service/configuration/v1/findByOptionCodes | 按选项码组合反查配置（包含匹配） |
 
 #### Option Family 接口

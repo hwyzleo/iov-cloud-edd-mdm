@@ -4,9 +4,12 @@ import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.api.service.ConfigurationService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.ConfigurationAssembler;
+import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.OptionCodeAssembler;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.ConfigurationQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.ConfigurationDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionCodeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.ConfigurationAppService;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +28,7 @@ public class ServiceConfigurationController implements ConfigurationService {
 
     private final ConfigurationAppService configurationAppService;
     private final ConfigurationAssembler configurationAssembler;
+    private final OptionCodeAssembler optionCodeAssembler;
 
     @Override
     @GetMapping("/listAll")
@@ -47,6 +51,13 @@ public class ServiceConfigurationController implements ConfigurationService {
     public ConfigurationResponse getByCode(@PathVariable String code) {
         ConfigurationDto configuration = configurationAppService.getConfigurationByCode(code);
         return configurationAssembler.toResponse(configuration);
+    }
+
+    @Override
+    @GetMapping("/{code}/optionCodes")
+    public List<OptionCodeResponse> getOptionCodes(@PathVariable String code) {
+        List<OptionCodeDto> list = configurationAppService.listOptionCodeDetails(code);
+        return list.stream().map(optionCodeAssembler::toResponse).collect(Collectors.toList());
     }
 
     @Override

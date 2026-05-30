@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.api.service.ConfigurationService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +33,12 @@ public class ConfigurationServiceFallbackFactory implements FallbackFactory<Conf
             public ConfigurationResponse getByCode(String code) {
                 log.error("配置服务根据code[{}]获取配置信息调用失败", code, throwable);
                 return null;
+            }
+
+            @Override
+            public List<OptionCodeResponse> getOptionCodes(String code) {
+                log.error("配置服务根据code[{}]获取关联选项码列表调用失败", code, throwable);
+                return Collections.emptyList();
             }
 
             @Override

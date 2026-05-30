@@ -19,6 +19,8 @@ public interface OptionCodeRepository {
 
     Optional<OptionCode> findByCode(String code);
 
+    List<OptionCode> findByCodes(List<String> codes);
+
     boolean existsByCode(String code);
 
     boolean existsByOptionFamilyCode(String optionFamilyCode);

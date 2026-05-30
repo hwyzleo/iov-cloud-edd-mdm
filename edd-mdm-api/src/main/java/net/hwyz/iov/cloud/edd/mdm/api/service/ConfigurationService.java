@@ -3,6 +3,7 @@ package net.hwyz.iov.cloud.edd.mdm.api.service;
 import net.hwyz.iov.cloud.edd.mdm.api.fallback.ConfigurationServiceFallbackFactory;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
 import net.hwyz.iov.cloud.framework.common.constant.ServiceNameConstants;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,9 @@ public interface ConfigurationService {
 
     @GetMapping("/{code}")
     ConfigurationResponse getByCode(@PathVariable String code);
+
+    @GetMapping("/{code}/optionCodes")
+    List<OptionCodeResponse> getOptionCodes(@PathVariable String code);
 
     @PostMapping("/findByOptionCodes")
     List<ConfigurationResponse> findByOptionCodes(@RequestBody List<String> optionCodes);

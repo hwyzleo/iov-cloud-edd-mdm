@@ -6,11 +6,14 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.VariantBindOptionC
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.VariantCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.VariantUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.VariantQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionCodeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.VariantDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.VariantHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.VariantHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.VariantOptionCodeBindingPo;
@@ -18,6 +21,7 @@ import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +38,7 @@ public class VariantAppService {
     private final ProductDomainService productDomainService;
     private final OutboxService outboxService;
     private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
+    private final OptionCodeRepository optionCodeRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public VariantDto createVariant(VariantCreateCmd cmd) {
@@ -128,6 +133,43 @@ public class VariantAppService {
 
     public List<VariantOptionCodeBindingPo> listOptionCodes(String variantCode) {
         return variantOptionCodeBindingRepository.findByVariantCode(variantCode);
+    }
+
+    public List<OptionCodeDto> listOptionCodeDetails(String variantCode) {
+        List<VariantOptionCodeBindingPo> bindings = variantOptionCodeBindingRepository.findByVariantCode(variantCode);
+        if (bindings.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> optionCodeCodes = bindings.stream()
+                .map(VariantOptionCodeBindingPo::getOptionCodeCode)
+                .collect(Collectors.toList());
+        List<OptionCode> optionCodes = optionCodeRepository.findByCodes(optionCodeCodes);
+        return optionCodes.stream().map(this::convertOptionCodeToDto).collect(Collectors.toList());
+    }
+
+    private OptionCodeDto convertOptionCodeToDto(OptionCode optionCode) {
+        return OptionCodeDto.builder()
+                .id(optionCode.getId())
+                .code(optionCode.getCode())
+                .name(optionCode.getName())
+                .nameLocal(optionCode.getNameLocal())
+                .optionFamilyCode(optionCode.getOptionFamilyCode())
+                .description(optionCode.getDescription())
+                .sourceSystem(optionCode.getSourceSystem())
+                .sourceId(optionCode.getSourceId())
+                .sourceVersion(optionCode.getSourceVersion())
+                .ingestionChannel(optionCode.getIngestionChannel())
+                .ingestionTime(optionCode.getIngestionTime())
+                .sourcePayloadHash(optionCode.getSourcePayloadHash())
+                .version(optionCode.getVersion())
+                .effectiveFrom(optionCode.getEffectiveFrom())
+                .effectiveTo(optionCode.getEffectiveTo())
+                .status(optionCode.getStatus().name())
+                .createBy(optionCode.getCreateBy())
+                .createTime(optionCode.getCreateTime())
+                .modifyBy(optionCode.getModifyBy())
+                .modifyTime(optionCode.getModifyTime())
+                .build();
     }
 
     private VariantDto convertToDto(Variant variant) {
