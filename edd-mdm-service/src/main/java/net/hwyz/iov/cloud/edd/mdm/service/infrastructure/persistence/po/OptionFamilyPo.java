@@ -28,6 +28,7 @@ public class OptionFamilyPo {
     private String name;
     private String nameLocal;
     private String description;
+    private String category;
     private String sourceSystem;
     private String sourceId;
     private String sourceVersion;

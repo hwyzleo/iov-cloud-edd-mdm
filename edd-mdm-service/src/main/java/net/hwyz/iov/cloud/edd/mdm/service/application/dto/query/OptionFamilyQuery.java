@@ -19,4 +19,5 @@ public class OptionFamilyQuery {
     private Integer page;
     private Integer size;
     private boolean includeInactive;
+    private String category;
 }

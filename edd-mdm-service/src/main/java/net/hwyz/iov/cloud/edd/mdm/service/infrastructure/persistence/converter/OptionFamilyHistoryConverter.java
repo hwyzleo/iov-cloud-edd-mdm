@@ -23,6 +23,7 @@ public class OptionFamilyHistoryConverter {
                 .name(po.getName())
                 .nameLocal(po.getNameLocal())
                 .description(po.getDescription())
+                .category(po.getCategory())
                 .sourceSystem(po.getSourceSystem())
                 .sourceId(po.getSourceId())
                 .sourceVersion(po.getSourceVersion())

@@ -22,6 +22,7 @@ public class OptionFamilyUpdateCmd {
     private String name;
     private String nameLocal;
     private String description;
+    private String category;
     private Date effectiveFrom;
     private Date effectiveTo;
     private String modifyBy;

@@ -20,7 +20,8 @@ public interface OptionFamilyService {
     @GetMapping("/listAll")
     OptionFamilyPageResponse listAll(@RequestParam(defaultValue = "1") Integer page,
                                      @RequestParam(defaultValue = "100") Integer size,
-                                     @RequestParam(required = false) Boolean includeInactive);
+                                     @RequestParam(required = false) Boolean includeInactive,
+                                     @RequestParam(required = false) String category);
 
     @GetMapping("/{code}")
     OptionFamilyResponse getByCode(@PathVariable String code);

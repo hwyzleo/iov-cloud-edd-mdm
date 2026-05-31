@@ -556,12 +556,13 @@ public class ProductDomainService {
      * 创建选项族
      */
     public OptionFamily createOptionFamily(String code, String name, String nameLocal, String description,
+                                           net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory category,
                                            Date effectiveFrom, Date effectiveTo, String createBy) {
         if (optionFamilyRepository.existsByCode(code)) {
             throw new DuplicateCodeException("选项族code已存在: " + code);
         }
         OptionFamily optionFamily = OptionFamily.create(code, name, nameLocal, description,
-                effectiveFrom, effectiveTo, createBy);
+                category, effectiveFrom, effectiveTo, createBy);
         return optionFamilyRepository.save(optionFamily, "CREATE");
     }
 
@@ -569,10 +570,11 @@ public class ProductDomainService {
      * 更新选项族
      */
     public OptionFamily updateOptionFamily(String code, String name, String nameLocal, String description,
+                                           net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory category,
                                            Date effectiveFrom, Date effectiveTo, String modifyBy) {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
                 .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
-        optionFamily.update(name, nameLocal, description, effectiveFrom, effectiveTo, modifyBy);
+        optionFamily.update(name, nameLocal, description, category, effectiveFrom, effectiveTo, modifyBy);
         return optionFamilyRepository.save(optionFamily, "UPDATE");
     }
 
@@ -613,15 +615,15 @@ public class ProductDomainService {
     /**
      * 分页查询选项族列表
      */
-    public List<OptionFamily> listOptionFamilies(int page, int size, boolean includeInactive) {
-        return optionFamilyRepository.findAll(page, size, includeInactive);
+    public List<OptionFamily> listOptionFamilies(int page, int size, boolean includeInactive, String category) {
+        return optionFamilyRepository.findAll(page, size, includeInactive, category);
     }
 
     /**
      * 查询选项族总数
      */
-    public long countOptionFamilies(boolean includeInactive) {
-        return optionFamilyRepository.count(includeInactive);
+    public long countOptionFamilies(boolean includeInactive, String category) {
+        return optionFamilyRepository.count(includeInactive, category);
     }
 
     /**

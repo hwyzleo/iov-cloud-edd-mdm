@@ -21,9 +21,9 @@ public interface OptionFamilyRepository {
 
     boolean existsByCode(String code);
 
-    List<OptionFamily> findAll(int page, int size, boolean includeInactive);
+    List<OptionFamily> findAll(int page, int size, boolean includeInactive, String category);
 
-    long count(boolean includeInactive);
+    long count(boolean includeInactive, String category);
 
     void delete(OptionFamily optionFamily);
 

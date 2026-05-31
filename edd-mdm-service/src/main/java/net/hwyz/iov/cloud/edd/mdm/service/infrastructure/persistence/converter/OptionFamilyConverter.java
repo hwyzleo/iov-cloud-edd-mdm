@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OptionFamilyPo;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ public class OptionFamilyConverter {
                 .name(po.getName())
                 .nameLocal(po.getNameLocal())
                 .description(po.getDescription())
+                .category(po.getCategory() != null ? OptionFamilyCategory.valueOf(po.getCategory()) : null)
                 .sourceSystem(po.getSourceSystem())
                 .sourceId(po.getSourceId())
                 .sourceVersion(po.getSourceVersion())
@@ -52,6 +54,7 @@ public class OptionFamilyConverter {
                 .name(domain.getName())
                 .nameLocal(domain.getNameLocal())
                 .description(domain.getDescription())
+                .category(domain.getCategory() != null ? domain.getCategory().name() : null)
                 .sourceSystem(domain.getSourceSystem())
                 .sourceId(domain.getSourceId())
                 .sourceVersion(domain.getSourceVersion())

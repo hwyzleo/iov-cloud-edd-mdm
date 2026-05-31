@@ -8,8 +8,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.OptionFamilyQuer
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionFamilyDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionFamilyHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyCategoryInvalidException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.OptionFamilyHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -34,13 +36,14 @@ public class OptionFamilyAppService {
     @Transactional(rollbackFor = Exception.class)
     public OptionFamilyDto createOptionFamily(OptionFamilyCreateCmd cmd) {
         log.info("创建选项族: {}", cmd.getCode());
+        OptionFamilyCategory category = parseAndValidateCategory(cmd.getCategory());
         String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
         }
         OptionFamily optionFamily = productDomainService.createOptionFamily(
                 cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
-                cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
+                category, cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
         outboxService.publishOptionFamilyCreatedEvent(optionFamily);
         return convertToDto(optionFamily);
     }
@@ -48,13 +51,14 @@ public class OptionFamilyAppService {
     @Transactional(rollbackFor = Exception.class)
     public OptionFamilyDto updateOptionFamily(OptionFamilyUpdateCmd cmd) {
         log.info("更新选项族: {}", cmd.getCode());
+        OptionFamilyCategory category = parseAndValidateCategory(cmd.getCategory());
         String modifyBy = cmd.getModifyBy();
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
         }
         OptionFamily optionFamily = productDomainService.updateOptionFamily(
                 cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
-                cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
+                category, cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
         outboxService.publishOptionFamilyUpdatedEvent(optionFamily);
         return convertToDto(optionFamily);
     }
@@ -86,12 +90,12 @@ public class OptionFamilyAppService {
 
     public List<OptionFamilyDto> listOptionFamily(OptionFamilyQuery query) {
         List<OptionFamily> list = productDomainService.listOptionFamilies(
-                query.getPage(), query.getSize(), query.isIncludeInactive());
+                query.getPage(), query.getSize(), query.isIncludeInactive(), query.getCategory());
         return list.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
-    public long countOptionFamily(boolean includeInactive) {
-        return productDomainService.countOptionFamilies(includeInactive);
+    public long countOptionFamily(boolean includeInactive, String category) {
+        return productDomainService.countOptionFamilies(includeInactive, category);
     }
 
     public List<OptionFamilyHistoryDto> listOptionFamilyHistory(String code) {
@@ -106,6 +110,7 @@ public class OptionFamilyAppService {
                 .name(optionFamily.getName())
                 .nameLocal(optionFamily.getNameLocal())
                 .description(optionFamily.getDescription())
+                .category(optionFamily.getCategory() != null ? optionFamily.getCategory().name() : null)
                 .sourceSystem(optionFamily.getSourceSystem())
                 .sourceId(optionFamily.getSourceId())
                 .sourceVersion(optionFamily.getSourceVersion())
@@ -131,6 +136,7 @@ public class OptionFamilyAppService {
                 .name(history.getName())
                 .nameLocal(history.getNameLocal())
                 .description(history.getDescription())
+                .category(history.getCategory())
                 .sourceSystem(history.getSourceSystem())
                 .sourceId(history.getSourceId())
                 .sourceVersion(history.getSourceVersion())
@@ -149,5 +155,23 @@ public class OptionFamilyAppService {
                 .modifyBy(history.getModifyBy())
                 .modifyTime(history.getModifyTime())
                 .build();
+    }
+
+    /**
+     * 解析并校验 category 枚举值
+     *
+     * @param categoryStr category 字符串
+     * @return OptionFamilyCategory 枚举值
+     * @throws OptionFamilyCategoryInvalidException 当 category 为空或取值不在枚举范围时
+     */
+    private OptionFamilyCategory parseAndValidateCategory(String categoryStr) {
+        if (categoryStr == null || categoryStr.isBlank()) {
+            throw new OptionFamilyCategoryInvalidException(categoryStr);
+        }
+        try {
+            return OptionFamilyCategory.valueOf(categoryStr);
+        } catch (IllegalArgumentException e) {
+            throw new OptionFamilyCategoryInvalidException(categoryStr);
+        }
     }
 }

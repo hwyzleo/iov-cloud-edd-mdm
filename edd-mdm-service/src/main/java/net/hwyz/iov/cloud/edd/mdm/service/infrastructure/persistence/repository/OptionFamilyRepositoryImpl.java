@@ -48,6 +48,7 @@ public class OptionFamilyRepositoryImpl implements OptionFamilyRepository {
                     .name(po.getName())
                     .nameLocal(po.getNameLocal())
                     .description(po.getDescription())
+                    .category(po.getCategory())
                     .sourceSystem(po.getSourceSystem())
                     .sourceId(po.getSourceId())
                     .sourceVersion(po.getSourceVersion())
@@ -97,12 +98,15 @@ public class OptionFamilyRepositoryImpl implements OptionFamilyRepository {
     }
 
     @Override
-    public List<OptionFamily> findAll(int page, int size, boolean includeInactive) {
+    public List<OptionFamily> findAll(int page, int size, boolean includeInactive, String category) {
         Page<OptionFamilyPo> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<OptionFamilyPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(OptionFamilyPo::getRowValid, true);
         if (!includeInactive) {
             wrapper.eq(OptionFamilyPo::getStatus, "ACTIVE");
+        }
+        if (category != null && !category.isBlank()) {
+            wrapper.eq(OptionFamilyPo::getCategory, category);
         }
         wrapper.orderByDesc(OptionFamilyPo::getCreateTime);
         Page<OptionFamilyPo> result = optionFamilyMapper.selectPage(pageParam, wrapper);
@@ -112,11 +116,14 @@ public class OptionFamilyRepositoryImpl implements OptionFamilyRepository {
     }
 
     @Override
-    public long count(boolean includeInactive) {
+    public long count(boolean includeInactive, String category) {
         LambdaQueryWrapper<OptionFamilyPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(OptionFamilyPo::getRowValid, true);
         if (!includeInactive) {
             wrapper.eq(OptionFamilyPo::getStatus, "ACTIVE");
+        }
+        if (category != null && !category.isBlank()) {
+            wrapper.eq(OptionFamilyPo::getCategory, category);
         }
         return optionFamilyMapper.selectCount(wrapper);
     }

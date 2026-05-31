@@ -65,11 +65,12 @@ public class MptOptionFamilyController {
     @GetMapping("/list")
     public ApiResponse<OptionFamilyPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
                                                       @RequestParam(defaultValue = "10") Integer size,
-                                                      @RequestParam(required = false) Boolean includeInactive) {
+                                                      @RequestParam(required = false) Boolean includeInactive,
+                                                      @RequestParam(required = false) String category) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
         List<OptionFamilyDto> list = optionFamilyAppService.listOptionFamily(
-                OptionFamilyQuery.builder().page(page).size(size).includeInactive(includeInactiveFlag).build());
-        long total = optionFamilyAppService.countOptionFamily(includeInactiveFlag);
+                OptionFamilyQuery.builder().page(page).size(size).includeInactive(includeInactiveFlag).category(category).build());
+        long total = optionFamilyAppService.countOptionFamily(includeInactiveFlag, category);
         List<OptionFamilyResponse> rows = list.stream()
                 .map(optionFamilyAssembler::toResponse).collect(Collectors.toList());
         return ApiResponse.ok(OptionFamilyPageResponse.builder().total(total).rows(rows).build());

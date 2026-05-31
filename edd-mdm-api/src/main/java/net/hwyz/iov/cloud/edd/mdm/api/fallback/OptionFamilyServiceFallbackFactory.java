@@ -20,7 +20,7 @@ public class OptionFamilyServiceFallbackFactory implements FallbackFactory<Optio
     public OptionFamilyService create(Throwable throwable) {
         return new OptionFamilyService() {
             @Override
-            public OptionFamilyPageResponse listAll(Integer page, Integer size, Boolean includeInactive) {
+            public OptionFamilyPageResponse listAll(Integer page, Integer size, Boolean includeInactive, String category) {
                 log.error("选项族服务获取选项族全量快照调用失败", throwable);
                 return OptionFamilyPageResponse.empty();
             }

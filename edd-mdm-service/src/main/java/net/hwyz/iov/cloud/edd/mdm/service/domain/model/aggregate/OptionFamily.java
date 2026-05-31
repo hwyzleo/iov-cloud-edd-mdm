@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.InvalidEffectiveDateException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyStatus;
 
 import java.util.Date;
@@ -44,6 +45,11 @@ public class OptionFamily {
      * 选项族描述
      */
     private String description;
+
+    /**
+     * 商品分类（CR-010）
+     */
+    private OptionFamilyCategory category;
 
     /**
      * 来源系统
@@ -138,12 +144,14 @@ public class OptionFamily {
      * 创建选项族
      */
     public static OptionFamily create(String code, String name, String nameLocal, String description,
+                                      OptionFamilyCategory category,
                                       Date effectiveFrom, Date effectiveTo, String createBy) {
         OptionFamily optionFamily = OptionFamily.builder()
                 .code(code)
                 .name(name)
                 .nameLocal(nameLocal)
                 .description(description)
+                .category(category)
                 .sourceSystem("LOCAL")
                 .sourceId(code)
                 .sourceVersion(null)
@@ -169,10 +177,12 @@ public class OptionFamily {
      * 更新选项族
      */
     public void update(String name, String nameLocal, String description,
+                       OptionFamilyCategory category,
                        Date effectiveFrom, Date effectiveTo, String modifyBy) {
         this.name = name;
         this.nameLocal = nameLocal;
         this.description = description;
+        this.category = category;
         this.effectiveFrom = effectiveFrom;
         this.effectiveTo = effectiveTo;
         this.version = this.version + 1;
@@ -185,12 +195,14 @@ public class OptionFamily {
      * 从上游数据创建选项族
      */
     public static OptionFamily createFromUpstream(String code, String name, String nameLocal, String description,
+                                                  OptionFamilyCategory category,
                                                   Date effectiveFrom, Date effectiveTo,
                                                   String sourceSystem, String sourceId, String sourceVersion,
                                                   String ingestionChannel, String sourcePayloadHash,
                                                   String createBy) {
         OptionFamily optionFamily = OptionFamily.builder()
                 .code(code).name(name).nameLocal(nameLocal).description(description)
+                .category(category)
                 .sourceSystem(sourceSystem).sourceId(sourceId).sourceVersion(sourceVersion)
                 .ingestionChannel(ingestionChannel).ingestionTime(new Date())
                 .sourcePayloadHash(sourcePayloadHash)
@@ -208,6 +220,7 @@ public class OptionFamily {
      * 从上游数据更新选项族
      */
     public void updateFromUpstream(String name, String nameLocal, String description,
+                                   OptionFamilyCategory category,
                                    Date effectiveFrom, Date effectiveTo,
                                    String sourceSystem, String sourceId, String sourceVersion,
                                    String ingestionChannel, String sourcePayloadHash,
@@ -215,6 +228,7 @@ public class OptionFamily {
         this.name = name;
         this.nameLocal = nameLocal;
         this.description = description;
+        this.category = category;
         this.sourceSystem = sourceSystem;
         this.sourceId = sourceId;
         this.sourceVersion = sourceVersion;
