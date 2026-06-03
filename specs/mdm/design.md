@@ -2266,6 +2266,35 @@ sequenceDiagram
 3. **fail-safe 默认拒绝**：VMD Feign 失败时不允许盲删；force 旁路需要更高权限点 + 操作人填写原因说明 + 写审计
 4. **删除事件 payload 携带 forceDelete 标记**：下游收到 PlantDeleted 事件时，可识别常规删除还是 admin 强删
 5. **域内不写 history 表的 entity_id 链**：DRAFT 物理删除时主表 id 已消失，history 表 entity_id 列允许 NULL，仅留 code 与快照体作为审计依据
+### F14 - 按 Variant 和 Option Code 组合反查 Configuration Code（CR-022 核心新流程）
+
+```mermaid
+sequenceDiagram
+    participant Caller as Service-Caller (VSO)
+    participant API as ServiceConfigurationController
+    participant App as ConfigurationAppService
+    participant DB as MySQL
+
+    Caller->>API: POST /api/service/configuration/v1/resolveConfiguration
+    Note over API: Body: { variantCode: "VARIANT001", optionCodes: ["OC001", "OC002", "OC003"] }
+    API->>App: resolveConfiguration(variantCode, optionCodes)
+    App->>DB: 查询 mdm_configuration_option_code_binding<br/>按 option_code_code IN (:optionCodes)<br/>AND configuration_code IN (<br/>    SELECT code FROM mdm_configuration<br/>    WHERE variant_code = :variantCode AND status = 'ACTIVE'<br/>)<br/>GROUP BY configuration_code<br/>HAVING COUNT(*) >= :optionCodesSize
+    DB-->>App: 返回匹配的 configuration_code（应唯一）
+    alt 存在匹配
+        App-->>API: 返回 configurationCode
+        API-->>Caller: 200 OK { configurationCode }
+    else 无匹配
+        App-->>API: 返回空结果或业务错误
+        API-->>Caller: 404 Not Found 或 200 OK { configurationCode: null }
+    end
+```
+
+**F14 关键设计点**：
+
+1. **与 F8 的区别**：F8 仅按 optionCodes 反查，返回 Configuration 列表；F14 增加 variantCode 约束，返回单个 Configuration Code（理论下同一 Variant + Option Code 组合应唯一匹配一个 Configuration）
+2. **查询逻辑**：复用 mdm_configuration_option_code_binding 表，增加 variant_code 过滤子查询
+3. **返回值语义**：匹配成功返回单个 configurationCode；匹配失败可返回 null 或 404，由调用方决定处理策略
+4. **性能考虑**：variant_code + option_code 联合索引优化查询性能
 
 ## 5. API Contracts
 
@@ -2490,6 +2519,7 @@ sequenceDiagram
 | GET | /api/service/configuration/v1/{code} | 按 code 单点查询 |
 | GET | /api/service/configuration/v1/{code}/optionCodes | 查询配置已绑定的选项码列表 |
 | POST | /api/service/configuration/v1/findByOptionCodes | 按选项码组合反查配置（包含匹配） |
+| POST | /api/service/configuration/v1/resolveConfiguration | 按 Variant 和 Option Code 组合反查 Configuration Code（包含匹配） |
 
 #### Option Family 接口
 
@@ -2807,6 +2837,7 @@ CR-008 沿用 CR-007 的反向 Feign 调用模式，但反查目标从 VehiclePa
 | US-025 | §3.1 (mdm_option_family), §4 (F1 同模式), §5.1 (Option Family API) | Option Family CRUD + 引用校验 |
 | US-026 | §3.1 (mdm_option_code), §4 (F1 同模式), §5.1 (Option Code API) | Option Code CRUD + 引用校验 |
 | US-071 | §2 (CR-010 决策), §3.1 (mdm_option_family.category + IDX_OF_CATEGORY_STATUS), §5.1 (Option Family list 过滤), §5.5 (812123) | Option Family 商品分类（category）管理（CR-010） |
+| US-072 | §4 (F14), §5.2 (Configuration resolveConfiguration API) | 按 Variant 和 Option Code 组合反查 Configuration Code（CR-022） |
 | US-027 | §3.3 (mdm_outbox), §4 (F2, F4) | 5 类新实体事件发布 |
 | US-028 | §5.2 (5 类新实体 Service API) | 5 类新实体全量快照消费 |
 | US-029 | §3.2 (5 类新实体 history 表) | 5 类新实体历史版本追溯 |
@@ -3032,4 +3063,5 @@ CR-008 沿用 CR-007 的反向 Feign 调用模式，但反查目标从 VehiclePa
 | 2026-05-29 | CR-010 | Modified | 决议 Q1：Product MDM 上层失效时采用方案 B（阻止失效 + 依赖检查）。(1) §5.5 错误码表新增 807016~807019 / 807021~807022 共 6 个错误码（BrandHasActiveChildren / CarLineHasActiveChildren / PlatformHasActiveChildren / ModelHasActiveChildren / VariantHasActiveChildren / OptionFamilyHasActiveChildren）；(2) §8 Open Questions 新增 OQ-1-Q1 记录决议结果；(3) 实现层：Repository 接口新增 existsByXxxCodeAndStatusActive 方法，ProductDomainService 各 deactivate 方法新增依赖检查逻辑 |
 | 2026-05-29 | CR-017 | Modified | 决议 Q9：Supplier 数据建模采用方案 A（一条记录 + supplier_type 多选）。(1) §3.1 mdm_supplier 表 supplier_type 字段类型从 VARCHAR(32) 改为 VARCHAR(256)，说明改为"业务分类，支持多选，逗号分隔"；(2) 存储格式：逗号分隔（如 "MATERIAL,SERVICE"）；(3) 查询方式：使用 FIND_IN_SET 函数精确匹配；(4) 理由：避免数据冗余、符合主数据单一 Golden Record 理念 |
 | 2026-05-29 | CR-020 | Modified | 决议 Q12：错误码段位统一迁移至 812XXX 段。(1) §5.5 错误码表重新分段：Product=8121XX、EEAD=8123XX、Org=8125XX、Party=8127XX、Material=8129XX；(2) Product 子域：807xxx → 8121XX（共 23 个错误码）；(3) EEAD 子域：812xxx → 8123XX（3 个错误码）；(4) Org 子域：813xxx → 8125XX（4 个 + 4 个预留）；(5) Party 子域：807020 → 812701；(6) Material 子域：814xxx → 8129XX（13 个错误码）；(7) 理由：统一规范、便于管理和扩展 |
-| 2026-05-31 | CR-011 | Modified | 为 Option Family 实体新增 category 字段（CR-010）：(1) §1 banner 追加 CR-010 覆盖声明；(2) §2 新增 CR-010 技术决策表 8 行（字段类型 / 是否独立表 / 与 functionalDomain 关系 / 默认值策略 / 列表过滤 / 索引策略 / Flyway 迁移 / 校验错误码）；(3) §3.1 mdm_option_family 主表新增 category 列（VARCHAR(32) 必填枚举）+ IDX_OF_CATEGORY_STATUS 索引 + 业务约束；(4) §5.1 Option Family list 接口追加 category 过滤说明；(5) §5.5 错误码表新增 812123（OPTION_FAMILY_CATEGORY_INVALID）；(6) §6 Coverage Mapping 新增 US-071 映射行 |
+| 2026-05-31 | CR-021 | Modified | 为 Option Family 实体新增 category 字段（CR-010）：(1) §1 banner 追加 CR-010 覆盖声明；(2) §2 新增 CR-010 技术决策表 8 行（字段类型 / 是否独立表 / 与 functionalDomain 关系 / 默认值策略 / 列表过滤 / 索引策略 / Flyway 迁移 / 校验错误码）；(3) §3.1 mdm_option_family 主表新增 category 列（VARCHAR(32) 必填枚举）+ IDX_OF_CATEGORY_STATUS 索引 + 业务约束；(4) §5.1 Option Family list 接口追加 category 过滤说明；(5) §5.5 错误码表新增 812123（OPTION_FAMILY_CATEGORY_INVALID）；(6) §6 Coverage Mapping 新增 US-071 映射行 |
+| 2026-06-03 | CR-022 | Added | 新增按 Variant 和 Option Code 组合反查 Configuration Code 接口设计（US-072）：(1) §4 新增 F14 流程图（按 Variant + Option Code 反查 Configuration Code，含查询逻辑与返回值语义）；(2) §5.2 Configuration Service 接口新增 POST /api/service/configuration/v1/resolveConfiguration；(3) §6 Coverage Mapping 新增 US-072 映射行 |

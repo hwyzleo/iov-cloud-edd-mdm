@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.api.service;
 
 import net.hwyz.iov.cloud.edd.mdm.api.fallback.ConfigurationServiceFallbackFactory;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.request.ConfigurationByVariantAndOptionCodesRequest;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
@@ -36,4 +37,7 @@ public interface ConfigurationService {
 
     @PostMapping("/findByOptionCodes")
     List<ConfigurationResponse> findByOptionCodes(@RequestBody List<String> optionCodes);
+
+    @PostMapping("/resolveConfiguration")
+    String resolveConfiguration(@RequestBody ConfigurationByVariantAndOptionCodesRequest request);
 }

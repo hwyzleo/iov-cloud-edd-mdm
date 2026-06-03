@@ -37,6 +37,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -48,6 +49,7 @@ import java.util.Optional;
  *
  * @author hwyz_leo
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductDomainService {
@@ -999,5 +1001,34 @@ public class ProductDomainService {
             return List.of();
         }
         return configurationRepository.findByCodes(codes, true);
+    }
+
+    /**
+     * 根据版本和选项码组合反查配置code（包含匹配，仅返回ACTIVE状态）
+     *
+     * @param variantCode 版本code
+     * @param optionCodes 选项码列表
+     * @return 匹配的配置code，如果无匹配返回null
+     */
+    public String findConfigurationCodeByVariantAndOptionCodes(String variantCode, List<String> optionCodes) {
+        if (variantCode == null || variantCode.isBlank() || optionCodes == null || optionCodes.isEmpty()) {
+            return null;
+        }
+        // 校验版本存在且ACTIVE
+        Variant variant = variantRepository.findByCode(variantCode)
+                .orElseThrow(() -> new IllegalArgumentException("版本不存在: " + variantCode));
+        if (variant.getStatus() != net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VariantStatus.ACTIVE) {
+            throw new IllegalArgumentException("版本状态不是ACTIVE: " + variantCode);
+        }
+        List<String> codes = configurationOptionCodeBindingRepository.findConfigurationCodeByVariantAndOptionCodes(variantCode, optionCodes, optionCodes.size());
+        if (codes.isEmpty()) {
+            return null;
+        }
+        // 理论上同一 Variant + Option Code 组合应唯一匹配一个 Configuration
+        if (codes.size() > 1) {
+            // 记录告警，但返回第一个
+            log.warn("根据版本[{}]和选项码组合[{}]反查到多个配置: {}", variantCode, optionCodes, codes);
+        }
+        return codes.get(0);
     }
 }

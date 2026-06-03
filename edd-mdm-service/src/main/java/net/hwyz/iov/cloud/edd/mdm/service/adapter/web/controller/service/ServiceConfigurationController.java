@@ -2,6 +2,7 @@ package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.service;
 
 import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.api.service.ConfigurationService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.request.ConfigurationByVariantAndOptionCodesRequest;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
@@ -65,5 +66,11 @@ public class ServiceConfigurationController implements ConfigurationService {
     public List<ConfigurationResponse> findByOptionCodes(@RequestBody List<String> optionCodes) {
         List<ConfigurationDto> list = configurationAppService.findByOptionCodes(optionCodes);
         return list.stream().map(configurationAssembler::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @PostMapping("/resolveConfiguration")
+    public String resolveConfiguration(@RequestBody ConfigurationByVariantAndOptionCodesRequest request) {
+        return configurationAppService.resolveConfigurationCode(request.getVariantCode(), request.getOptionCodes());
     }
 }

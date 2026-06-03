@@ -27,4 +27,19 @@ public interface ConfigurationOptionCodeBindingMapper extends BaseMapper<Configu
             "HAVING COUNT(DISTINCT option_code_code) &gt;= #{size}" +
             "</script>")
     List<String> findConfigurationCodesByOptionCodes(@Param("codes") List<String> codes, @Param("size") int size);
+
+    @Select("<script>" +
+            "SELECT binding.configuration_code FROM mdm_configuration_option_code_binding binding " +
+            "INNER JOIN mdm_configuration config ON binding.configuration_code = config.code " +
+            "WHERE binding.option_code_code IN " +
+            "<foreach collection='codes' item='code' open='(' separator=',' close=')'>" +
+            "#{code}" +
+            "</foreach>" +
+            " AND binding.row_valid=1 " +
+            " AND config.variant_code = #{variantCode} " +
+            " AND config.status = 'ACTIVE' " +
+            "GROUP BY binding.configuration_code " +
+            "HAVING COUNT(DISTINCT binding.option_code_code) &gt;= #{size}" +
+            "</script>")
+    List<String> findConfigurationCodeByVariantAndOptionCodes(@Param("variantCode") String variantCode, @Param("codes") List<String> codes, @Param("size") int size);
 }

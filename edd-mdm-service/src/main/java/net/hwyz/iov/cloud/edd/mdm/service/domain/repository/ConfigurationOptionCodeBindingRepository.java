@@ -22,4 +22,14 @@ public interface ConfigurationOptionCodeBindingRepository {
     List<ConfigurationOptionCodeBindingPo> findByConfigurationCode(String configurationCode);
 
     List<String> findConfigurationCodesByOptionCodes(List<String> optionCodes, int size);
+
+    /**
+     * 根据版本和选项码组合查询配置code（包含匹配，仅返回ACTIVE状态）
+     *
+     * @param variantCode 版本code
+     * @param optionCodes 选项码列表
+     * @param size        选项码数量
+     * @return 匹配的配置code列表
+     */
+    List<String> findConfigurationCodeByVariantAndOptionCodes(String variantCode, List<String> optionCodes, int size);
 }

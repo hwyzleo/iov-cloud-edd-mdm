@@ -2,6 +2,7 @@ package net.hwyz.iov.cloud.edd.mdm.api.fallback;
 
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.api.service.ConfigurationService;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.request.ConfigurationByVariantAndOptionCodesRequest;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.ConfigurationResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.OptionCodeResponse;
@@ -45,6 +46,12 @@ public class ConfigurationServiceFallbackFactory implements FallbackFactory<Conf
             public List<ConfigurationResponse> findByOptionCodes(List<String> optionCodes) {
                 log.error("配置服务根据选项码组合查询配置调用失败", throwable);
                 return Collections.emptyList();
+            }
+
+            @Override
+            public String resolveConfiguration(ConfigurationByVariantAndOptionCodesRequest request) {
+                log.error("配置服务根据版本和选项码组合反查配置code调用失败", throwable);
+                return null;
             }
         };
     }

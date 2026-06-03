@@ -79,4 +79,9 @@ public class ConfigurationOptionCodeBindingRepositoryImpl implements Configurati
     public List<String> findConfigurationCodesByOptionCodes(List<String> optionCodes, int size) {
         return bindingMapper.findConfigurationCodesByOptionCodes(optionCodes, size);
     }
+
+    @Override
+    public List<String> findConfigurationCodeByVariantAndOptionCodes(String variantCode, List<String> optionCodes, int size) {
+        return bindingMapper.findConfigurationCodeByVariantAndOptionCodes(variantCode, optionCodes, size);
+    }
 }

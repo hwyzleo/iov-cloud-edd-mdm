@@ -177,6 +177,17 @@ public class ConfigurationAppService {
         return list.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
+    /**
+     * 根据版本和选项码组合反查配置code
+     *
+     * @param variantCode 版本code
+     * @param optionCodes 选项码列表
+     * @return 匹配的配置code，如果无匹配返回null
+     */
+    public String resolveConfigurationCode(String variantCode, List<String> optionCodes) {
+        return productDomainService.findConfigurationCodeByVariantAndOptionCodes(variantCode, optionCodes);
+    }
+
     private ConfigurationDto convertToDto(Configuration configuration) {
         return ConfigurationDto.builder()
                 .id(configuration.getId())
