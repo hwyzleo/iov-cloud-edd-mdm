@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.KeyPartLevel;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStage;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.NumberingSource;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartType;
 
@@ -19,6 +21,8 @@ import java.util.Date;
 public class Part {
     private Long id;
     private String code;
+    private String baseNo;
+    private NumberingSource numberingSource;
     private String name;
     private String nameLocal;
     private String description;
@@ -27,6 +31,7 @@ public class Part {
     private String vehicleNodeCode;
     private String supplierCode;
     private Boolean isSoftware;
+    private Boolean isAssembly;
     private Boolean fotaUpgradeable;
     private Boolean isSafetyCritical;
     private KeyPartLevel isKeyPart;
@@ -65,9 +70,9 @@ public class Part {
     private Integer rowVersion;
     private Boolean rowValid;
 
-    public static Part create(String code, String name, String nameLocal, String description,
+    public static Part create(PartCode partCode, String name, String nameLocal, String description,
                                String categoryCode, PartType partType, String vehicleNodeCode, String supplierCode,
-                               Boolean isSoftware, Boolean fotaUpgradeable, Boolean isSafetyCritical,
+                               Boolean isSoftware, Boolean isAssembly, Boolean fotaUpgradeable, Boolean isSafetyCritical,
                                KeyPartLevel isKeyPart, Boolean isRegulatoryPart, Boolean isFramePart,
                                Boolean isAccuratelyTraced, String ffaCode, String ffaDesc,
                                Boolean isDigitate, String initialModel, String productionCode,
@@ -79,9 +84,10 @@ public class Part {
         validateEffectiveDate(effectiveFrom, effectiveTo);
         Date now = new Date();
         return Part.builder()
-                .code(code).name(name).nameLocal(nameLocal).description(description)
+                .code(partCode.code()).baseNo(partCode.baseNo()).numberingSource(NumberingSource.MDM_GEN)
+                .name(name).nameLocal(nameLocal).description(description)
                 .categoryCode(categoryCode).partType(partType).vehicleNodeCode(vehicleNodeCode).supplierCode(supplierCode)
-                .isSoftware(isSoftware).fotaUpgradeable(fotaUpgradeable).isSafetyCritical(isSafetyCritical)
+                .isSoftware(isSoftware).isAssembly(isAssembly).fotaUpgradeable(fotaUpgradeable).isSafetyCritical(isSafetyCritical)
                 .isKeyPart(isKeyPart).isRegulatoryPart(isRegulatoryPart).isFramePart(isFramePart)
                 .isAccuratelyTraced(isAccuratelyTraced).ffaCode(ffaCode).ffaDesc(ffaDesc)
                 .isDigitate(isDigitate).initialModel(initialModel).productionCode(productionCode)
@@ -89,7 +95,7 @@ public class Part {
                 .uom(uom).drawingNo(drawingNo).drawingVersion(drawingVersion)
                 .weight(weight).weightUom(weightUom)
                 .lifecycleStage(lifecycleStage).substitutePartCode(substitutePartCode)
-                .sourceSystem("LOCAL").sourceId(code).ingestionChannel("LOCAL").ingestionTime(now)
+                .sourceSystem("LOCAL").sourceId(partCode.code()).ingestionChannel("LOCAL").ingestionTime(now)
                 .version(1).effectiveFrom(effectiveFrom).effectiveTo(effectiveTo)
                 .status(PartStatus.ACTIVE)
                 .createBy(createBy).createTime(now)
@@ -173,6 +179,80 @@ public class Part {
         this.version = this.version + 1;
         this.modifyBy = modifyBy;
         this.modifyTime = new Date();
+    }
+
+    /**
+     * 代次升级（互换性变更）- 创建新记录
+     * @param newPartCode 新零件号值对象
+     * @param operator 操作人
+     * @return 新的Part实例
+     */
+    public Part upgradeGeneration(PartCode newPartCode, String operator) {
+        Date now = new Date();
+        Part newPart = new Part();
+        newPart.setId(null); // 新id
+        newPart.setCode(newPartCode.code());
+        newPart.setBaseNo(newPartCode.baseNo());
+        newPart.setNumberingSource(this.numberingSource);
+        // 复制其他业务字段
+        newPart.setName(this.name);
+        newPart.setNameLocal(this.nameLocal);
+        newPart.setDescription(this.description);
+        newPart.setCategoryCode(this.categoryCode);
+        newPart.setPartType(this.partType);
+        newPart.setVehicleNodeCode(this.vehicleNodeCode);
+        newPart.setSupplierCode(this.supplierCode);
+        newPart.setIsSoftware(this.isSoftware);
+        newPart.setIsAssembly(this.isAssembly);
+        newPart.setFotaUpgradeable(this.fotaUpgradeable);
+        newPart.setIsSafetyCritical(this.isSafetyCritical);
+        newPart.setIsKeyPart(this.isKeyPart);
+        newPart.setIsRegulatoryPart(this.isRegulatoryPart);
+        newPart.setIsFramePart(this.isFramePart);
+        newPart.setIsAccuratelyTraced(this.isAccuratelyTraced);
+        newPart.setFfaCode(this.ffaCode);
+        newPart.setFfaDesc(this.ffaDesc);
+        newPart.setIsDigitate(this.isDigitate);
+        newPart.setInitialModel(this.initialModel);
+        newPart.setProductionCode(this.productionCode);
+        newPart.setFirstProductionDate(this.firstProductionDate);
+        newPart.setDesigner(this.designer);
+        newPart.setDesignerDept(this.designerDept);
+        newPart.setUom(this.uom);
+        newPart.setDrawingNo(this.drawingNo);
+        newPart.setDrawingVersion(this.drawingVersion);
+        newPart.setWeight(this.weight);
+        newPart.setWeightUom(this.weightUom);
+        newPart.setLifecycleStage(this.lifecycleStage);
+        newPart.setSubstitutePartCode(this.substitutePartCode);
+        // 设置来源和审计字段
+        newPart.setSourceSystem("LOCAL");
+        newPart.setSourceId(newPartCode.code());
+        newPart.setIngestionChannel("LOCAL");
+        newPart.setIngestionTime(now);
+        newPart.setVersion(1);
+        newPart.setEffectiveFrom(this.effectiveFrom);
+        newPart.setEffectiveTo(this.effectiveTo);
+        newPart.setStatus(PartStatus.ACTIVE);
+        newPart.setCreateBy(operator);
+        newPart.setCreateTime(now);
+        newPart.setModifyBy(operator);
+        newPart.setModifyTime(now);
+        newPart.setRowVersion(0);
+        newPart.setRowValid(true);
+        return newPart;
+    }
+
+    /**
+     * 小修订 - 仅升drawing_version
+     * @param drawingVersion 新图纸版本
+     * @param modifyBy 修改人
+     */
+    public void minorRevision(String drawingVersion, String modifyBy) {
+        this.setDrawingVersion(drawingVersion);
+        this.setVersion(this.version + 1);
+        this.setModifyBy(modifyBy);
+        this.setModifyTime(new Date());
     }
 
     private static void validateEffectiveDate(Date effectiveFrom, Date effectiveTo) {

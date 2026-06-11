@@ -182,6 +182,17 @@ public class PartRepositoryImpl implements PartRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Optional<Part> findLatestByBaseNo(String baseNo) {
+        LambdaQueryWrapper<PartPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PartPo::getBaseNo, baseNo);
+        wrapper.eq(PartPo::getRowValid, true);
+        wrapper.orderByDesc(PartPo::getCode);
+        wrapper.last("LIMIT 1");
+        PartPo po = partMapper.selectOne(wrapper);
+        return Optional.ofNullable(partConverter.toDomain(po));
+    }
+
     private LambdaQueryWrapper<PartPo> buildListWrapper(String categoryCode, String partType,
                                                          String vehicleNodeCode, String supplierCode,
                                                          String lifecycleStage, String status) {

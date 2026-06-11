@@ -29,6 +29,8 @@ public class PartPo {
     private Long id;
 
     private String code;
+    private String baseNo;
+    private String numberingSource;
     private String name;
     private String nameLocal;
     private String description;
@@ -37,6 +39,7 @@ public class PartPo {
     private String vehicleNodeCode;
     private String supplierCode;
     private Boolean isSoftware;
+    private Boolean isAssembly;
     private Boolean fotaUpgradeable;
     private Boolean isSafetyCritical;
     private String isKeyPart;

@@ -1,11 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.application.assembler;
 
-import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PartDto;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.KeyPartLevel;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStage;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartType;
 
 /**
  * 零件领域组装器
@@ -18,35 +14,14 @@ public class PartDomainAssembler {
     }
 
     /**
-     * 创建命令转领域对象
-     */
-    public static Part toDomain(PartCreateCmd cmd, String createBy) {
-        return Part.create(
-                cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
-                cmd.getCategoryCode(),
-                cmd.getPartType() != null ? PartType.valueOf(cmd.getPartType()) : null,
-                cmd.getVehicleNodeCode(), cmd.getSupplierCode(),
-                cmd.getIsSoftware(), cmd.getFotaUpgradeable(), cmd.getIsSafetyCritical(),
-                cmd.getIsKeyPart() != null ? KeyPartLevel.valueOf(cmd.getIsKeyPart()) : null,
-                cmd.getIsRegulatoryPart(), cmd.getIsFramePart(),
-                cmd.getIsAccuratelyTraced(), cmd.getFfaCode(), cmd.getFfaDesc(),
-                cmd.getIsDigitate(), cmd.getInitialModel(), cmd.getProductionCode(),
-                cmd.getFirstProductionDate(), cmd.getDesigner(), cmd.getDesignerDept(),
-                cmd.getUom(), cmd.getDrawingNo(), cmd.getDrawingVersion(),
-                cmd.getWeight(), cmd.getWeightUom(),
-                cmd.getLifecycleStage() != null ? LifecycleStage.valueOf(cmd.getLifecycleStage()) : null,
-                cmd.getSubstitutePartCode(),
-                cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy
-        );
-    }
-
-    /**
      * 领域对象转DTO
      */
     public static PartDto toDto(Part part) {
         return PartDto.builder()
                 .id(part.getId())
                 .code(part.getCode())
+                .baseNo(part.getBaseNo())
+                .numberingSource(part.getNumberingSource() != null ? part.getNumberingSource().name() : null)
                 .name(part.getName())
                 .nameLocal(part.getNameLocal())
                 .description(part.getDescription())
@@ -55,6 +30,7 @@ public class PartDomainAssembler {
                 .vehicleNodeCode(part.getVehicleNodeCode())
                 .supplierCode(part.getSupplierCode())
                 .isSoftware(part.getIsSoftware())
+                .isAssembly(part.getIsAssembly())
                 .fotaUpgradeable(part.getFotaUpgradeable())
                 .isSafetyCritical(part.getIsSafetyCritical())
                 .isKeyPart(part.getIsKeyPart() != null ? part.getIsKeyPart().name() : null)

@@ -1,4 +1,4 @@
-package net.hwyz.iov.cloud.edd.mdm.service.application.dto.result;
+package net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,35 +9,19 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 零件DTO
- *
- * @author hwyz_leo
+ * 零件导入命令
+ * CR-023 新增
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PartDto {
+public class PartImportCmd {
 
     /**
-     * 主键ID
-     */
-    private Long id;
-
-    /**
-     * 业务主键（code）
+     * 导入的历史code
      */
     private String code;
-
-    /**
-     * 零件基础号
-     */
-    private String baseNo;
-
-    /**
-     * 发号来源
-     */
-    private String numberingSource;
 
     /**
      * 零件名称
@@ -65,16 +49,6 @@ public class PartDto {
     private String partType;
 
     /**
-     * 车辆节点编码
-     */
-    private String vehicleNodeCode;
-
-    /**
-     * 供应商编码
-     */
-    private String supplierCode;
-
-    /**
      * 是否软件
      */
     private Boolean isSoftware;
@@ -95,7 +69,7 @@ public class PartDto {
     private Boolean isSafetyCritical;
 
     /**
-     * 关重特性（KEY/MAJOR/SIMPLE）
+     * 关重特性
      */
     private String isKeyPart;
 
@@ -190,41 +164,6 @@ public class PartDto {
     private String substitutePartCode;
 
     /**
-     * 来源系统
-     */
-    private String sourceSystem;
-
-    /**
-     * 来源系统ID
-     */
-    private String sourceId;
-
-    /**
-     * 来源版本
-     */
-    private String sourceVersion;
-
-    /**
-     * 数据接入渠道
-     */
-    private String ingestionChannel;
-
-    /**
-     * 数据接入时间
-     */
-    private Date ingestionTime;
-
-    /**
-     * 来源数据哈希
-     */
-    private String sourcePayloadHash;
-
-    /**
-     * 业务版本号
-     */
-    private Integer version;
-
-    /**
      * 生效开始时间
      */
     private Date effectiveFrom;
@@ -235,27 +174,7 @@ public class PartDto {
     private Date effectiveTo;
 
     /**
-     * 状态
-     */
-    private String status;
-
-    /**
      * 创建人
      */
     private String createBy;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 修改人
-     */
-    private String modifyBy;
-
-    /**
-     * 修改时间
-     */
-    private Date modifyTime;
 }

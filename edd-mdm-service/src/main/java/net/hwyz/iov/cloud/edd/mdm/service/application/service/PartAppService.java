@@ -3,6 +3,9 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartGenerationUpgradeCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartImportCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartMinorRevisionCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.PartQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PartDto;
@@ -15,7 +18,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.KeyPartLevel;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStage;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartType;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PartRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.PartNumberingDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +39,7 @@ import java.util.stream.Collectors;
 public class PartAppService {
 
     private final PartRepository partRepository;
+    private final PartNumberingDomainService partNumberingDomainService;
     private final OutboxService outboxService;
 
     /**
@@ -44,18 +50,23 @@ public class PartAppService {
      */
     @Transactional(rollbackFor = Exception.class)
     public PartDto createPart(PartCreateCmd cmd) {
-        log.info("创建零件: {}", cmd.getCode());
+        log.info("创建零件");
 
         String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
         }
 
+        // 系统发号
+        boolean isSoftware = cmd.getIsSoftware() != null && cmd.getIsSoftware();
+        PartCode partCode = partNumberingDomainService.generatePartCode(isSoftware);
+        log.info("系统发号生成零件号: {}", partCode.code());
+
         Part part = Part.create(
-                cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
+                partCode, cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
                 cmd.getCategoryCode(), PartType.valueOf(cmd.getPartType()),
                 cmd.getVehicleNodeCode(), cmd.getSupplierCode(),
-                cmd.getIsSoftware(), cmd.getFotaUpgradeable(), cmd.getIsSafetyCritical(),
+                cmd.getIsSoftware(), cmd.getIsAssembly(), cmd.getFotaUpgradeable(), cmd.getIsSafetyCritical(),
                 cmd.getIsKeyPart() != null ? KeyPartLevel.valueOf(cmd.getIsKeyPart()) : null,
                 cmd.getIsRegulatoryPart(), cmd.getIsFramePart(),
                 cmd.getIsAccuratelyTraced(), cmd.getFfaCode(), cmd.getFfaDesc(),
@@ -309,6 +320,126 @@ public class PartAppService {
     }
 
     /**
+     * 代次升级（互换性变更）
+     *
+     * @param cmd 代次升级命令
+     * @return 新零件DTO
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public PartDto upgradeGeneration(PartGenerationUpgradeCmd cmd) {
+        log.info("代次升级: {}", cmd.getCode());
+
+        String operator = cmd.getOperator();
+        if (operator == null || operator.isBlank()) {
+            operator = SecurityUtils.getUsername();
+        }
+
+        // 查找原记录
+        Part originalPart = partRepository.findByCode(cmd.getCode())
+                .orElseThrow(() -> new IllegalArgumentException("零件不存在: " + cmd.getCode()));
+
+        // 计算下一代次
+        PartCode newPartCode = partNumberingDomainService.nextGeneration(cmd.getCode());
+        if (newPartCode == null) {
+            throw new IllegalStateException("代次溢出（超过ZZ）: " + cmd.getCode());
+        }
+
+        // 创建新记录
+        Part newPart = originalPart.upgradeGeneration(newPartCode, operator);
+        newPart = partRepository.save(newPart, "CREATE");
+
+        // 发布事件
+        outboxService.publishPartCreatedEvent(newPart);
+
+        log.info("代次升级完成: {} -> {}", cmd.getCode(), newPartCode.code());
+        return toDto(newPart);
+    }
+
+    /**
+     * 小修订（仅升图纸版本）
+     *
+     * @param cmd 小修订命令
+     * @return 零件DTO
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public PartDto minorRevision(PartMinorRevisionCmd cmd) {
+        log.info("小修订: {}", cmd.getCode());
+
+        String operator = cmd.getOperator();
+        if (operator == null || operator.isBlank()) {
+            operator = SecurityUtils.getUsername();
+        }
+
+        // 查找记录
+        Part part = partRepository.findByCode(cmd.getCode())
+                .orElseThrow(() -> new IllegalArgumentException("零件不存在: " + cmd.getCode()));
+
+        // 小修订
+        part.minorRevision(cmd.getDrawingVersion(), operator);
+
+        // 持久化
+        part = partRepository.save(part, "UPDATE");
+
+        // 发布事件
+        outboxService.publishPartUpdatedEvent(part);
+
+        log.info("小修订完成: {}", cmd.getCode());
+        return toDto(part);
+    }
+
+    /**
+     * 导入零件（存量迁移带号）
+     *
+     * @param cmd 导入命令
+     * @return 零件DTO
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public PartDto importPart(PartImportCmd cmd) {
+        log.info("导入零件: {}", cmd.getCode());
+
+        String createBy = cmd.getCreateBy();
+        if (createBy == null || createBy.isBlank()) {
+            createBy = SecurityUtils.getUsername();
+        }
+
+        // 校验code唯一
+        if (partRepository.existsByCode(cmd.getCode())) {
+            throw new IllegalArgumentException("零件code已存在: " + cmd.getCode());
+        }
+
+        // 反解code
+        PartCode partCode = partNumberingDomainService.parseCode(cmd.getCode());
+
+        // 创建聚合根
+        Part part = Part.create(partCode, cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
+                cmd.getCategoryCode(), cmd.getPartType() != null ? PartType.valueOf(cmd.getPartType()) : null,
+                null, null,
+                cmd.getIsSoftware(), cmd.getIsAssembly(), cmd.getFotaUpgradeable(), cmd.getIsSafetyCritical(),
+                cmd.getIsKeyPart() != null ? KeyPartLevel.valueOf(cmd.getIsKeyPart()) : null,
+                cmd.getIsRegulatoryPart(), cmd.getIsFramePart(),
+                cmd.getIsAccuratelyTraced(), cmd.getFfaCode(), cmd.getFfaDesc(),
+                cmd.getIsDigitate(), cmd.getInitialModel(), cmd.getProductionCode(),
+                cmd.getFirstProductionDate(), cmd.getDesigner(), cmd.getDesignerDept(),
+                cmd.getUom(), cmd.getDrawingNo(), cmd.getDrawingVersion(),
+                cmd.getWeight(), cmd.getWeightUom(),
+                cmd.getLifecycleStage() != null ? LifecycleStage.valueOf(cmd.getLifecycleStage()) : null,
+                cmd.getSubstitutePartCode(),
+                cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
+
+        // 设置为IMPORT来源
+        part.setNumberingSource(net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.NumberingSource.IMPORT);
+
+        // 持久化
+        part = partRepository.save(part, "CREATE");
+
+        // 发布事件
+        outboxService.publishPartCreatedEvent(part);
+
+        log.info("导入零件完成: {}", cmd.getCode());
+        return toDto(part);
+    }
+
+    /**
      * 领域对象转换为DTO
      *
      * @param part 零件聚合根
@@ -318,6 +449,8 @@ public class PartAppService {
         return PartDto.builder()
                 .id(part.getId())
                 .code(part.getCode())
+                .baseNo(part.getBaseNo())
+                .numberingSource(part.getNumberingSource() != null ? part.getNumberingSource().name() : null)
                 .name(part.getName())
                 .nameLocal(part.getNameLocal())
                 .description(part.getDescription())
@@ -326,6 +459,7 @@ public class PartAppService {
                 .vehicleNodeCode(part.getVehicleNodeCode())
                 .supplierCode(part.getSupplierCode())
                 .isSoftware(part.getIsSoftware())
+                .isAssembly(part.getIsAssembly())
                 .fotaUpgradeable(part.getFotaUpgradeable())
                 .isSafetyCritical(part.getIsSafetyCritical())
                 .isKeyPart(part.getIsKeyPart() != null ? part.getIsKeyPart().name() : null)

@@ -3,6 +3,7 @@ package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.converter;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.KeyPartLevel;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStage;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.NumberingSource;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartType;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.PartPo;
@@ -18,6 +19,8 @@ public class PartConverter {
         return Part.builder()
                 .id(po.getId())
                 .code(po.getCode())
+                .baseNo(po.getBaseNo())
+                .numberingSource(po.getNumberingSource() != null ? NumberingSource.valueOf(po.getNumberingSource()) : null)
                 .name(po.getName())
                 .nameLocal(po.getNameLocal())
                 .description(po.getDescription())
@@ -26,6 +29,7 @@ public class PartConverter {
                 .vehicleNodeCode(po.getVehicleNodeCode())
                 .supplierCode(po.getSupplierCode())
                 .isSoftware(po.getIsSoftware())
+                .isAssembly(po.getIsAssembly())
                 .fotaUpgradeable(po.getFotaUpgradeable())
                 .isSafetyCritical(po.getIsSafetyCritical())
                 .isKeyPart(po.getIsKeyPart() != null ? KeyPartLevel.valueOf(po.getIsKeyPart()) : null)
@@ -73,6 +77,8 @@ public class PartConverter {
         return PartPo.builder()
                 .id(domain.getId())
                 .code(domain.getCode())
+                .baseNo(domain.getBaseNo())
+                .numberingSource(domain.getNumberingSource() != null ? domain.getNumberingSource().name() : null)
                 .name(domain.getName())
                 .nameLocal(domain.getNameLocal())
                 .description(domain.getDescription())
@@ -81,6 +87,7 @@ public class PartConverter {
                 .vehicleNodeCode(domain.getVehicleNodeCode())
                 .supplierCode(domain.getSupplierCode())
                 .isSoftware(domain.getIsSoftware())
+                .isAssembly(domain.getIsAssembly())
                 .fotaUpgradeable(domain.getFotaUpgradeable())
                 .isSafetyCritical(domain.getIsSafetyCritical())
                 .isKeyPart(domain.getIsKeyPart() != null ? domain.getIsKeyPart().name() : null)

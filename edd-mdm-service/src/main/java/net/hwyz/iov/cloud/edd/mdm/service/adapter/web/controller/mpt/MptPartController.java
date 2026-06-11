@@ -6,7 +6,11 @@ import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartHistoryResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.PartAssembler;
+import jakarta.validation.Valid;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartGenerationUpgradeCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartImportCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartMinorRevisionCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.PartUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.PartQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PartDto;
@@ -46,8 +50,67 @@ public class MptPartController {
      * @return 零件响应
      */
     @PostMapping("/create")
-    public ApiResponse<PartResponse> create(@RequestBody PartCreateCmd cmd) {
+    public ApiResponse<PartResponse> create(@Valid @RequestBody PartCreateCmd cmd) {
         PartDto dto = partAppService.createPart(cmd);
+        return ApiResponse.ok(partAssembler.toResponse(dto));
+    }
+
+    /**
+     * 受权限手动指定code创建
+     * CR-023 US-080
+     *
+     * @param cmd 导入命令
+     * @return 零件响应
+     */
+    @PostMapping("/createWithCode")
+    public ApiResponse<PartResponse> createWithCode(@RequestBody PartImportCmd cmd) {
+        PartDto dto = partAppService.importPart(cmd);
+        return ApiResponse.ok(partAssembler.toResponse(dto));
+    }
+
+    /**
+     * 存量批量导入
+     * CR-023 US-080
+     *
+     * @param cmd 导入命令
+     * @return 零件响应
+     */
+    @PostMapping("/import")
+    public ApiResponse<PartResponse> importPart(@RequestBody PartImportCmd cmd) {
+        PartDto dto = partAppService.importPart(cmd);
+        return ApiResponse.ok(partAssembler.toResponse(dto));
+    }
+
+    /**
+     * 代次升级（互换性变更）
+     * CR-023 US-074
+     *
+     * @param code     当前零件号
+     * @param operator 操作人
+     * @return 新零件响应
+     */
+    @PostMapping("/{code}/upgradeGeneration")
+    public ApiResponse<PartResponse> upgradeGeneration(@PathVariable String code, @RequestParam String operator) {
+        PartGenerationUpgradeCmd cmd = PartGenerationUpgradeCmd.builder()
+                .code(code)
+                .operator(operator)
+                .build();
+        PartDto dto = partAppService.upgradeGeneration(cmd);
+        return ApiResponse.ok(partAssembler.toResponse(dto));
+    }
+
+    /**
+     * 小修订（仅升图纸版本）
+     * CR-023 US-075
+     *
+     * @param code 零件号
+     * @param cmd  小修订命令
+     * @return 零件响应
+     */
+    @PutMapping("/{code}/minorRevision")
+    public ApiResponse<PartResponse> minorRevision(@PathVariable String code, @RequestBody PartMinorRevisionCmd cmd) {
+        cmd.setCode(code);
+        PartDto dto = partAppService.minorRevision(cmd);
         return ApiResponse.ok(partAssembler.toResponse(dto));
     }
 

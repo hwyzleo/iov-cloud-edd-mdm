@@ -1,5 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,13 +22,9 @@ import java.util.Date;
 public class PartCreateCmd {
 
     /**
-     * 业务主键（code）
-     */
-    private String code;
-
-    /**
      * 零件名称
      */
+    @NotBlank(message = "零件名称不能为空")
     private String name;
 
     /**
@@ -42,11 +40,13 @@ public class PartCreateCmd {
     /**
      * 物料分类编码
      */
+    @NotBlank(message = "物料分类编码不能为空")
     private String categoryCode;
 
     /**
      * 零件类型
      */
+    @NotBlank(message = "零件类型不能为空")
     private String partType;
 
     /**
@@ -63,6 +63,11 @@ public class PartCreateCmd {
      * 是否软件
      */
     private Boolean isSoftware;
+
+    /**
+     * 是否总成件
+     */
+    private Boolean isAssembly;
 
     /**
      * 是否支持FOTA升级
@@ -162,6 +167,7 @@ public class PartCreateCmd {
     /**
      * 生命周期阶段
      */
+    @NotBlank(message = "生命周期阶段不能为空")
     private String lifecycleStage;
 
     /**

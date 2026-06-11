@@ -70,7 +70,12 @@ public enum MdmErrorCode implements ErrorCode {
     PART_SUPPLIER_INVALID("812913", "零件 supplierCode 指向不存在的 Supplier"),
     PART_SUBSTITUTE_INVALID("812914", "零件 substitutePartCode 指向不存在或指向自身"),
     PART_LIFECYCLE_INVALID_TRANSITION("812915", "零件 lifecycleStage 状态机逆向跳转或 OBSOLETE 终态变更"),
-    PART_HAS_DOWNSTREAM_REF("812916", "零件存在下游引用，删除被拒绝");
+    PART_HAS_DOWNSTREAM_REF("812916", "零件存在下游引用，删除被拒绝"),
+    PART_CODE_GEN_CONFLICT("812917", "系统发号code撞UK，重试仍冲突"),
+    PART_GENERATION_OVERFLOW("812918", "代次溢出（超过ZZ）"),
+    PART_SEQ_OVERFLOW("812919", "零件号流水序号溢出"),
+    PART_MANUAL_CODE_FORBIDDEN("812920", "无权限手动指定code"),
+    PART_NUMBERING_SOURCE_INVALID("812922", "发号来源为空或取值不在枚举范围");
 
     private final String code;
     private final String message;

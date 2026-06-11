@@ -32,6 +32,8 @@ public class PartHistoryPo {
     private String operator;
 
     private String code;
+    private String baseNo;
+    private String numberingSource;
     private String name;
     private String nameLocal;
     private String description;
@@ -40,6 +42,7 @@ public class PartHistoryPo {
     private String vehicleNodeCode;
     private String supplierCode;
     private Boolean isSoftware;
+    private Boolean isAssembly;
     private Boolean fotaUpgradeable;
     private Boolean isSafetyCritical;
     private String isKeyPart;

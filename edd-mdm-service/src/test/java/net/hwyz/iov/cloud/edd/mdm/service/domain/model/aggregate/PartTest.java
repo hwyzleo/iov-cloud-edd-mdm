@@ -2,6 +2,7 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.KeyPartLevel;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStage;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartType;
 import org.junit.jupiter.api.DisplayName;
@@ -29,10 +30,11 @@ class PartTest {
         @Test
         @DisplayName("创建成功 - 所有字段正确填充")
         void create_success() {
+            PartCode partCode = PartCode.generate(false, 1);
             Part part = Part.create(
-                    "P001", "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
+                    partCode, "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
                     "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
-                    false, false, true,
+                    false, false, true, true,
                     KeyPartLevel.KEY, true, false,
                     true, "FFA001", "FFA描述",
                     true, "M001", "PROD001",
@@ -43,7 +45,8 @@ class PartTest {
                     null, null, "admin"
             );
 
-            assertEquals("P001", part.getCode());
+            assertNotNull(part.getCode());
+            assertTrue(part.getCode().endsWith("AA"));
             assertEquals("前保险杠总成", part.getName());
             assertEquals("Front Bumper Assembly", part.getNameLocal());
             assertEquals("前保险杠总成描述", part.getDescription());
@@ -52,7 +55,7 @@ class PartTest {
             assertEquals("NODE001", part.getVehicleNodeCode());
             assertEquals("SUP001", part.getSupplierCode());
             assertFalse(part.getIsSoftware());
-            assertFalse(part.getFotaUpgradeable());
+            assertTrue(part.getFotaUpgradeable());
             assertTrue(part.getIsSafetyCritical());
             assertEquals(KeyPartLevel.KEY, part.getIsKeyPart());
             assertTrue(part.getIsRegulatoryPart());
@@ -74,7 +77,6 @@ class PartTest {
             assertEquals(LifecycleStage.MASS_PRODUCTION, part.getLifecycleStage());
             assertNull(part.getSubstitutePartCode());
             assertEquals("LOCAL", part.getSourceSystem());
-            assertEquals("P001", part.getSourceId());
             assertEquals("LOCAL", part.getIngestionChannel());
             assertEquals(1, part.getVersion());
             assertEquals(PartStatus.ACTIVE, part.getStatus());
@@ -93,11 +95,12 @@ class PartTest {
             cal.set(2026, Calendar.JANUARY, 1);
             Date to = cal.getTime();
 
+            PartCode partCode = PartCode.generate(false, 1);
             assertThrows(IllegalArgumentException.class, () ->
                     Part.create(
-                            "P001", "前保险杠总成", null, null,
+                            partCode, "前保险杠总成", null, null,
                             "MC001", PartType.ASSEMBLY, null, null,
-                            false, false, false,
+                            false, false, false, false,
                             null, false, false,
                             false, null, null,
                             false, null, null,
@@ -113,10 +116,11 @@ class PartTest {
         @Test
         @DisplayName("创建成功 - effectiveFrom 和 effectiveTo 都为 null")
         void create_bothDatesNull_success() {
+            PartCode partCode = PartCode.generate(false, 1);
             Part part = Part.create(
-                    "P001", "前保险杠总成", null, null,
+                    partCode, "前保险杠总成", null, null,
                     "MC001", PartType.ASSEMBLY, null, null,
-                    false, false, false,
+                    false, false, false, false,
                     null, false, false,
                     false, null, null,
                     false, null, null,
@@ -328,10 +332,11 @@ class PartTest {
     }
 
     private Part createTestPart() {
+        PartCode partCode = PartCode.generate(false, 1);
         return Part.create(
-                "P001", "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
+                partCode, "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
                 "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
-                false, false, true,
+                false, false, true, true,
                 KeyPartLevel.KEY, true, false,
                 true, "FFA001", "FFA描述",
                 true, "M001", "PROD001",

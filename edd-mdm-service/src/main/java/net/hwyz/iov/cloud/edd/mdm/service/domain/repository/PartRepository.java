@@ -42,4 +42,11 @@ public interface PartRepository {
     List<Part> listBySupplier(String supplierCode);
 
     List<PartHistory> findHistoryByCode(String code);
+
+    /**
+     * 按base_no查询最新代次记录
+     * @param baseNo 零件基础号
+     * @return 最新代次的Part
+     */
+    Optional<Part> findLatestByBaseNo(String baseNo);
 }
