@@ -30,6 +30,16 @@ public class PartResponse {
     private String code;
 
     /**
+     * 零件基础号（code去除末尾2位代次的主体部分）
+     */
+    private String baseNo;
+
+    /**
+     * 发号来源（MDM_GEN/PLM/IMPORT）
+     */
+    private String numberingSource;
+
+    /**
      * 零件名称
      */
     private String name;
@@ -68,6 +78,11 @@ public class PartResponse {
      * 是否软件
      */
     private Boolean isSoftware;
+
+    /**
+     * 是否总成件
+     */
+    private Boolean isAssembly;
 
     /**
      * 是否支持FOTA升级
