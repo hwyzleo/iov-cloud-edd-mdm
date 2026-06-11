@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/variant/v1")
+@RequestMapping("/api/service/variant/v1")
 @RequiredArgsConstructor
 public class ServiceVariantController implements VariantService {
 

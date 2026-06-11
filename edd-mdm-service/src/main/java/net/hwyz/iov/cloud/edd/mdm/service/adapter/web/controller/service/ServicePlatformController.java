@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/platform/v1")
+@RequestMapping("/api/service/platform/v1")
 @RequiredArgsConstructor
 public class ServicePlatformController implements PlatformService {
 

@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/carLine/v1")
+@RequestMapping("/api/service/carLine/v1")
 @RequiredArgsConstructor
 public class ServiceCarLineController implements CarLineService {
 

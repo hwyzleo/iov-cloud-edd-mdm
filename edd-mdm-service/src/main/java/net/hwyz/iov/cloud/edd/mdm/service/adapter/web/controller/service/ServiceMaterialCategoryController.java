@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/service/mdm/material/v1/category")
+@RequestMapping("/api/service/materialCategory/v1")
 @RequiredArgsConstructor
 public class ServiceMaterialCategoryController implements MaterialCategoryService {
 

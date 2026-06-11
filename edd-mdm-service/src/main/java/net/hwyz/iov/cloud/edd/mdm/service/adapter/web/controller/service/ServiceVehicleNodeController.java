@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/mdm/eead/v1/vehicleNode")
+@RequestMapping("/api/service/vehicleNode/v1")
 @RequiredArgsConstructor
 public class ServiceVehicleNodeController implements VehicleNodeService {
 

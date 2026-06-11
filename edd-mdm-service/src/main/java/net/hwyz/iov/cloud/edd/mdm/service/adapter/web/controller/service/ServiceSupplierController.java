@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/supplier/v1")
+@RequestMapping("/api/service/supplier/v1")
 @RequiredArgsConstructor
 public class ServiceSupplierController implements SupplierService {
 

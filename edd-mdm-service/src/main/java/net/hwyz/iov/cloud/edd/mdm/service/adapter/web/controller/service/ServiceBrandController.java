@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/brand/v1")
+@RequestMapping("/api/service/brand/v1")
 @RequiredArgsConstructor
 public class ServiceBrandController implements BrandService {
 

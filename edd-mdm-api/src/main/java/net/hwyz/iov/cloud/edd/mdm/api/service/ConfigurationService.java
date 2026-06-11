@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "configurationService", value = ServiceNameConstants.EDD_MDM, path = "/service/configuration/v1", fallbackFactory = ConfigurationServiceFallbackFactory.class)
+@FeignClient(contextId = "configurationService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/configuration/v1", fallbackFactory = ConfigurationServiceFallbackFactory.class)
 public interface ConfigurationService {
 
     @GetMapping("/listAll")

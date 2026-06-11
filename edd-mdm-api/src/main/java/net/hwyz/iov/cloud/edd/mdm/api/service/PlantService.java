@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "plantService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/mdm/org/v1/plant", fallbackFactory = PlantServiceFallbackFactory.class)
+@FeignClient(contextId = "plantService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/plant/v1", fallbackFactory = PlantServiceFallbackFactory.class)
 public interface PlantService {
 
     /**

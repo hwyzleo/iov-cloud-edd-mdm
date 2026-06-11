@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/model/v1")
+@RequestMapping("/api/service/model/v1")
 @RequiredArgsConstructor
 public class ServiceModelController implements ModelService {
 

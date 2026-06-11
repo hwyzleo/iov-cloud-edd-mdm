@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/service/configuration/v1")
+@RequestMapping("/api/service/configuration/v1")
 @RequiredArgsConstructor
 public class ServiceConfigurationController implements ConfigurationService {
 

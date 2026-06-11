@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "variantService", value = ServiceNameConstants.EDD_MDM, path = "/service/variant/v1", fallbackFactory = VariantServiceFallbackFactory.class)
+@FeignClient(contextId = "variantService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/variant/v1", fallbackFactory = VariantServiceFallbackFactory.class)
 public interface VariantService {
 
     @GetMapping("/listAll")

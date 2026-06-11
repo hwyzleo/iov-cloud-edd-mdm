@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "modelService", value = ServiceNameConstants.EDD_MDM, path = "/service/model/v1", fallbackFactory = ModelServiceFallbackFactory.class)
+@FeignClient(contextId = "modelService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/model/v1", fallbackFactory = ModelServiceFallbackFactory.class)
 public interface ModelService {
 
     @GetMapping("/listAll")

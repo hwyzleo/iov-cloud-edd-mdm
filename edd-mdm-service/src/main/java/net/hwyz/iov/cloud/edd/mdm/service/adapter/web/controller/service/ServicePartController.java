@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/service/mdm/material/v1/part")
+@RequestMapping("/api/service/part/v1")
 @RequiredArgsConstructor
 public class ServicePartController implements PartService {
 

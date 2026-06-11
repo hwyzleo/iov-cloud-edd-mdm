@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "platformService", value = ServiceNameConstants.EDD_MDM, path = "/service/platform/v1", fallbackFactory = PlatformServiceFallbackFactory.class)
+@FeignClient(contextId = "platformService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/platform/v1", fallbackFactory = PlatformServiceFallbackFactory.class)
 public interface PlatformService {
 
     /**
