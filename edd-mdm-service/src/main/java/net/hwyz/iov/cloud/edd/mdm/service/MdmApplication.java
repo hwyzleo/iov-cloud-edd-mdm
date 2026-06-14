@@ -19,6 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableCustomFeignClients
+@EnableScheduling
 public class MdmApplication {
 
     public static void main(String[] args) {
