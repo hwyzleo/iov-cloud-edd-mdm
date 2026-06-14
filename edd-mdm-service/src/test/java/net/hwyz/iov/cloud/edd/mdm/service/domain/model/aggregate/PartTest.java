@@ -55,6 +55,7 @@ class PartTest {
             assertEquals("NODE001", part.getVehicleNodeCode());
             assertEquals("SUP001", part.getSupplierCode());
             assertFalse(part.getIsSoftware());
+            assertFalse(part.getIsAssembly());
             assertTrue(part.getFotaUpgradeable());
             assertTrue(part.getIsSafetyCritical());
             assertEquals(KeyPartLevel.KEY, part.getIsKeyPart());
@@ -149,7 +150,7 @@ class PartTest {
 
             part.update("新名称", null, null,
                     "MC002", PartType.STANDARD_PART, null, null,
-                    true, true, false,
+                    true, true, true, false,
                     KeyPartLevel.MAJOR, false, true,
                     false, null, null,
                     false, null, null,
@@ -163,10 +164,54 @@ class PartTest {
             assertEquals("新名称", part.getName());
             assertEquals("MC002", part.getCategoryCode());
             assertEquals(PartType.STANDARD_PART, part.getPartType());
+            assertTrue(part.getIsAssembly());
             assertEquals(KeyPartLevel.MAJOR, part.getIsKeyPart());
             assertTrue(part.getIsFramePart());
             assertEquals(LifecycleStage.PRE_PRODUCTION, part.getLifecycleStage());
             assertEquals("modifier", part.getModifyBy());
+        }
+
+        @Test
+        @DisplayName("更新成功 - isAssembly 从 false 变为 true")
+        void update_isAssemblyChanged_success() {
+            Part part = createTestPart();
+            assertFalse(part.getIsAssembly());
+
+            part.update("前保险杠总成", null, null,
+                    "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
+                    false, true, true, true,
+                    KeyPartLevel.KEY, true, false,
+                    true, "FFA001", "FFA描述",
+                    true, "M001", "PROD001",
+                    new Date(), "张三", "设计部",
+                    "EA", "DWG001", "V1.0",
+                    new BigDecimal("5.5"), "KG",
+                    LifecycleStage.PROTOTYPE, null,
+                    null, null, "modifier");
+
+            assertTrue(part.getIsAssembly());
+        }
+
+        @Test
+        @DisplayName("更新成功 - isAssembly 从 true 变为 false")
+        void update_isAssemblySetToFalse_success() {
+            Part part = createTestPart();
+            part.setIsAssembly(true);
+            assertTrue(part.getIsAssembly());
+
+            part.update("前保险杠总成", null, null,
+                    "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
+                    false, false, true, true,
+                    KeyPartLevel.KEY, true, false,
+                    true, "FFA001", "FFA描述",
+                    true, "M001", "PROD001",
+                    new Date(), "张三", "设计部",
+                    "EA", "DWG001", "V1.0",
+                    new BigDecimal("5.5"), "KG",
+                    LifecycleStage.PROTOTYPE, null,
+                    null, null, "modifier");
+
+            assertFalse(part.getIsAssembly());
         }
 
         @Test
@@ -177,7 +222,7 @@ class PartTest {
 
             part.update("新名称", null, null,
                     "MC002", PartType.STANDARD_PART, null, null,
-                    false, false, false,
+                    false, false, false, false,
                     null, false, false,
                     false, null, null,
                     false, null, null,
@@ -204,7 +249,7 @@ class PartTest {
             assertThrows(IllegalArgumentException.class, () ->
                     part.update("新名称", null, null,
                             "MC001", PartType.ASSEMBLY, null, null,
-                            false, false, false,
+                            false, false, false, false,
                             null, false, false,
                             false, null, null,
                             false, null, null,

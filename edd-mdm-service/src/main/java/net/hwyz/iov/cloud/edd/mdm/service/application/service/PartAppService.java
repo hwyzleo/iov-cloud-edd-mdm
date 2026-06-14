@@ -107,7 +107,7 @@ public class PartAppService {
                 cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
                 cmd.getCategoryCode(), PartType.valueOf(cmd.getPartType()),
                 cmd.getVehicleNodeCode(), cmd.getSupplierCode(),
-                cmd.getIsSoftware(), cmd.getFotaUpgradeable(), cmd.getIsSafetyCritical(),
+                cmd.getIsSoftware(), cmd.getIsAssembly(), cmd.getFotaUpgradeable(), cmd.getIsSafetyCritical(),
                 cmd.getIsKeyPart() != null ? KeyPartLevel.valueOf(cmd.getIsKeyPart()) : null,
                 cmd.getIsRegulatoryPart(), cmd.getIsFramePart(),
                 cmd.getIsAccuratelyTraced(), cmd.getFfaCode(), cmd.getFfaDesc(),

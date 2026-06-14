@@ -106,7 +106,7 @@ public class Part {
 
     public void update(String name, String nameLocal, String description,
                        String categoryCode, PartType partType, String vehicleNodeCode, String supplierCode,
-                       Boolean isSoftware, Boolean fotaUpgradeable, Boolean isSafetyCritical,
+                       Boolean isSoftware, Boolean isAssembly, Boolean fotaUpgradeable, Boolean isSafetyCritical,
                        KeyPartLevel isKeyPart, Boolean isRegulatoryPart, Boolean isFramePart,
                        Boolean isAccuratelyTraced, String ffaCode, String ffaDesc,
                        Boolean isDigitate, String initialModel, String productionCode,
@@ -124,6 +124,7 @@ public class Part {
         this.vehicleNodeCode = vehicleNodeCode;
         this.supplierCode = supplierCode;
         this.isSoftware = isSoftware;
+        this.isAssembly = isAssembly;
         this.fotaUpgradeable = fotaUpgradeable;
         this.isSafetyCritical = isSafetyCritical;
         this.isKeyPart = isKeyPart;

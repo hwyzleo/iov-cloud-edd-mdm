@@ -90,6 +90,11 @@ public class PartUpdateCmd {
     private Boolean isFramePart;
 
     /**
+     * 是否总成件
+     */
+    private Boolean isAssembly;
+
+    /**
      * 是否精准追溯
      */
     private Boolean isAccuratelyTraced;
