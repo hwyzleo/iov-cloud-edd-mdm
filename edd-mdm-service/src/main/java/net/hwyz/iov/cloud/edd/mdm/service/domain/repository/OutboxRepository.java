@@ -36,6 +36,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryDel
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryDeletedEvent;
 
 import java.util.List;
 
@@ -297,6 +300,27 @@ public interface OutboxRepository {
      * @param event 零件删除事件
      */
     void savePartDeletedEvent(PartDeletedEvent event);
+
+    /**
+     * 保存设备类别创建事件（EEAD 子域）
+     *
+     * @param event 设备类别创建事件
+     */
+    void saveDeviceCategoryCreatedEvent(DeviceCategoryCreatedEvent event);
+
+    /**
+     * 保存设备类别更新事件（EEAD 子域）
+     *
+     * @param event 设备类别更新事件
+     */
+    void saveDeviceCategoryUpdatedEvent(DeviceCategoryUpdatedEvent event);
+
+    /**
+     * 保存设备类别删除事件（EEAD 子域）
+     *
+     * @param event 设备类别删除事件
+     */
+    void saveDeviceCategoryDeletedEvent(DeviceCategoryDeletedEvent event);
 
     /**
      * 获取待发送的事件列表

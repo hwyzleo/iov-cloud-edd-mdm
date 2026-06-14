@@ -43,6 +43,10 @@ public enum MdmErrorCode implements ErrorCode {
     VEHICLE_NODE_NOT_EXIST("812301", "车载节点不存在"),
     VEHICLE_NODE_CODE_EXIST("812302", "车载节点 nodeCode 已存在"),
     VEHICLE_NODE_HAS_DOWNSTREAM_REF("812303", "车载节点存在下游引用，删除被拒绝"),
+    DEVICE_CATEGORY_NOT_EXIST("812304", "设备类别不存在"),
+    DEVICE_CATEGORY_CODE_EXIST("812305", "设备类别 code 已存在"),
+    DEVICE_CATEGORY_HAS_REFERENCE("812306", "设备类别被车载节点引用，删除被拒绝"),
+    DEVICE_CATEGORY_NOT_ACTIVE("812307", "设备类别非 ACTIVE 状态，不允许被引用"),
 
     // ==================== Org 子域 (8125XX) ====================
     PLANT_NOT_EXIST("812501", "工厂不存在"),

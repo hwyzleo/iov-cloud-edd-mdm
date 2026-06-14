@@ -98,4 +98,12 @@ public interface VehicleNodeRepository {
      * 查询历史版本（按 version 降序）。
      */
     List<VehicleNodeHistory> findHistoryByCode(String nodeCode);
+
+    /**
+     * 统计引用指定设备类别的车载节点数量（用于删除前置依赖检查）。
+     *
+     * @param deviceCategoryCode 设备类别 code
+     * @return 引用数量
+     */
+    long countByDeviceCategory(String deviceCategoryCode);
 }

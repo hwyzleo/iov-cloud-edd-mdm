@@ -146,6 +146,14 @@ public class VehicleNodeRepositoryImpl implements VehicleNodeRepository {
     }
 
     @Override
+    public long countByDeviceCategory(String deviceCategoryCode) {
+        LambdaQueryWrapper<VehicleNodePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(VehicleNodePo::getDeviceCategory, deviceCategoryCode);
+        wrapper.eq(VehicleNodePo::getRowValid, true);
+        return vehicleNodeMapper.selectCount(wrapper);
+    }
+
+    @Override
     public List<VehicleNodeHistory> findHistoryByCode(String nodeCode) {
         LambdaQueryWrapper<VehicleNodeHistoryPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(VehicleNodeHistoryPo::getNodeCode, nodeCode);

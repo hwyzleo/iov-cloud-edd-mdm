@@ -12,6 +12,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 
 /**
  * 事件发件箱服务端口
@@ -275,4 +276,26 @@ public interface OutboxService {
      * @param forceDelete 是否 force 旁路删除
      */
     void publishPartDeletedEvent(Part part, boolean forceDelete);
+
+    /**
+     * 发布设备类别创建事件（EEAD 子域）
+     *
+     * @param category 设备类别聚合根
+     */
+    void publishDeviceCategoryCreatedEvent(DeviceCategory category);
+
+    /**
+     * 发布设备类别更新事件（EEAD 子域）
+     *
+     * @param category 设备类别聚合根
+     */
+    void publishDeviceCategoryUpdatedEvent(DeviceCategory category);
+
+    /**
+     * 发布设备类别删除事件（EEAD 子域）
+     *
+     * @param category    设备类别聚合根（删除前最后一份快照）
+     * @param forceDelete 是否 force 旁路删除
+     */
+    void publishDeviceCategoryDeletedEvent(DeviceCategory category, boolean forceDelete);
 }

@@ -13,5 +13,6 @@ public enum EntityType {
     VEHICLE_NODE,
     PLANT,
     PART,
-    MATERIAL_CATEGORY
+    MATERIAL_CATEGORY,
+    DEVICE_CATEGORY
 }

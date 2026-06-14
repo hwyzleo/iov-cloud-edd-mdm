@@ -41,6 +41,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryDel
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.OutboxMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
@@ -991,6 +994,81 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存零件删除事件失败", e);
             throw new RuntimeException("保存零件删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveDeviceCategoryCreatedEvent(DeviceCategoryCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("DEVICE_CATEGORY")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存设备类别创建事件失败", e);
+            throw new RuntimeException("保存设备类别创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveDeviceCategoryUpdatedEvent(DeviceCategoryUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("DEVICE_CATEGORY")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存设备类别更新事件失败", e);
+            throw new RuntimeException("保存设备类别更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveDeviceCategoryDeletedEvent(DeviceCategoryDeletedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("DEVICE_CATEGORY")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存设备类别删除事件失败", e);
+            throw new RuntimeException("保存设备类别删除事件失败", e);
         }
     }
 }

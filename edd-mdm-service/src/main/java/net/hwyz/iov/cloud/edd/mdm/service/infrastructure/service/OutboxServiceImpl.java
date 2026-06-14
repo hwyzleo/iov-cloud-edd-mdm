@@ -15,6 +15,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Plant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -51,6 +52,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.MaterialCategoryDel
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -611,5 +615,48 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.savePartDeletedEvent(event);
         log.info("发布零件删除事件: {} forceDelete={}", part.getCode(), forceDelete);
+    }
+
+    @Override
+    public void publishDeviceCategoryCreatedEvent(DeviceCategory category) {
+        DeviceCategoryCreatedEvent event = DeviceCategoryCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("DeviceCategoryCreated")
+                .occurredAt(new Date())
+                .entityId(category.getCode())
+                .version(category.getVersion())
+                .payload(category)
+                .build();
+        outboxRepository.saveDeviceCategoryCreatedEvent(event);
+        log.info("发布设备类别创建事件: {}", category.getCode());
+    }
+
+    @Override
+    public void publishDeviceCategoryUpdatedEvent(DeviceCategory category) {
+        DeviceCategoryUpdatedEvent event = DeviceCategoryUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("DeviceCategoryUpdated")
+                .occurredAt(new Date())
+                .entityId(category.getCode())
+                .version(category.getVersion())
+                .payload(category)
+                .build();
+        outboxRepository.saveDeviceCategoryUpdatedEvent(event);
+        log.info("发布设备类别更新事件: {}", category.getCode());
+    }
+
+    @Override
+    public void publishDeviceCategoryDeletedEvent(DeviceCategory category, boolean forceDelete) {
+        DeviceCategoryDeletedEvent event = DeviceCategoryDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("DeviceCategoryDeleted")
+                .occurredAt(new Date())
+                .entityId(category.getCode())
+                .version(category.getVersion())
+                .payload(category)
+                .forceDelete(forceDelete)
+                .build();
+        outboxRepository.saveDeviceCategoryDeletedEvent(event);
+        log.info("发布设备类别删除事件: {} forceDelete={}", category.getCode(), forceDelete);
     }
 }

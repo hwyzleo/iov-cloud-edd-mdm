@@ -88,7 +88,7 @@ public class IngestionAppService {
             case MODEL -> processModel(cmd, code, payloadHash);
             case VARIANT -> processVariant(cmd, code, payloadHash);
             case CONFIGURATION -> processConfiguration(cmd, code, payloadHash);
-            case OPTION_FAMILY, OPTION_CODE, SUPPLIER, VEHICLE_NODE, PLANT, PART, MATERIAL_CATEGORY -> throw new UnsupportedOperationException("暂不支持通过通用接入处理实体类型: " + et);
+            case OPTION_FAMILY, OPTION_CODE, SUPPLIER, VEHICLE_NODE, PLANT, PART, MATERIAL_CATEGORY, DEVICE_CATEGORY -> throw new UnsupportedOperationException("暂不支持通过通用接入处理实体类型: " + et);
         };
     }
 
