@@ -33,8 +33,8 @@ class PartTest {
             PartCode partCode = PartCode.generate(false, 1);
             Part part = Part.create(
                     partCode, "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
-                    "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
-                    false, false, true, true,
+                    "MC001", PartType.STANDARD_PART, "NODE001", "SUP001",
+                    false, true, true, true,
                     KeyPartLevel.KEY, true, false,
                     true, "FFA001", "FFA描述",
                     true, "M001", "PROD001",
@@ -51,11 +51,11 @@ class PartTest {
             assertEquals("Front Bumper Assembly", part.getNameLocal());
             assertEquals("前保险杠总成描述", part.getDescription());
             assertEquals("MC001", part.getCategoryCode());
-            assertEquals(PartType.ASSEMBLY, part.getPartType());
+            assertEquals(PartType.STANDARD_PART, part.getPartType());
             assertEquals("NODE001", part.getVehicleNodeCode());
             assertEquals("SUP001", part.getSupplierCode());
             assertFalse(part.getIsSoftware());
-            assertFalse(part.getIsAssembly());
+            assertTrue(part.getIsAssembly());
             assertTrue(part.getFotaUpgradeable());
             assertTrue(part.getIsSafetyCritical());
             assertEquals(KeyPartLevel.KEY, part.getIsKeyPart());
@@ -100,8 +100,8 @@ class PartTest {
             assertThrows(IllegalArgumentException.class, () ->
                     Part.create(
                             partCode, "前保险杠总成", null, null,
-                            "MC001", PartType.ASSEMBLY, null, null,
-                            false, false, false, false,
+                            "MC001", PartType.STANDARD_PART, null, null,
+                            false, true, false, false,
                             null, false, false,
                             false, null, null,
                             false, null, null,
@@ -120,8 +120,8 @@ class PartTest {
             PartCode partCode = PartCode.generate(false, 1);
             Part part = Part.create(
                     partCode, "前保险杠总成", null, null,
-                    "MC001", PartType.ASSEMBLY, null, null,
-                    false, false, false, false,
+                    "MC001", PartType.STANDARD_PART, null, null,
+                    false, true, false, false,
                     null, false, false,
                     false, null, null,
                     false, null, null,
@@ -175,10 +175,11 @@ class PartTest {
         @DisplayName("更新成功 - isAssembly 从 false 变为 true")
         void update_isAssemblyChanged_success() {
             Part part = createTestPart();
+            part.setIsAssembly(false);
             assertFalse(part.getIsAssembly());
 
             part.update("前保险杠总成", null, null,
-                    "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
+                    "MC001", PartType.STANDARD_PART, "NODE001", "SUP001",
                     false, true, true, true,
                     KeyPartLevel.KEY, true, false,
                     true, "FFA001", "FFA描述",
@@ -196,11 +197,10 @@ class PartTest {
         @DisplayName("更新成功 - isAssembly 从 true 变为 false")
         void update_isAssemblySetToFalse_success() {
             Part part = createTestPart();
-            part.setIsAssembly(true);
             assertTrue(part.getIsAssembly());
 
             part.update("前保险杠总成", null, null,
-                    "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
+                    "MC001", PartType.STANDARD_PART, "NODE001", "SUP001",
                     false, false, true, true,
                     KeyPartLevel.KEY, true, false,
                     true, "FFA001", "FFA描述",
@@ -248,8 +248,8 @@ class PartTest {
 
             assertThrows(IllegalArgumentException.class, () ->
                     part.update("新名称", null, null,
-                            "MC001", PartType.ASSEMBLY, null, null,
-                            false, false, false, false,
+                            "MC001", PartType.STANDARD_PART, null, null,
+                            false, true, false, false,
                             null, false, false,
                             false, null, null,
                             false, null, null,
@@ -380,8 +380,8 @@ class PartTest {
         PartCode partCode = PartCode.generate(false, 1);
         return Part.create(
                 partCode, "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
-                "MC001", PartType.ASSEMBLY, "NODE001", "SUP001",
-                false, false, true, true,
+                "MC001", PartType.STANDARD_PART, "NODE001", "SUP001",
+                false, true, true, true,
                 KeyPartLevel.KEY, true, false,
                 true, "FFA001", "FFA描述",
                 true, "M001", "PROD001",

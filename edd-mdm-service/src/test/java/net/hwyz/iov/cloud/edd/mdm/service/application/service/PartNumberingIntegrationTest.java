@@ -49,7 +49,7 @@ class PartNumberingIntegrationTest {
         PartCreateCmd cmd = PartCreateCmd.builder()
                 .name("软件件")
                 .categoryCode("CAT001")
-                .partType("SOFTWARE")
+                .partType("STANDARD_PART")
                 .isSoftware(true)
                 .fotaUpgradeable(true)
                 .lifecycleStage("PROTOTYPE")
