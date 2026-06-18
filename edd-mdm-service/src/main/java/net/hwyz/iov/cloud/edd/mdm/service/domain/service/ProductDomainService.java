@@ -229,6 +229,11 @@ public class ProductDomainService {
     public CarLine createCarLine(String code, String name, String nameLocal, String brandCode,
                                String carLineType, String lifecycleStatus, String targetMarket,
                                Date effectiveFrom, Date effectiveTo, String createBy) {
+        // 校验车系类型（必填）
+        if (carLineType == null || carLineType.isBlank()) {
+            throw new IllegalArgumentException("车系类型不能为空");
+        }
+
         // 检查code唯一性
         if (carLineRepository.existsByCode(code)) {
             throw new DuplicateCodeException("车系code已存在: " + code);
@@ -244,8 +249,8 @@ public class ProductDomainService {
         // 创建车系
         CarLine carLine = CarLine.create(code, name, nameLocal, brandCode,
                 net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineType.valueOf(carLineType),
-                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus.valueOf(lifecycleStatus),
-                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket.valueOf(targetMarket),
+                lifecycleStatus != null && !lifecycleStatus.isBlank() ? net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus.valueOf(lifecycleStatus) : null,
+                targetMarket != null && !targetMarket.isBlank() ? net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket.valueOf(targetMarket) : null,
                 effectiveFrom, effectiveTo, createBy);
 
         // 保存车系
@@ -278,8 +283,8 @@ public class ProductDomainService {
         // 更新车系
         carLine.update(name, nameLocal,
                 net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.CarLineType.valueOf(carLineType),
-                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus.valueOf(lifecycleStatus),
-                net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket.valueOf(targetMarket),
+                lifecycleStatus != null && !lifecycleStatus.isBlank() ? net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.LifecycleStatus.valueOf(lifecycleStatus) : null,
+                targetMarket != null && !targetMarket.isBlank() ? net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TargetMarket.valueOf(targetMarket) : null,
                 effectiveFrom, effectiveTo, modifyBy);
 
         // 保存车系
