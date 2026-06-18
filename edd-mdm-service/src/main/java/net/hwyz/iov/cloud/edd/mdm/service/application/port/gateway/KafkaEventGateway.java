@@ -5,9 +5,11 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.port.gateway;
  * <p>
  * 负责将 Outbox 中的事件发送到对应的 Kafka topic。
  * topic 路由规则：
- * - EEAD 子域: mdm.eead.vehicleNode.event（单一 topic + eventType discriminator）
- * - Product MDM: eventType 作为 topic 名称（如 mdm.product.brand.created）
- * - Party MDM: eventType 作为 topic 名称（如 mdm.party.supplier.created）
+ * - Product MDM（多 topic）：eventType 作为 topic 名称（如 mdm.product.brand.created）
+ * - Party MDM（多 topic）：eventType 作为 topic 名称（如 mdm.party.supplier.created）
+ * - EEAD（单 topic）：mdm.eead.vehicleNode.event / mdm.eead.deviceCategory.event
+ * - Org（单 topic）：mdm.org.plant.event
+ * - Material（单 topic）：mdm.material.part.event / mdm.material.category.event
  *
  * @author hwyz_leo
  */

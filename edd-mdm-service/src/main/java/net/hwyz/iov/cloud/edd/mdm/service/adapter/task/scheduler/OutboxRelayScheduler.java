@@ -18,8 +18,11 @@ import java.util.Map;
  * 每 5 秒扫描 mdm_outbox 表中未发送的事件，根据 aggregateType 路由到对应的 Kafka topic。
  * <p>
  * topic 路由规则：
- * - VEHICLE_NODE → mdm.eead.vehicleNode.event（单一 topic + eventType discriminator）
- * - 其他聚合类型 → eventType 作为 topic 名称（如 mdm.product.brand.created）
+ * - Product 子域（多 topic）：eventType 直接作为 topic（如 mdm.product.brand.created）
+ * - Party 子域（多 topic）：eventType 直接作为 topic（如 mdm.party.supplier.created）
+ * - EEAD 子域（单 topic）：VEHICLE_NODE → mdm.eead.vehicleNode.event，DEVICE_CATEGORY → mdm.eead.deviceCategory.event
+ * - Org 子域（单 topic）：PLANT → mdm.org.plant.event
+ * - Material 子域（单 topic）：MATERIAL_CATEGORY → mdm.material.category.event，PART → mdm.material.part.event
  *
  * @author hwyz_leo
  */
@@ -32,12 +35,16 @@ public class OutboxRelayScheduler {
     private final KafkaEventGateway kafkaEventGateway;
 
     /**
-     * EEAD 子域 topic 映射：aggregateType → 单一 topic
+     * 单 topic 子域映射：aggregateType → 单一 topic（EEAD / Org / Material）
      */
     private static final Map<String, String> EEAD_TOPIC_MAPPING = new HashMap<>();
 
     static {
+        // EEAD 子域 topic 映射
         EEAD_TOPIC_MAPPING.put("VEHICLE_NODE", "mdm.eead.vehicleNode.event");
+        EEAD_TOPIC_MAPPING.put("DEVICE_CATEGORY", "mdm.eead.deviceCategory.event");
+        // Org 子域 topic 映射
+        EEAD_TOPIC_MAPPING.put("PLANT", "mdm.org.plant.event");
         // Material 子域 topic 映射
         EEAD_TOPIC_MAPPING.put("MATERIAL_CATEGORY", "mdm.material.category.event");
         EEAD_TOPIC_MAPPING.put("PART", "mdm.material.part.event");
