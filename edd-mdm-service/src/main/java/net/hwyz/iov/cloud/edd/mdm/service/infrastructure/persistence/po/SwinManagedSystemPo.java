@@ -24,19 +24,8 @@ public class SwinManagedSystemPo {
 
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String code;
-    private String name;
-    private String nameLocal;
-    private String description;
-    private Integer sortOrder;
-    private String source;
-    private String externalRefId;
-    private Long externalVersion;
-    private Date lastSyncTime;
-    private Integer version;
-    private Date effectiveFrom;
-    private Date effectiveTo;
-    private String status;
+    private String swinCode;
+    private String vehicleNodeCode;
     private String createBy;
     private Date createTime;
     private String modifyBy;

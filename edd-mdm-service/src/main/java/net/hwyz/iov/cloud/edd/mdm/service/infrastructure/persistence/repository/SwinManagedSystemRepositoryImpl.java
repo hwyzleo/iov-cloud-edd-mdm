@@ -36,52 +36,52 @@ public class SwinManagedSystemRepositoryImpl implements SwinManagedSystemReposit
     @Override
     public List<SwinManagedSystem> findBySwinCode(String swinCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinManagedSystemPo::getCode, swinCode);
+        wrapper.eq(SwinManagedSystemPo::getSwinCode, swinCode);
         return swinManagedSystemMapper.selectList(wrapper).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public boolean existsBySwinCodeAndVehicleNodeCode(String swinCode, String vehicleNodeCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinManagedSystemPo::getCode, swinCode);
-        wrapper.eq(SwinManagedSystemPo::getName, vehicleNodeCode);
+        wrapper.eq(SwinManagedSystemPo::getSwinCode, swinCode);
+        wrapper.eq(SwinManagedSystemPo::getVehicleNodeCode, vehicleNodeCode);
         return swinManagedSystemMapper.selectCount(wrapper) > 0;
     }
 
     @Override
     public long countBySwinCode(String swinCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinManagedSystemPo::getCode, swinCode);
+        wrapper.eq(SwinManagedSystemPo::getSwinCode, swinCode);
         return swinManagedSystemMapper.selectCount(wrapper);
     }
 
     @Override
     public long countByVehicleNodeCode(String vehicleNodeCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinManagedSystemPo::getName, vehicleNodeCode);
+        wrapper.eq(SwinManagedSystemPo::getVehicleNodeCode, vehicleNodeCode);
         return swinManagedSystemMapper.selectCount(wrapper);
     }
 
     @Override
     public void deleteBySwinCodeAndVehicleNodeCode(String swinCode, String vehicleNodeCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinManagedSystemPo::getCode, swinCode);
-        wrapper.eq(SwinManagedSystemPo::getName, vehicleNodeCode);
+        wrapper.eq(SwinManagedSystemPo::getSwinCode, swinCode);
+        wrapper.eq(SwinManagedSystemPo::getVehicleNodeCode, vehicleNodeCode);
         swinManagedSystemMapper.delete(wrapper);
     }
 
     @Override
     public void deleteAllBySwinCode(String swinCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinManagedSystemPo::getCode, swinCode);
+        wrapper.eq(SwinManagedSystemPo::getSwinCode, swinCode);
         swinManagedSystemMapper.delete(wrapper);
     }
 
     private SwinManagedSystemPo toPo(SwinManagedSystem domain) {
         return SwinManagedSystemPo.builder()
-                .id(domain.getId()).code(domain.getSwinCode()).name(domain.getVehicleNodeCode())
-                .sortOrder(0).source("MANUAL")
-                .version(1).status("ACTIVE")
+                .id(domain.getId())
+                .swinCode(domain.getSwinCode())
+                .vehicleNodeCode(domain.getVehicleNodeCode())
                 .createBy(domain.getCreateBy()).createTime(domain.getCreateTime())
                 .modifyBy(domain.getModifyBy()).modifyTime(domain.getModifyTime())
                 .rowVersion(domain.getRowVersion()).rowValid(domain.getRowValid())
@@ -90,7 +90,9 @@ public class SwinManagedSystemRepositoryImpl implements SwinManagedSystemReposit
 
     private SwinManagedSystem toDomain(SwinManagedSystemPo po) {
         return SwinManagedSystem.builder()
-                .id(po.getId()).swinCode(po.getCode()).vehicleNodeCode(po.getName())
+                .id(po.getId())
+                .swinCode(po.getSwinCode())
+                .vehicleNodeCode(po.getVehicleNodeCode())
                 .createBy(po.getCreateBy()).createTime(po.getCreateTime())
                 .modifyBy(po.getModifyBy()).modifyTime(po.getModifyTime())
                 .rowVersion(po.getRowVersion()).rowValid(po.getRowValid())

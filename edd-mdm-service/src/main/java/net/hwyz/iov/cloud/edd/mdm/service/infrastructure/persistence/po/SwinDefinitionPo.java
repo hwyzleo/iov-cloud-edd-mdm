@@ -24,7 +24,7 @@ public class SwinDefinitionPo {
 
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String code;
+    private String swinCode;
     private String name;
     private String nameLocal;
     private String description;

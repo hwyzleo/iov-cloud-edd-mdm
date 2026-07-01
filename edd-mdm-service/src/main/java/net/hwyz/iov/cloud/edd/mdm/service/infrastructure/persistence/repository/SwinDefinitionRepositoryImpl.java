@@ -39,14 +39,14 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
     @Override
     public Optional<SwinDefinition> findBySwinCode(String swinCode) {
         LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinDefinitionPo::getCode, swinCode);
+        wrapper.eq(SwinDefinitionPo::getSwinCode, swinCode);
         return Optional.ofNullable(swinDefinitionMapper.selectOne(wrapper)).map(this::toDomain);
     }
 
     @Override
     public boolean existsBySwinCode(String swinCode) {
         LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinDefinitionPo::getCode, swinCode);
+        wrapper.eq(SwinDefinitionPo::getSwinCode, swinCode);
         return swinDefinitionMapper.selectCount(wrapper) > 0;
     }
 
@@ -61,7 +61,8 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
     public long countActiveByTypeRef(String typeRefType, String typeRefCode) {
         LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
-        wrapper.eq(SwinDefinitionPo::getCode, typeRefCode);
+        wrapper.eq(SwinDefinitionPo::getTypeRefType, typeRefType);
+        wrapper.eq(SwinDefinitionPo::getTypeRefCode, typeRefCode);
         return swinDefinitionMapper.selectCount(wrapper);
     }
 
@@ -96,7 +97,7 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
     @Override
     public void deleteBySwinCode(String swinCode) {
         LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SwinDefinitionPo::getCode, swinCode);
+        wrapper.eq(SwinDefinitionPo::getSwinCode, swinCode);
         swinDefinitionMapper.delete(wrapper);
     }
 
@@ -121,7 +122,7 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
 
     private SwinDefinitionPo toPo(SwinDefinition domain) {
         return SwinDefinitionPo.builder()
-                .id(domain.getId()).code(domain.getSwinCode()).name(domain.getName())
+                .id(domain.getId()).swinCode(domain.getSwinCode()).name(domain.getName())
                 .nameLocal(domain.getNameLocal()).description(domain.getDescription())
                 .schemeCode(domain.getSchemeCode())
                 .typeRefType(domain.getTypeRefType())
@@ -136,7 +137,7 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
 
     private SwinDefinition toDomain(SwinDefinitionPo po) {
         return SwinDefinition.builder()
-                .id(po.getId()).swinCode(po.getCode()).schemeCode(po.getSchemeCode())
+                .id(po.getId()).swinCode(po.getSwinCode()).schemeCode(po.getSchemeCode())
                 .typeRefType(po.getTypeRefType())
                 .typeRefCode(po.getTypeRefCode())
                 .name(po.getName()).nameLocal(po.getNameLocal()).description(po.getDescription())
