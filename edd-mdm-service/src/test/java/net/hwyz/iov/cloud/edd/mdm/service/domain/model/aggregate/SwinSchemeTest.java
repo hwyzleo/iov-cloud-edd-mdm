@@ -36,7 +36,7 @@ class SwinSchemeTest {
             Date effectiveTo = new Date(System.currentTimeMillis() + 86400000L);
             String createBy = "testUser";
 
-            SwinScheme swinScheme = SwinScheme.create(code, name, nameLocal, description, route, sortOrder, effectiveFrom, effectiveTo, createBy);
+            SwinScheme swinScheme = SwinScheme.create(code, name, nameLocal, description, route, null, null, sortOrder, effectiveFrom, effectiveTo, createBy);
 
             assertNotNull(swinScheme);
             assertEquals(code, swinScheme.getCode());
@@ -64,7 +64,7 @@ class SwinSchemeTest {
         @Test
         @DisplayName("创建成功 - sortOrder 为 null 时默认为 0")
         void create_nullSortOrder_defaultsToZero() {
-            SwinScheme swinScheme = SwinScheme.create("TEST", "Test", null, null, SwinRoute.SINGLE_SWIN, null, null, null, "testUser");
+            SwinScheme swinScheme = SwinScheme.create("TEST", "Test", null, null, SwinRoute.SINGLE_SWIN, null, null, null, null, null, "testUser");
 
             assertEquals(0, swinScheme.getSortOrder());
         }
@@ -73,7 +73,7 @@ class SwinSchemeTest {
         @DisplayName("创建失败 - route 为 null")
         void create_nullRoute_throwsException() {
             assertThrows(IllegalArgumentException.class, () -> {
-                SwinScheme.create("TEST", "Test", null, null, null, 0, null, null, "testUser");
+                SwinScheme.create("TEST", "Test", null, null, null, null, null, 0, null, null, "testUser");
             });
         }
 
@@ -87,7 +87,7 @@ class SwinSchemeTest {
             Date to = cal.getTime();
 
             assertThrows(IllegalArgumentException.class, () -> {
-                SwinScheme.create("TEST", "Test", null, null, SwinRoute.SINGLE_SWIN, 0, from, to, "testUser");
+                SwinScheme.create("TEST", "Test", null, null, SwinRoute.SINGLE_SWIN, null, null, 0, from, to, "testUser");
             });
         }
     }
@@ -111,7 +111,7 @@ class SwinSchemeTest {
             Date newEffectiveTo = new Date(System.currentTimeMillis() + 86400000L);
             String modifyBy = "modifier";
 
-            swinScheme.update(newName, newNameLocal, newDescription, newRoute, newSortOrder, newEffectiveFrom, newEffectiveTo, modifyBy);
+            swinScheme.update(newName, newNameLocal, newDescription, newRoute, null, null, newSortOrder, newEffectiveFrom, newEffectiveTo, modifyBy);
 
             assertEquals(newName, swinScheme.getName());
             assertEquals(newNameLocal, swinScheme.getNameLocal());
@@ -130,7 +130,7 @@ class SwinSchemeTest {
             SwinScheme swinScheme = createTestScheme();
 
             assertThrows(IllegalArgumentException.class, () -> {
-                swinScheme.update("Name", null, null, null, 0, null, null, "modifier");
+                swinScheme.update("Name", null, null, null, null, null, 0, null, null, "modifier");
             });
         }
 
@@ -146,7 +146,7 @@ class SwinSchemeTest {
             Date to = cal.getTime();
 
             assertThrows(IllegalArgumentException.class, () -> {
-                swinScheme.update("Name", null, null, SwinRoute.SINGLE_SWIN, 0, from, to, "modifier");
+                swinScheme.update("Name", null, null, SwinRoute.SINGLE_SWIN, null, null, 0, from, to, "modifier");
             });
         }
     }
@@ -201,6 +201,6 @@ class SwinSchemeTest {
     }
 
     private SwinScheme createTestScheme() {
-        return SwinScheme.create("TEST", "Test", null, null, SwinRoute.SINGLE_SWIN, 0, null, null, "testUser");
+        return SwinScheme.create("TEST", "Test", null, null, SwinRoute.SINGLE_SWIN, null, null, 0, null, null, "testUser");
     }
 }

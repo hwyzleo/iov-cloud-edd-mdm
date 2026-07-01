@@ -246,6 +246,6 @@ class SwinSchemeAppServiceTest {
     }
 
     private SwinScheme createTestScheme() {
-        return SwinScheme.create("TEST_SCHEME", "Test Scheme", null, null, SwinRoute.SINGLE_SWIN, 0, null, null, "testUser");
+        return SwinScheme.create("TEST_SCHEME", "Test Scheme", null, null, SwinRoute.SINGLE_SWIN, null, null, 0, null, null, "testUser");
     }
 }
