@@ -48,6 +48,25 @@ public enum MdmErrorCode implements ErrorCode {
     DEVICE_CATEGORY_HAS_REFERENCE("812306", "设备类别被车载节点引用，删除被拒绝"),
     DEVICE_CATEGORY_NOT_ACTIVE("812307", "设备类别非 ACTIVE 状态，不允许被引用"),
 
+    // EEAD子域 - SWIN编码方案相关 (812308-812312)
+    SWIN_SCHEME_NOT_EXIST("812308", "SWIN编码方案不存在"),
+    SWIN_SCHEME_CODE_EXIST("812309", "SWIN编码方案 code 已存在"),
+    SWIN_SCHEME_HAS_REFERENCE("812310", "SWIN编码方案被SWIN定义引用，删除被拒绝"),
+    SWIN_SCHEME_NOT_ACTIVE("812311", "SWIN编码方案非 ACTIVE 状态，不允许被引用"),
+    SWIN_SCHEME_ROUTE_INVALID("812312", "SWIN路由类型无效"),
+
+    // EEAD子域 - SWIN定义相关 (812313-812318)
+    SWIN_DEFINITION_NOT_EXIST("812313", "SWIN定义不存在"),
+    SWIN_DEFINITION_SWIN_CODE_EXIST("812314", "SWIN定义 swinCode 已存在"),
+    SWIN_DEFINITION_SCHEME_NOT_ACTIVE("812315", "关联的编码方案非 ACTIVE 状态"),
+    SWIN_DEFINITION_TYPE_REF_NOT_ACTIVE("812316", "引用的Variant或Model非 ACTIVE 状态"),
+    SWIN_DEFINITION_SINGLE_SWIN_CONFLICT("812317", "单SWIN路由下已存在同类型的 ACTIVE SWIN定义"),
+    SWIN_DEFINITION_HAS_REFERENCE("812318", "SWIN定义被其他实体引用，删除被拒绝"),
+
+    // EEAD子域 - SWIN管理软件系统相关 (812319-812320)
+    SWIN_MANAGED_SYSTEM_DUPLICATE("812319", "同一SWIN定义下已存在相同的车载节点"),
+    SWIN_MANAGED_SYSTEM_VEHICLE_NODE_NOT_ACTIVE("812320", "关联的车载节点非 ACTIVE 状态"),
+
     // ==================== Org 子域 (8125XX) ====================
     PLANT_NOT_EXIST("812501", "工厂不存在"),
     PLANT_CODE_EXIST("812502", "工厂 code 已存在"),
