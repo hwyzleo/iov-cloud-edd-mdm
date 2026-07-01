@@ -28,11 +28,11 @@ public class ServiceSwinSchemeController implements SwinSchemeService {
 
     @Override
     @GetMapping("/snapshot")
-    public SwinSchemePageResponse snapshot(@RequestParam(defaultValue = "false") Boolean includeInactive,
-                                           @RequestParam(defaultValue = "1") Integer page,
-                                           @RequestParam(defaultValue = "10") Integer size) {
+    public SwinSchemePageResponse getSnapshot(@RequestParam(defaultValue = "false") boolean includeInactive,
+                                              @RequestParam(defaultValue = "1") int page,
+                                              @RequestParam(defaultValue = "100") int size) {
         SwinSchemeQuery query = SwinSchemeQuery.builder()
-                .includeInactive(Boolean.TRUE.equals(includeInactive)).page(page).size(size).build();
+                .includeInactive(includeInactive).page(page).size(size).build();
         List<SwinSchemeDto> schemes = swinSchemeAppService.listSwinSchemes(query);
         long total = swinSchemeAppService.countSwinSchemes(Boolean.TRUE.equals(includeInactive));
         List<SwinSchemeResponse> rows = schemes.stream()

@@ -29,7 +29,8 @@ public class SwinDefinitionPo {
     private String nameLocal;
     private String description;
     private String schemeCode;
-    private String managedSystemCode;
+    private String typeRefType;
+    private String typeRefCode;
     private Integer sortOrder;
     private String source;
     private String externalRefId;

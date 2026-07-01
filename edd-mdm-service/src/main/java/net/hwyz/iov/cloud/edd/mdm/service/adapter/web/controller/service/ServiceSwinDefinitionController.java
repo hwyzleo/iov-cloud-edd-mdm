@@ -28,13 +28,13 @@ public class ServiceSwinDefinitionController implements SwinDefinitionService {
 
     @Override
     @GetMapping("/snapshot")
-    public SwinDefinitionPageResponse snapshot(@RequestParam(defaultValue = "false") Boolean includeInactive,
-                                               @RequestParam(defaultValue = "1") Integer page,
-                                               @RequestParam(defaultValue = "10") Integer size) {
+    public SwinDefinitionPageResponse getSnapshot(@RequestParam(defaultValue = "false") boolean includeInactive,
+                                                   @RequestParam(defaultValue = "1") int page,
+                                                   @RequestParam(defaultValue = "100") int size) {
         SwinDefinitionQuery query = SwinDefinitionQuery.builder()
-                .includeInactive(Boolean.TRUE.equals(includeInactive)).page(page).size(size).build();
+                .includeInactive(includeInactive).page(page).size(size).build();
         List<SwinDefinitionDto> definitions = swinDefinitionAppService.listSwinDefinitions(query);
-        long total = swinDefinitionAppService.countSwinDefinitions(Boolean.TRUE.equals(includeInactive));
+        long total = swinDefinitionAppService.countSwinDefinitions(includeInactive);
         List<SwinDefinitionResponse> rows = definitions.stream()
                 .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
         return SwinDefinitionPageResponse.builder().total(total).rows(rows).build();
@@ -51,6 +51,23 @@ public class ServiceSwinDefinitionController implements SwinDefinitionService {
     @GetMapping("/listAll")
     public List<SwinDefinitionResponse> listAllActiveSwinDefinitions() {
         List<SwinDefinitionDto> dtoList = swinDefinitionAppService.listAllActiveSwinDefinitions();
+        return dtoList.stream()
+                .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @GetMapping("/byScheme/{schemeCode}")
+    public List<SwinDefinitionResponse> getSwinDefinitionsBySchemeCode(@PathVariable String schemeCode) {
+        List<SwinDefinitionDto> dtoList = swinDefinitionAppService.listSwinDefinitionsBySchemeCode(schemeCode);
+        return dtoList.stream()
+                .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @GetMapping("/byTypeRef")
+    public List<SwinDefinitionResponse> getSwinDefinitionsByTypeRef(@RequestParam String typeRefType,
+                                                                     @RequestParam String typeRefCode) {
+        List<SwinDefinitionDto> dtoList = swinDefinitionAppService.listSwinDefinitionsByTypeRef(typeRefType, typeRefCode);
         return dtoList.stream()
                 .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
     }

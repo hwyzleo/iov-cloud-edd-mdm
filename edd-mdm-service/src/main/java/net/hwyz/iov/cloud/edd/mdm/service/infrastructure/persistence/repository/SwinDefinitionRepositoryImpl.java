@@ -100,11 +100,32 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
         swinDefinitionMapper.delete(wrapper);
     }
 
+    @Override
+    public List<SwinDefinition> findAllActiveBySchemeCode(String schemeCode) {
+        LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
+        wrapper.eq(SwinDefinitionPo::getSchemeCode, schemeCode);
+        wrapper.orderByAsc(SwinDefinitionPo::getSortOrder);
+        return swinDefinitionMapper.selectList(wrapper).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SwinDefinition> findAllActiveByTypeRef(String typeRefType, String typeRefCode) {
+        LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
+        wrapper.eq(SwinDefinitionPo::getTypeRefType, typeRefType);
+        wrapper.eq(SwinDefinitionPo::getTypeRefCode, typeRefCode);
+        wrapper.orderByAsc(SwinDefinitionPo::getSortOrder);
+        return swinDefinitionMapper.selectList(wrapper).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
     private SwinDefinitionPo toPo(SwinDefinition domain) {
         return SwinDefinitionPo.builder()
                 .id(domain.getId()).code(domain.getSwinCode()).name(domain.getName())
                 .nameLocal(domain.getNameLocal()).description(domain.getDescription())
                 .schemeCode(domain.getSchemeCode())
+                .typeRefType(domain.getTypeRefType())
+                .typeRefCode(domain.getTypeRefCode())
                 .sortOrder(0).source("MANUAL")
                 .version(domain.getVersion()).status(domain.getStatus().name())
                 .createBy(domain.getCreateBy()).createTime(domain.getCreateTime())
@@ -116,6 +137,8 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
     private SwinDefinition toDomain(SwinDefinitionPo po) {
         return SwinDefinition.builder()
                 .id(po.getId()).swinCode(po.getCode()).schemeCode(po.getSchemeCode())
+                .typeRefType(po.getTypeRefType())
+                .typeRefCode(po.getTypeRefCode())
                 .name(po.getName()).nameLocal(po.getNameLocal()).description(po.getDescription())
                 .version(po.getVersion())
                 .status(SwinDefinitionStatus.valueOf(po.getStatus()))

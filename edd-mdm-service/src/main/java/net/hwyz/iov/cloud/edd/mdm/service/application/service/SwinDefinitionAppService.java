@@ -181,6 +181,33 @@ public class SwinDefinitionAppService {
     }
 
     /**
+     * 根据编码方案代码获取所有有效的SWIN定义
+     *
+     * @param schemeCode 编码方案代码
+     * @return SWIN定义DTO列表
+     */
+    public List<SwinDefinitionDto> listSwinDefinitionsBySchemeCode(String schemeCode) {
+        return swinDefinitionRepository.findAllActiveBySchemeCode(schemeCode)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据引用类型和引用代码获取所有有效的SWIN定义
+     *
+     * @param typeRefType 引用类型
+     * @param typeRefCode 引用代码
+     * @return SWIN定义DTO列表
+     */
+    public List<SwinDefinitionDto> listSwinDefinitionsByTypeRef(String typeRefType, String typeRefCode) {
+        return swinDefinitionRepository.findAllActiveByTypeRef(typeRefType, typeRefCode)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 领域对象转DTO
      *
      * @param swinDefinition 领域对象

@@ -53,6 +53,23 @@ public interface SwinDefinitionRepository {
     long countActiveByTypeRef(String typeRefType, String typeRefCode);
 
     /**
+     * 根据编码方案代码查找所有有效的SWIN定义
+     *
+     * @param schemeCode 编码方案代码
+     * @return SWIN定义列表
+     */
+    List<SwinDefinition> findAllActiveBySchemeCode(String schemeCode);
+
+    /**
+     * 根据引用类型和引用代码查找所有有效的SWIN定义
+     *
+     * @param typeRefType 引用类型
+     * @param typeRefCode 引用代码
+     * @return SWIN定义列表
+     */
+    List<SwinDefinition> findAllActiveByTypeRef(String typeRefType, String typeRefCode);
+
+    /**
      * 查找所有有效的SWIN定义
      *
      * @return SWIN定义列表
