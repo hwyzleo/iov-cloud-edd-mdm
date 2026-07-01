@@ -76,6 +76,9 @@ public class SwinDefinition {
         if (typeRefCode == null || typeRefCode.isBlank()) {
             throw new IllegalArgumentException("引用代码不能为空");
         }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("名称不能为空");
+        }
         Date now = new Date();
         return SwinDefinition.builder()
                 .swinCode(swinCode).schemeCode(schemeCode)

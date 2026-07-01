@@ -1,5 +1,6 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.mpt;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionResponse;
@@ -29,7 +30,7 @@ public class MptSwinDefinitionController {
     private final SwinDefinitionAssembler swinDefinitionAssembler;
 
     @PostMapping("/create")
-    public ApiResponse<SwinDefinitionResponse> create(@RequestBody SwinDefinitionCreateCmd cmd) {
+    public ApiResponse<SwinDefinitionResponse> create(@Valid @RequestBody SwinDefinitionCreateCmd cmd) {
         SwinDefinitionDto dto = swinDefinitionAppService.createSwinDefinition(cmd);
         return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
     }
