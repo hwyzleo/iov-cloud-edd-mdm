@@ -1,5 +1,9 @@
 package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionDuplicateSwinCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSchemeNotActiveException;
@@ -59,8 +63,11 @@ class SwinDefinitionAppServiceTest {
             when(swinDefinitionRepository.countActiveByTypeRef("VARIANT", "VAR001")).thenReturn(0L);
             doNothing().when(swinDefinitionRepository).save(any(SwinDefinition.class));
 
-            SwinDefinition result = swinDefinitionAppService.createSwinDefinition("SWIN001", "SCHEME001", "VARIANT", "VAR001",
-                    "Test Definition", "测试定义", "Test Description", "testUser");
+            SwinDefinitionCreateCmd cmd = SwinDefinitionCreateCmd.builder()
+                    .swinCode("SWIN001").schemeCode("SCHEME001").typeRefType("VARIANT").typeRefCode("VAR001")
+                    .name("Test Definition").nameLocal("测试定义").description("Test Description").createBy("testUser").build();
+
+            SwinDefinitionDto result = swinDefinitionAppService.createSwinDefinition(cmd);
 
             assertNotNull(result);
             assertEquals("SWIN001", result.getSwinCode());
@@ -78,8 +85,11 @@ class SwinDefinitionAppServiceTest {
             when(swinSchemeRepository.findByCode("SCHEME001")).thenReturn(Optional.of(createActiveScheme(SwinRoute.MULTI_SWIN)));
             doNothing().when(swinDefinitionRepository).save(any(SwinDefinition.class));
 
-            SwinDefinition result = swinDefinitionAppService.createSwinDefinition("SWIN002", "SCHEME001", "VARIANT", "VAR001",
-                    "Test Definition 2", null, null, "testUser");
+            SwinDefinitionCreateCmd cmd = SwinDefinitionCreateCmd.builder()
+                    .swinCode("SWIN002").schemeCode("SCHEME001").typeRefType("VARIANT").typeRefCode("VAR001")
+                    .name("Test Definition 2").createBy("testUser").build();
+
+            SwinDefinitionDto result = swinDefinitionAppService.createSwinDefinition(cmd);
 
             assertNotNull(result);
             assertEquals("SWIN002", result.getSwinCode());
@@ -91,9 +101,12 @@ class SwinDefinitionAppServiceTest {
         void create_duplicateSwinCode_throwsException() {
             when(swinDefinitionRepository.existsBySwinCode("SWIN001")).thenReturn(true);
 
+            SwinDefinitionCreateCmd cmd = SwinDefinitionCreateCmd.builder()
+                    .swinCode("SWIN001").schemeCode("SCHEME001").typeRefType("VARIANT").typeRefCode("VAR001")
+                    .name("Test").createBy("testUser").build();
+
             assertThrows(SwinDefinitionDuplicateSwinCodeException.class, () -> {
-                swinDefinitionAppService.createSwinDefinition("SWIN001", "SCHEME001", "VARIANT", "VAR001",
-                        "Test", null, null, "testUser");
+                swinDefinitionAppService.createSwinDefinition(cmd);
             });
 
             verify(swinDefinitionRepository).existsBySwinCode("SWIN001");
@@ -107,9 +120,12 @@ class SwinDefinitionAppServiceTest {
             when(swinDefinitionRepository.existsBySwinCode("SWIN001")).thenReturn(false);
             when(swinSchemeRepository.findByCode("NONEXISTENT")).thenReturn(Optional.empty());
 
+            SwinDefinitionCreateCmd cmd = SwinDefinitionCreateCmd.builder()
+                    .swinCode("SWIN001").schemeCode("NONEXISTENT").typeRefType("VARIANT").typeRefCode("VAR001")
+                    .name("Test").createBy("testUser").build();
+
             assertThrows(SwinSchemeNotExistException.class, () -> {
-                swinDefinitionAppService.createSwinDefinition("SWIN001", "NONEXISTENT", "VARIANT", "VAR001",
-                        "Test", null, null, "testUser");
+                swinDefinitionAppService.createSwinDefinition(cmd);
             });
 
             verify(swinSchemeRepository).findByCode("NONEXISTENT");
@@ -124,9 +140,12 @@ class SwinDefinitionAppServiceTest {
             inactiveScheme.setStatus(SwinSchemeStatus.INACTIVE);
             when(swinSchemeRepository.findByCode("SCHEME001")).thenReturn(Optional.of(inactiveScheme));
 
+            SwinDefinitionCreateCmd cmd = SwinDefinitionCreateCmd.builder()
+                    .swinCode("SWIN001").schemeCode("SCHEME001").typeRefType("VARIANT").typeRefCode("VAR001")
+                    .name("Test").createBy("testUser").build();
+
             assertThrows(SwinDefinitionSchemeNotActiveException.class, () -> {
-                swinDefinitionAppService.createSwinDefinition("SWIN001", "SCHEME001", "VARIANT", "VAR001",
-                        "Test", null, null, "testUser");
+                swinDefinitionAppService.createSwinDefinition(cmd);
             });
 
             verify(swinDefinitionRepository, never()).save(any());
@@ -139,9 +158,12 @@ class SwinDefinitionAppServiceTest {
             when(swinSchemeRepository.findByCode("SCHEME001")).thenReturn(Optional.of(createActiveScheme(SwinRoute.SINGLE_SWIN)));
             when(swinDefinitionRepository.countActiveByTypeRef("VARIANT", "VAR001")).thenReturn(1L);
 
+            SwinDefinitionCreateCmd cmd = SwinDefinitionCreateCmd.builder()
+                    .swinCode("SWIN002").schemeCode("SCHEME001").typeRefType("VARIANT").typeRefCode("VAR001")
+                    .name("Test").createBy("testUser").build();
+
             assertThrows(SwinDefinitionSingleSwinConflictException.class, () -> {
-                swinDefinitionAppService.createSwinDefinition("SWIN002", "SCHEME001", "VARIANT", "VAR001",
-                        "Test", null, null, "testUser");
+                swinDefinitionAppService.createSwinDefinition(cmd);
             });
 
             verify(swinDefinitionRepository).countActiveByTypeRef("VARIANT", "VAR001");
@@ -160,8 +182,11 @@ class SwinDefinitionAppServiceTest {
             when(swinDefinitionRepository.findBySwinCode("SWIN001")).thenReturn(Optional.of(existingDefinition));
             doNothing().when(swinDefinitionRepository).save(any(SwinDefinition.class));
 
-            SwinDefinition result = swinDefinitionAppService.updateSwinDefinition("SWIN001", "Updated Name", "更新名称",
-                    "Updated Description", "modifier");
+            SwinDefinitionUpdateCmd cmd = SwinDefinitionUpdateCmd.builder()
+                    .swinCode("SWIN001").name("Updated Name").nameLocal("更新名称")
+                    .description("Updated Description").modifyBy("modifier").build();
+
+            SwinDefinitionDto result = swinDefinitionAppService.updateSwinDefinition(cmd);
 
             assertNotNull(result);
             assertEquals("Updated Name", result.getName());
@@ -175,8 +200,11 @@ class SwinDefinitionAppServiceTest {
         void update_notExist_throwsException() {
             when(swinDefinitionRepository.findBySwinCode("NONEXISTENT")).thenReturn(Optional.empty());
 
+            SwinDefinitionUpdateCmd cmd = SwinDefinitionUpdateCmd.builder()
+                    .swinCode("NONEXISTENT").name("Name").modifyBy("modifier").build();
+
             assertThrows(SwinDefinitionNotExistException.class, () -> {
-                swinDefinitionAppService.updateSwinDefinition("NONEXISTENT", "Name", null, null, "modifier");
+                swinDefinitionAppService.updateSwinDefinition(cmd);
             });
 
             verify(swinDefinitionRepository).findBySwinCode("NONEXISTENT");
@@ -226,10 +254,10 @@ class SwinDefinitionAppServiceTest {
             when(swinDefinitionRepository.findBySwinCode("SWIN001")).thenReturn(Optional.of(existingDefinition));
             doNothing().when(swinDefinitionRepository).save(any(SwinDefinition.class));
 
-            SwinDefinition result = swinDefinitionAppService.deactivateSwinDefinition("SWIN001", "admin");
+            SwinDefinitionDto result = swinDefinitionAppService.deactivateSwinDefinition("SWIN001", "admin");
 
             assertNotNull(result);
-            assertEquals(SwinDefinitionStatus.INACTIVE, result.getStatus());
+            assertEquals("INACTIVE", result.getStatus());
             verify(swinDefinitionRepository).findBySwinCode("SWIN001");
             verify(swinDefinitionRepository).save(any(SwinDefinition.class));
         }
@@ -258,7 +286,7 @@ class SwinDefinitionAppServiceTest {
             SwinDefinition existingDefinition = createTestDefinition();
             when(swinDefinitionRepository.findBySwinCode("SWIN001")).thenReturn(Optional.of(existingDefinition));
 
-            SwinDefinition result = swinDefinitionAppService.getSwinDefinitionBySwinCode("SWIN001");
+            SwinDefinitionDto result = swinDefinitionAppService.getSwinDefinitionBySwinCode("SWIN001");
 
             assertNotNull(result);
             assertEquals("SWIN001", result.getSwinCode());

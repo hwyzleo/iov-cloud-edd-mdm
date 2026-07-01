@@ -1,5 +1,9 @@
 package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinSchemeQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinSchemeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeDuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeHasReferenceException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeNotExistException;
@@ -54,12 +58,17 @@ class SwinSchemeAppServiceTest {
             when(swinSchemeRepository.existsByCode("TEST_SCHEME")).thenReturn(false);
             doNothing().when(swinSchemeRepository).save(any(SwinScheme.class));
 
-            SwinScheme result = swinSchemeAppService.createSwinScheme("TEST_SCHEME", "Test Scheme", "测试方案",
-                    "Test Description", "SINGLE_SWIN", 1, new Date(), new Date(System.currentTimeMillis() + 86400000L), "testUser");
+            SwinSchemeCreateCmd cmd = SwinSchemeCreateCmd.builder()
+                    .code("TEST_SCHEME").name("Test Scheme").nameLocal("测试方案")
+                    .description("Test Description").route("SINGLE_SWIN").sortOrder(1)
+                    .effectiveFrom(new Date()).effectiveTo(new Date(System.currentTimeMillis() + 86400000L))
+                    .createBy("testUser").build();
+
+            SwinSchemeDto result = swinSchemeAppService.createSwinScheme(cmd);
 
             assertNotNull(result);
             assertEquals("TEST_SCHEME", result.getCode());
-            assertEquals(SwinRoute.SINGLE_SWIN, result.getRoute());
+            assertEquals("SINGLE_SWIN", result.getRoute());
             verify(swinSchemeRepository).existsByCode("TEST_SCHEME");
             verify(swinSchemeRepository).save(any(SwinScheme.class));
         }
@@ -69,9 +78,11 @@ class SwinSchemeAppServiceTest {
         void create_duplicateCode_throwsException() {
             when(swinSchemeRepository.existsByCode("TEST_SCHEME")).thenReturn(true);
 
+            SwinSchemeCreateCmd cmd = SwinSchemeCreateCmd.builder()
+                    .code("TEST_SCHEME").name("Test Scheme").route("SINGLE_SWIN").createBy("testUser").build();
+
             assertThrows(SwinSchemeDuplicateCodeException.class, () -> {
-                swinSchemeAppService.createSwinScheme("TEST_SCHEME", "Test Scheme", null, null,
-                        "SINGLE_SWIN", 0, null, null, "testUser");
+                swinSchemeAppService.createSwinScheme(cmd);
             });
 
             verify(swinSchemeRepository).existsByCode("TEST_SCHEME");
@@ -90,12 +101,17 @@ class SwinSchemeAppServiceTest {
             when(swinSchemeRepository.findByCode("TEST_SCHEME")).thenReturn(Optional.of(existingScheme));
             doNothing().when(swinSchemeRepository).save(any(SwinScheme.class));
 
-            SwinScheme result = swinSchemeAppService.updateSwinScheme("TEST_SCHEME", "Updated Name", "更新名称",
-                    "Updated Description", "MULTI_SWIN", 2, new Date(), new Date(System.currentTimeMillis() + 86400000L), "modifier");
+            SwinSchemeUpdateCmd cmd = SwinSchemeUpdateCmd.builder()
+                    .code("TEST_SCHEME").name("Updated Name").nameLocal("更新名称")
+                    .description("Updated Description").route("MULTI_SWIN").sortOrder(2)
+                    .effectiveFrom(new Date()).effectiveTo(new Date(System.currentTimeMillis() + 86400000L))
+                    .modifyBy("modifier").build();
+
+            SwinSchemeDto result = swinSchemeAppService.updateSwinScheme(cmd);
 
             assertNotNull(result);
             assertEquals("Updated Name", result.getName());
-            assertEquals(SwinRoute.MULTI_SWIN, result.getRoute());
+            assertEquals("MULTI_SWIN", result.getRoute());
             verify(swinSchemeRepository).findByCode("TEST_SCHEME");
             verify(swinSchemeRepository).save(any(SwinScheme.class));
         }
@@ -105,9 +121,11 @@ class SwinSchemeAppServiceTest {
         void update_notExist_throwsException() {
             when(swinSchemeRepository.findByCode("NONEXISTENT")).thenReturn(Optional.empty());
 
+            SwinSchemeUpdateCmd cmd = SwinSchemeUpdateCmd.builder()
+                    .code("NONEXISTENT").name("Name").route("SINGLE_SWIN").modifyBy("modifier").build();
+
             assertThrows(SwinSchemeNotExistException.class, () -> {
-                swinSchemeAppService.updateSwinScheme("NONEXISTENT", "Name", null, null,
-                        "SINGLE_SWIN", 0, null, null, "modifier");
+                swinSchemeAppService.updateSwinScheme(cmd);
             });
 
             verify(swinSchemeRepository).findByCode("NONEXISTENT");
@@ -175,10 +193,10 @@ class SwinSchemeAppServiceTest {
             when(swinSchemeRepository.findByCode("TEST_SCHEME")).thenReturn(Optional.of(existingScheme));
             doNothing().when(swinSchemeRepository).save(any(SwinScheme.class));
 
-            SwinScheme result = swinSchemeAppService.deactivateSwinScheme("TEST_SCHEME", "admin");
+            SwinSchemeDto result = swinSchemeAppService.deactivateSwinScheme("TEST_SCHEME", "admin");
 
             assertNotNull(result);
-            assertEquals(SwinSchemeStatus.INACTIVE, result.getStatus());
+            assertEquals("INACTIVE", result.getStatus());
             verify(swinSchemeRepository).findByCode("TEST_SCHEME");
             verify(swinSchemeRepository).save(any(SwinScheme.class));
         }
@@ -207,7 +225,7 @@ class SwinSchemeAppServiceTest {
             SwinScheme existingScheme = createTestScheme();
             when(swinSchemeRepository.findByCode("TEST_SCHEME")).thenReturn(Optional.of(existingScheme));
 
-            SwinScheme result = swinSchemeAppService.getSwinSchemeByCode("TEST_SCHEME");
+            SwinSchemeDto result = swinSchemeAppService.getSwinSchemeByCode("TEST_SCHEME");
 
             assertNotNull(result);
             assertEquals("TEST_SCHEME", result.getCode());

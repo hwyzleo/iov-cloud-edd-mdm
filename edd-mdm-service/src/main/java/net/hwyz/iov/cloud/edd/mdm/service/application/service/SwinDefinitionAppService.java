@@ -2,12 +2,18 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinManagedSystemDto;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionDuplicateSwinCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSchemeNotActiveException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSingleSwinConflictException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinManagedSystem;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinRoute;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeStatus;
@@ -18,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * SWIN定义应用服务（EEAD 子域）
@@ -35,64 +42,56 @@ public class SwinDefinitionAppService {
     /**
      * 创建SWIN定义
      *
-     * @param swinCode    SWIN代码
-     * @param schemeCode  编码方案代码
-     * @param typeRefType 引用类型（VARIANT/MODEL）
-     * @param typeRefCode 引用代码
-     * @param name        名称
-     * @param nameLocal   本地化名称
-     * @param description 描述
-     * @param createBy    创建人
-     * @return 创建的SWIN定义
+     * @param cmd 创建命令
+     * @return 创建的SWIN定义DTO
      */
     @Transactional(rollbackFor = Exception.class)
-    public SwinDefinition createSwinDefinition(String swinCode, String schemeCode, String typeRefType, String typeRefCode,
-                                                String name, String nameLocal, String description, String createBy) {
-        log.info("创建SWIN定义: {}, 编码方案: {}, 引用类型: {}, 引用代码: {}", swinCode, schemeCode, typeRefType, typeRefCode);
-        if (swinDefinitionRepository.existsBySwinCode(swinCode)) {
-            throw new SwinDefinitionDuplicateSwinCodeException(swinCode, "ACTIVE");
+    public SwinDefinitionDto createSwinDefinition(SwinDefinitionCreateCmd cmd) {
+        log.info("创建SWIN定义: {}, 编码方案: {}, 引用类型: {}, 引用代码: {}",
+                cmd.getSwinCode(), cmd.getSchemeCode(), cmd.getTypeRefType(), cmd.getTypeRefCode());
+        if (swinDefinitionRepository.existsBySwinCode(cmd.getSwinCode())) {
+            throw new SwinDefinitionDuplicateSwinCodeException(cmd.getSwinCode(), "ACTIVE");
         }
-        SwinScheme swinScheme = swinSchemeRepository.findByCode(schemeCode)
-                .orElseThrow(() -> new SwinSchemeNotExistException(schemeCode));
+        SwinScheme swinScheme = swinSchemeRepository.findByCode(cmd.getSchemeCode())
+                .orElseThrow(() -> new SwinSchemeNotExistException(cmd.getSchemeCode()));
         if (swinScheme.getStatus() != SwinSchemeStatus.ACTIVE) {
-            throw new SwinDefinitionSchemeNotActiveException(schemeCode, swinScheme.getStatus().name());
+            throw new SwinDefinitionSchemeNotActiveException(cmd.getSchemeCode(), swinScheme.getStatus().name());
         }
         if (swinScheme.getRoute() == SwinRoute.SINGLE_SWIN) {
-            long existingCount = swinDefinitionRepository.countActiveByTypeRef(typeRefType, typeRefCode);
+            long existingCount = swinDefinitionRepository.countActiveByTypeRef(cmd.getTypeRefType(), cmd.getTypeRefCode());
             if (existingCount > 0) {
-                throw new SwinDefinitionSingleSwinConflictException(schemeCode, typeRefType, typeRefCode);
+                throw new SwinDefinitionSingleSwinConflictException(cmd.getSchemeCode(), cmd.getTypeRefType(), cmd.getTypeRefCode());
             }
         }
+        String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
         }
-        SwinDefinition swinDefinition = SwinDefinition.create(swinCode, schemeCode, typeRefType, typeRefCode,
-                name, nameLocal, description, createBy);
+        SwinDefinition swinDefinition = SwinDefinition.create(cmd.getSwinCode(), cmd.getSchemeCode(),
+                cmd.getTypeRefType(), cmd.getTypeRefCode(), cmd.getName(), cmd.getNameLocal(),
+                cmd.getDescription(), createBy);
         swinDefinitionRepository.save(swinDefinition);
-        return swinDefinition;
+        return toDto(swinDefinition);
     }
 
     /**
      * 更新SWIN定义
      *
-     * @param swinCode    SWIN代码
-     * @param name        名称
-     * @param nameLocal   本地化名称
-     * @param description 描述
-     * @param modifyBy    修改人
-     * @return 更新后的SWIN定义
+     * @param cmd 更新命令
+     * @return 更新后的SWIN定义DTO
      */
     @Transactional(rollbackFor = Exception.class)
-    public SwinDefinition updateSwinDefinition(String swinCode, String name, String nameLocal, String description, String modifyBy) {
-        log.info("更新SWIN定义: {}", swinCode);
-        SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode)
-                .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
+    public SwinDefinitionDto updateSwinDefinition(SwinDefinitionUpdateCmd cmd) {
+        log.info("更新SWIN定义: {}", cmd.getSwinCode());
+        SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(cmd.getSwinCode())
+                .orElseThrow(() -> new SwinDefinitionNotExistException(cmd.getSwinCode()));
+        String modifyBy = cmd.getModifyBy();
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
         }
-        swinDefinition.update(name, nameLocal, description, modifyBy);
+        swinDefinition.update(cmd.getName(), cmd.getNameLocal(), cmd.getDescription(), modifyBy);
         swinDefinitionRepository.save(swinDefinition);
-        return swinDefinition;
+        return toDto(swinDefinition);
     }
 
     /**
@@ -118,10 +117,10 @@ public class SwinDefinitionAppService {
      *
      * @param swinCode SWIN代码
      * @param modifyBy 修改人
-     * @return 更新后的SWIN定义
+     * @return 更新后的SWIN定义DTO
      */
     @Transactional(rollbackFor = Exception.class)
-    public SwinDefinition deactivateSwinDefinition(String swinCode, String modifyBy) {
+    public SwinDefinitionDto deactivateSwinDefinition(String swinCode, String modifyBy) {
         log.info("使SWIN定义失效: {}", swinCode);
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
@@ -130,39 +129,45 @@ public class SwinDefinitionAppService {
                 .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
         swinDefinition.deactivate(modifyBy);
         swinDefinitionRepository.save(swinDefinition);
-        return swinDefinition;
+        return toDto(swinDefinition);
     }
 
     /**
      * 根据SWIN代码获取SWIN定义
      *
      * @param swinCode SWIN代码
-     * @return SWIN定义
+     * @return SWIN定义DTO
      */
-    public SwinDefinition getSwinDefinitionBySwinCode(String swinCode) {
-        return swinDefinitionRepository.findBySwinCode(swinCode)
+    public SwinDefinitionDto getSwinDefinitionBySwinCode(String swinCode) {
+        SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode)
                 .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
+        return toDto(swinDefinition);
     }
 
     /**
      * 分页获取SWIN定义列表
      *
-     * @param page            页码
-     * @param size            每页大小
-     * @param includeInactive 是否包含失效的
-     * @return SWIN定义列表
+     * @param query 查询对象
+     * @return SWIN定义DTO列表
      */
-    public List<SwinDefinition> getSwinDefinitions(int page, int size, boolean includeInactive) {
-        return swinDefinitionRepository.findPaginated(page, size, includeInactive);
+    public List<SwinDefinitionDto> listSwinDefinitions(SwinDefinitionQuery query) {
+        boolean includeInactive = Boolean.TRUE.equals(query.getIncludeInactive());
+        return swinDefinitionRepository.findPaginated(query.getPage(), query.getSize(), includeInactive)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
      * 获取所有有效的SWIN定义
      *
-     * @return SWIN定义列表
+     * @return SWIN定义DTO列表
      */
-    public List<SwinDefinition> getAllActiveSwinDefinitions() {
-        return swinDefinitionRepository.findAllActive();
+    public List<SwinDefinitionDto> listAllActiveSwinDefinitions() {
+        return swinDefinitionRepository.findAllActive()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -173,5 +178,61 @@ public class SwinDefinitionAppService {
      */
     public long countSwinDefinitions(boolean includeInactive) {
         return swinDefinitionRepository.count(includeInactive);
+    }
+
+    /**
+     * 领域对象转DTO
+     *
+     * @param swinDefinition 领域对象
+     * @return DTO
+     */
+    private SwinDefinitionDto toDto(SwinDefinition swinDefinition) {
+        if (swinDefinition == null) {
+            return null;
+        }
+        List<SwinManagedSystemDto> managedSystems = null;
+        if (swinDefinition.getManagedSystems() != null) {
+            managedSystems = swinDefinition.getManagedSystems().stream()
+                    .map(this::toManagedSystemDto)
+                    .collect(Collectors.toList());
+        }
+        return SwinDefinitionDto.builder()
+                .id(swinDefinition.getId())
+                .swinCode(swinDefinition.getSwinCode())
+                .schemeCode(swinDefinition.getSchemeCode())
+                .typeRefType(swinDefinition.getTypeRefType())
+                .typeRefCode(swinDefinition.getTypeRefCode())
+                .name(swinDefinition.getName())
+                .nameLocal(swinDefinition.getNameLocal())
+                .description(swinDefinition.getDescription())
+                .version(swinDefinition.getVersion())
+                .status(swinDefinition.getStatus() != null ? swinDefinition.getStatus().name() : null)
+                .createBy(swinDefinition.getCreateBy())
+                .createTime(swinDefinition.getCreateTime())
+                .modifyBy(swinDefinition.getModifyBy())
+                .modifyTime(swinDefinition.getModifyTime())
+                .managedSystems(managedSystems)
+                .build();
+    }
+
+    /**
+     * 管理软件系统领域对象转DTO
+     *
+     * @param swinManagedSystem 领域对象
+     * @return DTO
+     */
+    private SwinManagedSystemDto toManagedSystemDto(SwinManagedSystem swinManagedSystem) {
+        if (swinManagedSystem == null) {
+            return null;
+        }
+        return SwinManagedSystemDto.builder()
+                .id(swinManagedSystem.getId())
+                .swinCode(swinManagedSystem.getSwinCode())
+                .vehicleNodeCode(swinManagedSystem.getVehicleNodeCode())
+                .createBy(swinManagedSystem.getCreateBy())
+                .createTime(swinManagedSystem.getCreateTime())
+                .modifyBy(swinManagedSystem.getModifyBy())
+                .modifyTime(swinManagedSystem.getModifyTime())
+                .build();
     }
 }

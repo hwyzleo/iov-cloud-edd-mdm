@@ -1,12 +1,19 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.mpt;
 
 import lombok.RequiredArgsConstructor;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionPageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionResponse;
+import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SwinDefinitionAssembler;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SwinDefinitionAppService;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
-import org.springframework.http.ResponseEntity;
+import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * SWIN定义管理控制器（MPT）
@@ -19,72 +26,57 @@ import java.util.List;
 public class MptSwinDefinitionController {
 
     private final SwinDefinitionAppService swinDefinitionAppService;
+    private final SwinDefinitionAssembler swinDefinitionAssembler;
 
     @PostMapping("/create")
-    public ResponseEntity<SwinDefinition> createSwinDefinition(@RequestBody CreateSwinDefinitionRequest request) {
-        SwinDefinition swinDefinition = swinDefinitionAppService.createSwinDefinition(
-                request.getSwinCode(), request.getSchemeCode(), request.getTypeRefType(), request.getTypeRefCode(),
-                request.getName(), request.getNameLocal(), request.getDescription(), request.getCreateBy());
-        return ResponseEntity.ok(swinDefinition);
+    public ApiResponse<SwinDefinitionResponse> create(@RequestBody SwinDefinitionCreateCmd cmd) {
+        SwinDefinitionDto dto = swinDefinitionAppService.createSwinDefinition(cmd);
+        return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
     }
 
     @PutMapping("/{swinCode}")
-    public ResponseEntity<SwinDefinition> updateSwinDefinition(@PathVariable String swinCode, @RequestBody UpdateSwinDefinitionRequest request) {
-        SwinDefinition swinDefinition = swinDefinitionAppService.updateSwinDefinition(
-                swinCode, request.getName(), request.getNameLocal(), request.getDescription(), request.getModifyBy());
-        return ResponseEntity.ok(swinDefinition);
+    public ApiResponse<SwinDefinitionResponse> update(@PathVariable String swinCode, @RequestBody SwinDefinitionUpdateCmd cmd) {
+        cmd.setSwinCode(swinCode);
+        SwinDefinitionDto dto = swinDefinitionAppService.updateSwinDefinition(cmd);
+        return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
     }
 
     @DeleteMapping("/{swinCode}")
-    public ResponseEntity<Void> deleteSwinDefinition(@PathVariable String swinCode, @RequestParam String operator) {
+    public ApiResponse<Void> delete(@PathVariable String swinCode, @RequestParam String operator) {
         swinDefinitionAppService.deleteSwinDefinition(swinCode, operator);
-        return ResponseEntity.ok().build();
+        return ApiResponse.ok();
     }
 
     @PostMapping("/{swinCode}/deactivate")
-    public ResponseEntity<SwinDefinition> deactivateSwinDefinition(@PathVariable String swinCode, @RequestParam String modifyBy) {
-        SwinDefinition swinDefinition = swinDefinitionAppService.deactivateSwinDefinition(swinCode, modifyBy);
-        return ResponseEntity.ok(swinDefinition);
+    public ApiResponse<SwinDefinitionResponse> deactivate(@PathVariable String swinCode, @RequestParam String modifyBy) {
+        SwinDefinitionDto dto = swinDefinitionAppService.deactivateSwinDefinition(swinCode, modifyBy);
+        return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
     }
 
     @GetMapping("/{swinCode}")
-    public ResponseEntity<SwinDefinition> getSwinDefinition(@PathVariable String swinCode) {
-        SwinDefinition swinDefinition = swinDefinitionAppService.getSwinDefinitionBySwinCode(swinCode);
-        return ResponseEntity.ok(swinDefinition);
+    public ApiResponse<SwinDefinitionResponse> getBySwinCode(@PathVariable String swinCode) {
+        SwinDefinitionDto dto = swinDefinitionAppService.getSwinDefinitionBySwinCode(swinCode);
+        return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<SwinDefinition>> listSwinDefinitions(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "false") boolean includeInactive) {
-        List<SwinDefinition> swinDefinitions = swinDefinitionAppService.getSwinDefinitions(page, size, includeInactive);
-        return ResponseEntity.ok(swinDefinitions);
+    public ApiResponse<SwinDefinitionPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
+                                                        @RequestParam(defaultValue = "10") Integer size,
+                                                        @RequestParam(required = false) Boolean includeInactive) {
+        SwinDefinitionQuery query = SwinDefinitionQuery.builder()
+                .page(page).size(size).includeInactive(Boolean.TRUE.equals(includeInactive)).build();
+        List<SwinDefinitionDto> definitions = swinDefinitionAppService.listSwinDefinitions(query);
+        long total = swinDefinitionAppService.countSwinDefinitions(Boolean.TRUE.equals(includeInactive));
+        List<SwinDefinitionResponse> rows = definitions.stream()
+                .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
+        return ApiResponse.ok(SwinDefinitionPageResponse.builder().total(total).rows(rows).build());
     }
 
     @GetMapping("/listAll")
-    public ResponseEntity<List<SwinDefinition>> listAllActiveSwinDefinitions() {
-        List<SwinDefinition> swinDefinitions = swinDefinitionAppService.getAllActiveSwinDefinitions();
-        return ResponseEntity.ok(swinDefinitions);
-    }
-
-    @lombok.Data
-    public static class CreateSwinDefinitionRequest {
-        private String swinCode;
-        private String schemeCode;
-        private String typeRefType;
-        private String typeRefCode;
-        private String name;
-        private String nameLocal;
-        private String description;
-        private String createBy;
-    }
-
-    @lombok.Data
-    public static class UpdateSwinDefinitionRequest {
-        private String name;
-        private String nameLocal;
-        private String description;
-        private String modifyBy;
+    public ApiResponse<List<SwinDefinitionResponse>> listAll() {
+        List<SwinDefinitionDto> dtoList = swinDefinitionAppService.listAllActiveSwinDefinitions();
+        List<SwinDefinitionResponse> rows = dtoList.stream()
+                .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
+        return ApiResponse.ok(rows);
     }
 }

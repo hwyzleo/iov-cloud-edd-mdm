@@ -1,13 +1,19 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.mpt;
 
 import lombok.RequiredArgsConstructor;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinSchemePageResponse;
+import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinSchemeResponse;
+import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SwinSchemeAssembler;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinSchemeQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinSchemeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SwinSchemeAppService;
-import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
-import org.springframework.http.ResponseEntity;
+import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * SWIN编码方案管理控制器（MPT）
@@ -20,80 +26,57 @@ import java.util.List;
 public class MptSwinSchemeController {
 
     private final SwinSchemeAppService swinSchemeAppService;
+    private final SwinSchemeAssembler swinSchemeAssembler;
 
     @PostMapping("/create")
-    public ResponseEntity<SwinScheme> createSwinScheme(@RequestBody CreateSwinSchemeRequest request) {
-        SwinScheme swinScheme = swinSchemeAppService.createSwinScheme(
-                request.getCode(), request.getName(), request.getNameLocal(), request.getDescription(),
-                request.getRoute(), request.getSortOrder(), request.getEffectiveFrom(), request.getEffectiveTo(),
-                request.getCreateBy());
-        return ResponseEntity.ok(swinScheme);
+    public ApiResponse<SwinSchemeResponse> create(@RequestBody SwinSchemeCreateCmd cmd) {
+        SwinSchemeDto dto = swinSchemeAppService.createSwinScheme(cmd);
+        return ApiResponse.ok(swinSchemeAssembler.toResponse(dto));
     }
 
     @PutMapping("/{code}")
-    public ResponseEntity<SwinScheme> updateSwinScheme(@PathVariable String code, @RequestBody UpdateSwinSchemeRequest request) {
-        SwinScheme swinScheme = swinSchemeAppService.updateSwinScheme(
-                code, request.getName(), request.getNameLocal(), request.getDescription(),
-                request.getRoute(), request.getSortOrder(), request.getEffectiveFrom(), request.getEffectiveTo(),
-                request.getModifyBy());
-        return ResponseEntity.ok(swinScheme);
+    public ApiResponse<SwinSchemeResponse> update(@PathVariable String code, @RequestBody SwinSchemeUpdateCmd cmd) {
+        cmd.setCode(code);
+        SwinSchemeDto dto = swinSchemeAppService.updateSwinScheme(cmd);
+        return ApiResponse.ok(swinSchemeAssembler.toResponse(dto));
     }
 
     @DeleteMapping("/{code}")
-    public ResponseEntity<Void> deleteSwinScheme(@PathVariable String code, @RequestParam String operator) {
+    public ApiResponse<Void> delete(@PathVariable String code, @RequestParam String operator) {
         swinSchemeAppService.deleteSwinScheme(code, operator);
-        return ResponseEntity.ok().build();
+        return ApiResponse.ok();
     }
 
     @PostMapping("/{code}/deactivate")
-    public ResponseEntity<SwinScheme> deactivateSwinScheme(@PathVariable String code, @RequestParam String modifyBy) {
-        SwinScheme swinScheme = swinSchemeAppService.deactivateSwinScheme(code, modifyBy);
-        return ResponseEntity.ok(swinScheme);
+    public ApiResponse<SwinSchemeResponse> deactivate(@PathVariable String code, @RequestParam String modifyBy) {
+        SwinSchemeDto dto = swinSchemeAppService.deactivateSwinScheme(code, modifyBy);
+        return ApiResponse.ok(swinSchemeAssembler.toResponse(dto));
     }
 
     @GetMapping("/{code}")
-    public ResponseEntity<SwinScheme> getSwinScheme(@PathVariable String code) {
-        SwinScheme swinScheme = swinSchemeAppService.getSwinSchemeByCode(code);
-        return ResponseEntity.ok(swinScheme);
+    public ApiResponse<SwinSchemeResponse> getByCode(@PathVariable String code) {
+        SwinSchemeDto dto = swinSchemeAppService.getSwinSchemeByCode(code);
+        return ApiResponse.ok(swinSchemeAssembler.toResponse(dto));
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<SwinScheme>> listSwinSchemes(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "false") boolean includeInactive) {
-        List<SwinScheme> swinSchemes = swinSchemeAppService.getSwinSchemes(page, size, includeInactive);
-        return ResponseEntity.ok(swinSchemes);
+    public ApiResponse<SwinSchemePageResponse> list(@RequestParam(defaultValue = "1") Integer page,
+                                                    @RequestParam(defaultValue = "10") Integer size,
+                                                    @RequestParam(required = false) Boolean includeInactive) {
+        SwinSchemeQuery query = SwinSchemeQuery.builder()
+                .page(page).size(size).includeInactive(Boolean.TRUE.equals(includeInactive)).build();
+        List<SwinSchemeDto> schemes = swinSchemeAppService.listSwinSchemes(query);
+        long total = swinSchemeAppService.countSwinSchemes(Boolean.TRUE.equals(includeInactive));
+        List<SwinSchemeResponse> rows = schemes.stream()
+                .map(swinSchemeAssembler::toResponse).collect(Collectors.toList());
+        return ApiResponse.ok(SwinSchemePageResponse.builder().total(total).rows(rows).build());
     }
 
     @GetMapping("/listAll")
-    public ResponseEntity<List<SwinScheme>> listAllActiveSwinSchemes() {
-        List<SwinScheme> swinSchemes = swinSchemeAppService.getAllActiveSwinSchemes();
-        return ResponseEntity.ok(swinSchemes);
-    }
-
-    @lombok.Data
-    public static class CreateSwinSchemeRequest {
-        private String code;
-        private String name;
-        private String nameLocal;
-        private String description;
-        private String route;
-        private Integer sortOrder;
-        private Date effectiveFrom;
-        private Date effectiveTo;
-        private String createBy;
-    }
-
-    @lombok.Data
-    public static class UpdateSwinSchemeRequest {
-        private String name;
-        private String nameLocal;
-        private String description;
-        private String route;
-        private Integer sortOrder;
-        private Date effectiveFrom;
-        private Date effectiveTo;
-        private String modifyBy;
+    public ApiResponse<List<SwinSchemeResponse>> listAll() {
+        List<SwinSchemeDto> dtoList = swinSchemeAppService.listAllActiveSwinSchemes();
+        List<SwinSchemeResponse> rows = dtoList.stream()
+                .map(swinSchemeAssembler::toResponse).collect(Collectors.toList());
+        return ApiResponse.ok(rows);
     }
 }
