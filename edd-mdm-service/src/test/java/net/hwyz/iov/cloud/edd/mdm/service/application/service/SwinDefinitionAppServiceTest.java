@@ -307,7 +307,7 @@ class SwinDefinitionAppServiceTest {
     }
 
     private SwinScheme createActiveScheme(SwinRoute route) {
-        return SwinScheme.create("SCHEME001", "Test Scheme", null, null, route, 0, null, null, "testUser");
+        return SwinScheme.create("SCHEME001", "Test Scheme", null, null, route, null, null, 0, null, null, "testUser");
     }
 
     private SwinDefinition createTestDefinition() {
