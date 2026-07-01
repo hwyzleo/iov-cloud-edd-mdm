@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS `mdm_eead_swin_scheme` (
     `row_valid`           TINYINT      NOT NULL DEFAULT 1 COMMENT '行有效标记：1-有效，0-无效',
     PRIMARY KEY (`id`),
     UNIQUE KEY `UK_SWIN_SCHEME_CODE` (`code`),
-    KEY `IDX_SWIN_SCHEME_STATUS` (`status`),
-    KEY `IDX_SWIN_SCHEME_SORT` (`sort_order`)
+    KEY `idx_ss_status` (`status`),
+    KEY `idx_ss_sort` (`sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SWIN编码方案字典表（EEAD 子域）';
 
 -- ============================================================
@@ -62,9 +62,10 @@ CREATE TABLE IF NOT EXISTS `mdm_eead_swin_scheme_history` (
     `modify_time`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `row_version`         INT          NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `row_valid`           TINYINT      NOT NULL DEFAULT 1 COMMENT '行有效标记：1-有效，0-无效',
+    `force_delete`        TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '物理删除标记：1-是，0-否',
     PRIMARY KEY (`snapshot_id`),
-    KEY `IDX_SSH_ENTITY_ID` (`entity_id`),
-    KEY `IDX_SSH_CODE_VERSION` (`code`, `version`)
+    KEY `idx_ssh_entity_id` (`entity_id`),
+    KEY `idx_ssh_code_version` (`code`, `version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SWIN编码方案历史快照表（EEAD 子域）';
 
 -- ============================================================
@@ -89,9 +90,9 @@ CREATE TABLE IF NOT EXISTS `mdm_eead_swin_definition` (
     `row_valid`           TINYINT      NOT NULL DEFAULT 1 COMMENT '行有效标记：1-有效，0-无效',
     PRIMARY KEY (`id`),
     UNIQUE KEY `UK_SWIN_DEF_SWIN_CODE` (`swin_code`),
-    KEY `IDX_SWIN_DEF_SCHEME` (`scheme_code`),
-    KEY `IDX_SWIN_DEF_TYPE_REF` (`type_ref_type`, `type_ref_code`),
-    KEY `IDX_SWIN_DEF_STATUS` (`status`)
+    KEY `idx_sd_scheme` (`scheme_code`),
+    KEY `idx_sd_type_ref` (`type_ref_type`, `type_ref_code`),
+    KEY `idx_sd_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SWIN定义表（EEAD 子域）';
 
 -- ============================================================
@@ -119,9 +120,10 @@ CREATE TABLE IF NOT EXISTS `mdm_eead_swin_definition_history` (
     `modify_time`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `row_version`         INT          NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     `row_valid`           TINYINT      NOT NULL DEFAULT 1 COMMENT '行有效标记：1-有效，0-无效',
+    `force_delete`        TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '物理删除标记：1-是，0-否',
     PRIMARY KEY (`snapshot_id`),
-    KEY `IDX_SDH_ENTITY_ID` (`entity_id`),
-    KEY `IDX_SDH_SWIN_CODE_VERSION` (`swin_code`, `version`)
+    KEY `idx_sdh_entity_id` (`entity_id`),
+    KEY `idx_sdh_swin_code_version` (`swin_code`, `version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SWIN定义历史快照表（EEAD 子域）';
 
 -- ============================================================
@@ -139,8 +141,8 @@ CREATE TABLE IF NOT EXISTS `mdm_eead_swin_managed_system` (
     `row_valid`           TINYINT      NOT NULL DEFAULT 1 COMMENT '行有效标记：1-有效，0-无效',
     PRIMARY KEY (`id`),
     UNIQUE KEY `UK_SWIN_MS_SWIN_NODE` (`swin_code`, `vehicle_node_code`),
-    KEY `IDX_SWIN_MS_NODE` (`vehicle_node_code`),
-    KEY `IDX_SWIN_MS_SWIN` (`swin_code`)
+    KEY `idx_sms_node` (`vehicle_node_code`),
+    KEY `idx_sms_swin` (`swin_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SWIN管理软件系统清单表（EEAD 子域）';
 
 -- ============================================================
