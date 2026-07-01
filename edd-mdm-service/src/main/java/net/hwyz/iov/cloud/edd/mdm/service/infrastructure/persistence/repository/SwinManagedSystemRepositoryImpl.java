@@ -49,6 +49,13 @@ public class SwinManagedSystemRepositoryImpl implements SwinManagedSystemReposit
     }
 
     @Override
+    public long countBySwinCode(String swinCode) {
+        LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SwinManagedSystemPo::getCode, swinCode);
+        return swinManagedSystemMapper.selectCount(wrapper);
+    }
+
+    @Override
     public long countByVehicleNodeCode(String vehicleNodeCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SwinManagedSystemPo::getName, vehicleNodeCode);

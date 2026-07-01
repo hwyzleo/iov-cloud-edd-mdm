@@ -9,6 +9,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.NodeType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OtaSupportType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VehicleNodeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VehiclePartReferenceCheckResult;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,8 @@ class VehicleNodeDeletionDomainServiceTest {
 
     @Mock
     private VehicleNodeRepository vehicleNodeRepository;
+    @Mock
+    private SwinManagedSystemRepository swinManagedSystemRepository;
 
     @Mock
     private VehiclePartReverseLookupGateway vehiclePartReverseLookupGateway;
@@ -44,7 +47,7 @@ class VehicleNodeDeletionDomainServiceTest {
 
     @BeforeEach
     void setUp() {
-        domainService = new VehicleNodeDeletionDomainService(vehicleNodeRepository, vehiclePartReverseLookupGateway);
+        domainService = new VehicleNodeDeletionDomainService(vehicleNodeRepository, swinManagedSystemRepository, vehiclePartReverseLookupGateway);
     }
 
     @Nested
@@ -98,6 +101,7 @@ class VehicleNodeDeletionDomainServiceTest {
         @DisplayName("反查无引用 - 删除成功")
         void checkAndDelete_noReference_deleteSuccess() {
             VehicleNode node = createTestNode(VehicleNodeStatus.ACTIVE);
+            when(swinManagedSystemRepository.countByVehicleNodeCode("TBOX")).thenReturn(0L);
             VehiclePartReferenceCheckResult result = VehiclePartReferenceCheckResult.builder()
                     .referenceCount(0)
                     .samples(Collections.emptyList())
@@ -114,6 +118,7 @@ class VehicleNodeDeletionDomainServiceTest {
         @DisplayName("反查有引用 - 抛出 VehicleNodeHasDownstreamRefException")
         void checkAndDelete_hasReference_throwsException() {
             VehicleNode node = createTestNode(VehicleNodeStatus.ACTIVE);
+            when(swinManagedSystemRepository.countByVehicleNodeCode("TBOX")).thenReturn(0L);
             VehiclePartReferenceCheckResult result = VehiclePartReferenceCheckResult.builder()
                     .referenceCount(5)
                     .referencingService("VMD")
@@ -136,6 +141,7 @@ class VehicleNodeDeletionDomainServiceTest {
         @DisplayName("反查不可用 - 抛出 VmdServiceUnavailableException")
         void checkAndDelete_unavailable_throwsException() {
             VehicleNode node = createTestNode(VehicleNodeStatus.ACTIVE);
+            when(swinManagedSystemRepository.countByVehicleNodeCode("TBOX")).thenReturn(0L);
             VehiclePartReferenceCheckResult result = VehiclePartReferenceCheckResult.unavailable("VMD");
             when(vehiclePartReverseLookupGateway.checkReferences("TBOX", 10)).thenReturn(result);
 
