@@ -47,6 +47,6 @@ class NodeTypeTest {
     @Test
     @DisplayName("valueOf null 抛出异常")
     void valueOf_null_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> NodeType.valueOf(null));
+        assertThrows(NullPointerException.class, () -> NodeType.valueOf(null));
     }
 }
