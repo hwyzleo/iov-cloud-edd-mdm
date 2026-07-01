@@ -42,14 +42,14 @@ public class MptSwinSchemeController {
     }
 
     @DeleteMapping("/{code}")
-    public ApiResponse<Void> delete(@PathVariable String code, @RequestParam(required = false) String operator) {
-        swinSchemeAppService.deleteSwinScheme(code, operator);
+    public ApiResponse<Void> delete(@PathVariable String code) {
+        swinSchemeAppService.deleteSwinScheme(code, null);
         return ApiResponse.ok();
     }
 
     @PostMapping("/{code}/deactivate")
-    public ApiResponse<SwinSchemeResponse> deactivate(@PathVariable String code, @RequestParam(required = false) String modifyBy) {
-        SwinSchemeDto dto = swinSchemeAppService.deactivateSwinScheme(code, modifyBy);
+    public ApiResponse<SwinSchemeResponse> deactivate(@PathVariable String code) {
+        SwinSchemeDto dto = swinSchemeAppService.deactivateSwinScheme(code, null);
         return ApiResponse.ok(swinSchemeAssembler.toResponse(dto));
     }
 
