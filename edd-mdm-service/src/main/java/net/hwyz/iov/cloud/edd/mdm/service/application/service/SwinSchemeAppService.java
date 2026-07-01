@@ -51,8 +51,8 @@ public class SwinSchemeAppService {
         }
         SwinRoute swinRoute = SwinRoute.fromValue(cmd.getRoute());
         SwinScheme swinScheme = SwinScheme.create(cmd.getCode(), cmd.getName(), cmd.getNameLocal(),
-                cmd.getDescription(), swinRoute, cmd.getSortOrder(), cmd.getEffectiveFrom(),
-                cmd.getEffectiveTo(), createBy);
+                cmd.getDescription(), swinRoute, cmd.getStructurePattern(), cmd.getVersionFormat(),
+                cmd.getSortOrder(), cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
         swinSchemeRepository.save(swinScheme);
         return toDto(swinScheme);
     }
@@ -74,7 +74,8 @@ public class SwinSchemeAppService {
         }
         SwinRoute swinRoute = SwinRoute.fromValue(cmd.getRoute());
         swinScheme.update(cmd.getName(), cmd.getNameLocal(), cmd.getDescription(), swinRoute,
-                cmd.getSortOrder(), cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
+                cmd.getStructurePattern(), cmd.getVersionFormat(), cmd.getSortOrder(),
+                cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
         swinSchemeRepository.save(swinScheme);
         return toDto(swinScheme);
     }
@@ -186,6 +187,8 @@ public class SwinSchemeAppService {
                 .nameLocal(swinScheme.getNameLocal())
                 .description(swinScheme.getDescription())
                 .route(swinScheme.getRoute() != null ? swinScheme.getRoute().name() : null)
+                .structurePattern(swinScheme.getStructurePattern())
+                .versionFormat(swinScheme.getVersionFormat())
                 .sortOrder(swinScheme.getSortOrder())
                 .source(swinScheme.getSource())
                 .externalRefId(swinScheme.getExternalRefId())

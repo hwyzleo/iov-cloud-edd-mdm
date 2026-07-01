@@ -23,6 +23,8 @@ public class SwinSchemeDto {
     private String nameLocal;
     private String description;
     private String route;
+    private String structurePattern;
+    private String versionFormat;
     private Integer sortOrder;
     private String source;
     private String externalRefId;

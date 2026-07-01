@@ -28,6 +28,8 @@ public class SwinScheme {
     private String nameLocal;
     private String description;
     private SwinRoute route;
+    private String structurePattern;
+    private String versionFormat;
     private Integer sortOrder;
     private String source;
     private String externalRefId;
@@ -47,19 +49,22 @@ public class SwinScheme {
     /**
      * 创建新的SWIN编码方案
      *
-     * @param code          业务主键
-     * @param name          名称
-     * @param nameLocal     本地化名称
-     * @param description   描述
-     * @param route         路由类型
-     * @param sortOrder     排序序号
-     * @param effectiveFrom 生效开始时间
-     * @param effectiveTo   生效结束时间
-     * @param createBy      创建人
+     * @param code              业务主键
+     * @param name              名称
+     * @param nameLocal         本地化名称
+     * @param description       描述
+     * @param route             路由类型
+     * @param structurePattern  编码结构/格式模板或正则
+     * @param versionFormat     版本号格式说明
+     * @param sortOrder         排序序号
+     * @param effectiveFrom     生效开始时间
+     * @param effectiveTo       生效结束时间
+     * @param createBy          创建人
      * @return 新创建的SwinScheme实例
      */
     public static SwinScheme create(String code, String name, String nameLocal, String description,
-                                     SwinRoute route, Integer sortOrder, Date effectiveFrom, Date effectiveTo, String createBy) {
+                                     SwinRoute route, String structurePattern, String versionFormat,
+                                     Integer sortOrder, Date effectiveFrom, Date effectiveTo, String createBy) {
         validateEffectiveDate(effectiveFrom, effectiveTo);
         if (route == null) {
             throw new IllegalArgumentException("路由类型不能为空");
@@ -67,7 +72,7 @@ public class SwinScheme {
         Date now = new Date();
         return SwinScheme.builder()
                 .code(code).name(name).nameLocal(nameLocal).description(description)
-                .route(route)
+                .route(route).structurePattern(structurePattern).versionFormat(versionFormat)
                 .sortOrder(sortOrder != null ? sortOrder : 0)
                 .source("MANUAL").externalRefId(null).externalVersion(null).lastSyncTime(now)
                 .version(1).effectiveFrom(effectiveFrom).effectiveTo(effectiveTo)
@@ -81,17 +86,20 @@ public class SwinScheme {
     /**
      * 更新SWIN编码方案
      *
-     * @param name          名称
-     * @param nameLocal     本地化名称
-     * @param description   描述
-     * @param route         路由类型
-     * @param sortOrder     排序序号
-     * @param effectiveFrom 生效开始时间
-     * @param effectiveTo   生效结束时间
-     * @param modifyBy      修改人
+     * @param name              名称
+     * @param nameLocal         本地化名称
+     * @param description       描述
+     * @param route             路由类型
+     * @param structurePattern  编码结构/格式模板或正则
+     * @param versionFormat     版本号格式说明
+     * @param sortOrder         排序序号
+     * @param effectiveFrom     生效开始时间
+     * @param effectiveTo       生效结束时间
+     * @param modifyBy          修改人
      */
     public void update(String name, String nameLocal, String description, SwinRoute route,
-                       Integer sortOrder, Date effectiveFrom, Date effectiveTo, String modifyBy) {
+                       String structurePattern, String versionFormat, Integer sortOrder,
+                       Date effectiveFrom, Date effectiveTo, String modifyBy) {
         validateEffectiveDate(effectiveFrom, effectiveTo);
         if (route == null) {
             throw new IllegalArgumentException("路由类型不能为空");
@@ -100,6 +108,8 @@ public class SwinScheme {
         this.nameLocal = nameLocal;
         this.description = description;
         this.route = route;
+        this.structurePattern = structurePattern;
+        this.versionFormat = versionFormat;
         if (sortOrder != null) {
             this.sortOrder = sortOrder;
         }
