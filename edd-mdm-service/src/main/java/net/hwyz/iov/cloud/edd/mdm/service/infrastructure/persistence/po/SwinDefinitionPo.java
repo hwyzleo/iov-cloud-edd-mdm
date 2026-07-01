@@ -25,20 +25,13 @@ public class SwinDefinitionPo {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String swinCode;
-    private String name;
-    private String nameLocal;
-    private String description;
     private String schemeCode;
     private String typeRefType;
     private String typeRefCode;
-    private Integer sortOrder;
-    private String source;
-    private String externalRefId;
-    private Long externalVersion;
-    private Date lastSyncTime;
+    private String name;
+    private String nameLocal;
+    private String description;
     private Integer version;
-    private Date effectiveFrom;
-    private Date effectiveTo;
     private String status;
     private String createBy;
     private Date createTime;

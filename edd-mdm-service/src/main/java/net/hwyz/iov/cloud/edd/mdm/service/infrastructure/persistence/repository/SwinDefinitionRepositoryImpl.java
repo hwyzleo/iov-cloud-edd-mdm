@@ -70,7 +70,7 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
     public List<SwinDefinition> findAllActive() {
         LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
-        wrapper.orderByAsc(SwinDefinitionPo::getSortOrder);
+        wrapper.orderByAsc(SwinDefinitionPo::getId);
         return swinDefinitionMapper.selectList(wrapper).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
@@ -80,7 +80,7 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
         if (!includeInactive) {
             wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
         }
-        wrapper.orderByAsc(SwinDefinitionPo::getSortOrder);
+        wrapper.orderByAsc(SwinDefinitionPo::getId);
         return swinDefinitionMapper.selectPage(new Page<>(page, size), wrapper).getRecords().stream()
                 .map(this::toDomain).collect(Collectors.toList());
     }
@@ -106,7 +106,7 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
         LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
         wrapper.eq(SwinDefinitionPo::getSchemeCode, schemeCode);
-        wrapper.orderByAsc(SwinDefinitionPo::getSortOrder);
+        wrapper.orderByAsc(SwinDefinitionPo::getId);
         return swinDefinitionMapper.selectList(wrapper).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
@@ -116,18 +116,16 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
         wrapper.eq(SwinDefinitionPo::getStatus, "ACTIVE");
         wrapper.eq(SwinDefinitionPo::getTypeRefType, typeRefType);
         wrapper.eq(SwinDefinitionPo::getTypeRefCode, typeRefCode);
-        wrapper.orderByAsc(SwinDefinitionPo::getSortOrder);
         return swinDefinitionMapper.selectList(wrapper).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     private SwinDefinitionPo toPo(SwinDefinition domain) {
         return SwinDefinitionPo.builder()
-                .id(domain.getId()).swinCode(domain.getSwinCode()).name(domain.getName())
-                .nameLocal(domain.getNameLocal()).description(domain.getDescription())
+                .id(domain.getId()).swinCode(domain.getSwinCode())
                 .schemeCode(domain.getSchemeCode())
                 .typeRefType(domain.getTypeRefType())
                 .typeRefCode(domain.getTypeRefCode())
-                .sortOrder(0).source("MANUAL")
+                .name(domain.getName()).nameLocal(domain.getNameLocal()).description(domain.getDescription())
                 .version(domain.getVersion()).status(domain.getStatus().name())
                 .createBy(domain.getCreateBy()).createTime(domain.getCreateTime())
                 .modifyBy(domain.getModifyBy()).modifyTime(domain.getModifyTime())
