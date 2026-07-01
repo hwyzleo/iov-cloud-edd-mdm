@@ -37,6 +37,14 @@ public interface SwinManagedSystemRepository {
     boolean existsBySwinCodeAndVehicleNodeCode(String swinCode, String vehicleNodeCode);
 
     /**
+     * 根据SWIN代码统计引用数
+     *
+     * @param swinCode SWIN代码
+     * @return 引用数
+     */
+    long countBySwinCode(String swinCode);
+
+    /**
      * 根据车载节点代码统计引用数
      *
      * @param vehicleNodeCode 车载节点代码

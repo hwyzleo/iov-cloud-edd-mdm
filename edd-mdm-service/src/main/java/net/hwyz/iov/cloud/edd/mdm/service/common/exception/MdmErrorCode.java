@@ -66,6 +66,9 @@ public enum MdmErrorCode implements ErrorCode {
     // EEAD子域 - SWIN管理软件系统相关 (812319-812320)
     SWIN_MANAGED_SYSTEM_DUPLICATE("812319", "同一SWIN定义下已存在相同的车载节点"),
     SWIN_MANAGED_SYSTEM_VEHICLE_NODE_NOT_ACTIVE("812320", "关联的车载节点非 ACTIVE 状态"),
+    VEHICLE_NODE_HAS_SWIN_REF("812321", "车载节点被SWIN管理软件系统引用，删除被拒绝"),
+    VARIANT_HAS_SWIN_REF("812322", "版本被SWIN定义引用，删除被拒绝"),
+    MODEL_HAS_SWIN_REF("812323", "车型被SWIN定义引用，删除被拒绝"),
 
     // ==================== Org 子域 (8125XX) ====================
     PLANT_NOT_EXIST("812501", "工厂不存在"),

@@ -3,11 +3,13 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeHasDownstreamRefException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeHasSwinRefException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.VmdServiceUnavailableException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.gateway.VehiclePartReverseLookupGateway;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VehicleNodeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VehiclePartReferenceCheckResult;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,7 @@ public class VehicleNodeDeletionDomainService {
     private static final int SAMPLE_LIMIT = 10;
 
     private final VehicleNodeRepository vehicleNodeRepository;
+    private final SwinManagedSystemRepository swinManagedSystemRepository;
     private final VehiclePartReverseLookupGateway vehiclePartReverseLookupGateway;
 
     /**
@@ -59,6 +62,13 @@ public class VehicleNodeDeletionDomainService {
                     node.getNodeCode(), node.getStatus(), operator);
             doDelete(node, operator, true);
             return;
+        }
+
+        long swinRefCount = swinManagedSystemRepository.countByVehicleNodeCode(node.getNodeCode());
+        if (swinRefCount > 0) {
+            log.warn("VehicleNode 删除：存在SWIN引用，拒绝 nodeCode={} swinRefCount={} operator={}",
+                    node.getNodeCode(), swinRefCount, operator);
+            throw new VehicleNodeHasSwinRefException(node.getNodeCode(), swinRefCount);
         }
 
         VehiclePartReferenceCheckResult result =
