@@ -5,10 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
- * SWIN管理的软件系统值对象（EEAD 子域）
+ * SWIN管理软件系统实体（EEAD 子域）
  * <p>
- * 记录SWIN定义管理的软件系统清单。
+ * 描述一个SWIN定义下管理的车载节点清单。
  *
  * @author hwyz_leo
  */
@@ -19,10 +21,36 @@ import lombok.NoArgsConstructor;
 public class SwinManagedSystem {
 
     private Long id;
-    private Long swinDefinitionId;
+    private String swinCode;
     private String vehicleNodeCode;
-    private String softwareComponentCode;
-    private String description;
     private String createBy;
-    private java.util.Date createTime;
+    private Date createTime;
+    private String modifyBy;
+    private Date modifyTime;
+    private Integer rowVersion;
+    private Boolean rowValid;
+
+    /**
+     * 创建新的管理软件系统
+     *
+     * @param swinCode        SWIN定义代码
+     * @param vehicleNodeCode 车载节点代码
+     * @param createBy        创建人
+     * @return 新创建的SwinManagedSystem实例
+     */
+    public static SwinManagedSystem create(String swinCode, String vehicleNodeCode, String createBy) {
+        if (swinCode == null || swinCode.isBlank()) {
+            throw new IllegalArgumentException("SWIN代码不能为空");
+        }
+        if (vehicleNodeCode == null || vehicleNodeCode.isBlank()) {
+            throw new IllegalArgumentException("车载节点代码不能为空");
+        }
+        Date now = new Date();
+        return SwinManagedSystem.builder()
+                .swinCode(swinCode).vehicleNodeCode(vehicleNodeCode)
+                .createBy(createBy).createTime(now)
+                .modifyBy(createBy).modifyTime(now)
+                .rowVersion(0).rowValid(true)
+                .build();
+    }
 }
