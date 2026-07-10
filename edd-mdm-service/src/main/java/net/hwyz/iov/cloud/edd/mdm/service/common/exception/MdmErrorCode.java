@@ -70,6 +70,13 @@ public enum MdmErrorCode implements ErrorCode {
     VARIANT_HAS_SWIN_REF("812322", "版本被SWIN定义引用，删除被拒绝"),
     MODEL_HAS_SWIN_REF("812323", "车型被SWIN定义引用，删除被拒绝"),
 
+    // EEAD子域 - RXSWIN登记相关 (812324-812328)
+    RXSWIN_MANIFEST_CONFLICT("812324", "同manifestCode的swinCode、manifestDigest或softwareBaselineCode冲突"),
+    RXSWIN_REGISTRY_NOT_EXIST("812325", "RXSWIN登记记录不存在"),
+    RXSWIN_BASELINE_NOT_EXIST("812326", "softwareBaselineCode对应的软件基线不存在"),
+    RXSWIN_SEQ_OVERFLOW("812327", "RXSWIN 16位十进制序列溢出"),
+    RXSWIN_SWIN_NOT_ACTIVE("812328", "登记引用的swinCode对应TypeSwinDefinition存在但非ACTIVE"),
+
     // ==================== Org 子域 (8125XX) ====================
     PLANT_NOT_EXIST("812501", "工厂不存在"),
     PLANT_CODE_EXIST("812502", "工厂 code 已存在"),

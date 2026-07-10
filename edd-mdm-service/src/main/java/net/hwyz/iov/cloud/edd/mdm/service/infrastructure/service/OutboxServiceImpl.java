@@ -17,6 +17,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategor
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.RxswinRegistry;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -61,6 +62,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpd
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -735,5 +737,19 @@ public class OutboxServiceImpl implements OutboxService {
                 .build();
         outboxRepository.saveSoftwareBaselineDeletedEvent(event);
         log.info("发布软件基线删除事件: {} forceDelete={}", baseline.getCode(), forceDelete);
+    }
+
+    @Override
+    public void publishRxswinRegistryCreatedEvent(RxswinRegistry rxswinRegistry) {
+        RxswinRegistryCreatedEvent event = RxswinRegistryCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("RxswinRegistryCreated")
+                .occurredAt(new Date())
+                .entityId(rxswinRegistry.getManifestCode())
+                .version(rxswinRegistry.getVersion())
+                .payload(rxswinRegistry)
+                .build();
+        outboxRepository.saveRxswinRegistryCreatedEvent(event);
+        log.info("发布RXSWIN登记创建事件: {}", rxswinRegistry.getManifestCode());
     }
 }

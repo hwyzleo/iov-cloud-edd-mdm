@@ -14,6 +14,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategor
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.RxswinRegistry;
 
 /**
  * 事件发件箱服务端口
@@ -335,4 +336,11 @@ public interface OutboxService {
      * @param forceDelete 是否 force 旁路删除
      */
     void publishSoftwareBaselineDeletedEvent(SoftwareBaseline baseline, boolean forceDelete);
+
+    /**
+     * 发布RXSWIN登记创建事件（EEAD 子域）
+     *
+     * @param rxswinRegistry RXSWIN登记聚合根
+     */
+    void publishRxswinRegistryCreatedEvent(RxswinRegistry rxswinRegistry);
 }

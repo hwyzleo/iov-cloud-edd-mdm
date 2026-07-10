@@ -44,6 +44,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpd
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
 
 import java.util.List;
 
@@ -383,4 +384,11 @@ public interface OutboxRepository {
      * @param eventId 事件ID
      */
     void incrementRetryCount(String eventId);
+
+    /**
+     * 保存RXSWIN登记创建事件
+     *
+     * @param event RXSWIN登记创建事件
+     */
+    void saveRxswinRegistryCreatedEvent(RxswinRegistryCreatedEvent event);
 }

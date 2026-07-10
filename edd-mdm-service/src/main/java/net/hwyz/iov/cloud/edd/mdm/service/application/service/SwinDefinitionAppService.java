@@ -19,6 +19,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinRoute;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ public class SwinDefinitionAppService {
 
     private final SwinDefinitionRepository swinDefinitionRepository;
     private final SwinSchemeRepository swinSchemeRepository;
+    private final SwinDefinitionDeletionDomainService swinDefinitionDeletionDomainService;
 
     /**
      * 创建SWIN定义
@@ -108,6 +110,7 @@ public class SwinDefinitionAppService {
         }
         SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode)
                 .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
+        swinDefinitionDeletionDomainService.checkCanDelete(swinCode);
         swinDefinition.markAsDeleting(operator);
         swinDefinitionRepository.deleteBySwinCode(swinCode);
     }
