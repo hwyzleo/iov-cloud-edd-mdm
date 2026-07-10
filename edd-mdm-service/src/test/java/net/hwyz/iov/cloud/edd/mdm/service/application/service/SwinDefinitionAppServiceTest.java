@@ -16,6 +16,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinRoute;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,12 +44,14 @@ class SwinDefinitionAppServiceTest {
     private SwinDefinitionRepository swinDefinitionRepository;
     @Mock
     private SwinSchemeRepository swinSchemeRepository;
+    @Mock
+    private SwinDefinitionDeletionDomainService swinDefinitionDeletionDomainService;
 
     private SwinDefinitionAppService swinDefinitionAppService;
 
     @BeforeEach
     void setUp() {
-        swinDefinitionAppService = new SwinDefinitionAppService(swinDefinitionRepository, swinSchemeRepository);
+        swinDefinitionAppService = new SwinDefinitionAppService(swinDefinitionRepository, swinSchemeRepository, swinDefinitionDeletionDomainService);
     }
 
     @Nested
