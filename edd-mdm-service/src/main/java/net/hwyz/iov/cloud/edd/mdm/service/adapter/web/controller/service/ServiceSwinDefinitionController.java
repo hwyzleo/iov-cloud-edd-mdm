@@ -71,4 +71,12 @@ public class ServiceSwinDefinitionController implements SwinDefinitionService {
         return dtoList.stream()
                 .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
     }
+
+    @Override
+    @GetMapping("/listByNode/{vehicleNodeCode}")
+    public List<SwinDefinitionResponse> listByNode(@PathVariable String vehicleNodeCode) {
+        List<SwinDefinitionDto> dtoList = swinDefinitionAppService.listSwinDefinitionsByVehicleNodeCode(vehicleNodeCode);
+        return dtoList.stream()
+                .map(swinDefinitionAssembler::toResponse).collect(Collectors.toList());
+    }
 }

@@ -17,10 +17,10 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SwinSchemeUpdatedEvent {
-    private String code;
-    private String name;
-    private String route;
+    private String eventId;
+    private String eventType;
+    private Date occurredAt;
+    private String entityId;
     private Integer version;
-    private String operator;
-    private Date eventTime;
+    private Object payload;
 }

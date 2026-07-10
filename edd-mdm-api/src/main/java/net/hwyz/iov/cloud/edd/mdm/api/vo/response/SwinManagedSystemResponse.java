@@ -20,6 +20,8 @@ public class SwinManagedSystemResponse {
     private Long id;
     private String swinCode;
     private String vehicleNodeCode;
+    private Boolean isTypeApprovalRelevant;
+    private String approvedSoftwareBaseline;
     private String createBy;
     private Date createTime;
     private String modifyBy;

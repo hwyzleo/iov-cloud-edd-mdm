@@ -51,6 +51,12 @@ public class SwinDefinitionServiceFallbackFactory implements FallbackFactory<Swi
                 log.error("SWIN定义服务根据typeRefType[{}]和typeRefCode[{}]获取SWIN定义列表调用失败", typeRefType, typeRefCode, throwable);
                 return Collections.emptyList();
             }
+
+            @Override
+            public List<SwinDefinitionResponse> listByNode(String vehicleNodeCode) {
+                log.error("SWIN定义服务根据vehicleNodeCode[{}]获取SWIN定义列表调用失败", vehicleNodeCode, throwable);
+                return Collections.emptyList();
+            }
         };
     }
 }

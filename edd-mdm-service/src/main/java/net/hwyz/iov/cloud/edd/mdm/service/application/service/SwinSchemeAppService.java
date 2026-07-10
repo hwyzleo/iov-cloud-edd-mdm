@@ -6,6 +6,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeCreateCm
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinSchemeQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinSchemeDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeDuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeHasReferenceException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeNotExistException;
@@ -32,6 +33,7 @@ public class SwinSchemeAppService {
 
     private final SwinSchemeRepository swinSchemeRepository;
     private final SwinDefinitionRepository swinDefinitionRepository;
+    private final OutboxService outboxService;
 
     /**
      * 创建SWIN编码方案
@@ -54,6 +56,7 @@ public class SwinSchemeAppService {
                 cmd.getDescription(), swinRoute, cmd.getStructurePattern(), cmd.getVersionFormat(),
                 cmd.getSortOrder(), cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
         swinSchemeRepository.save(swinScheme);
+        outboxService.publishSwinSchemeCreatedEvent(swinScheme);
         return toDto(swinScheme);
     }
 
@@ -77,6 +80,7 @@ public class SwinSchemeAppService {
                 cmd.getStructurePattern(), cmd.getVersionFormat(), cmd.getSortOrder(),
                 cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
         swinSchemeRepository.save(swinScheme);
+        outboxService.publishSwinSchemeUpdatedEvent(swinScheme);
         return toDto(swinScheme);
     }
 
@@ -99,6 +103,7 @@ public class SwinSchemeAppService {
             throw new SwinSchemeHasReferenceException(code, referenceCount);
         }
         swinScheme.markAsDeleting(operator);
+        outboxService.publishSwinSchemeDeletedEvent(swinScheme);
         swinSchemeRepository.deleteByCode(code);
     }
 
@@ -119,6 +124,7 @@ public class SwinSchemeAppService {
                 .orElseThrow(() -> new SwinSchemeNotExistException(code));
         swinScheme.deactivate(modifyBy);
         swinSchemeRepository.save(swinScheme);
+        outboxService.publishSwinSchemeUpdatedEvent(swinScheme);
         return toDto(swinScheme);
     }
 

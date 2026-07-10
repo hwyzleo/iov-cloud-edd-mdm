@@ -7,6 +7,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpda
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinManagedSystemDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionDuplicateSwinCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSchemeNotActiveException;
@@ -16,8 +17,10 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinManagedSystem;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinRoute;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinDefinitionStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +44,8 @@ public class SwinDefinitionAppService {
     private final SwinDefinitionRepository swinDefinitionRepository;
     private final SwinSchemeRepository swinSchemeRepository;
     private final SwinDefinitionDeletionDomainService swinDefinitionDeletionDomainService;
+    private final SwinManagedSystemRepository swinManagedSystemRepository;
+    private final OutboxService outboxService;
 
     /**
      * 创建SWIN定义
@@ -73,6 +79,7 @@ public class SwinDefinitionAppService {
                 cmd.getTypeRefType(), cmd.getTypeRefCode(), cmd.getName(), cmd.getNameLocal(),
                 cmd.getDescription(), createBy);
         swinDefinitionRepository.save(swinDefinition);
+        outboxService.publishSwinDefinitionCreatedEvent(swinDefinition);
         return toDto(swinDefinition);
     }
 
@@ -93,6 +100,7 @@ public class SwinDefinitionAppService {
         }
         swinDefinition.update(cmd.getName(), cmd.getNameLocal(), cmd.getDescription(), modifyBy);
         swinDefinitionRepository.save(swinDefinition);
+        outboxService.publishSwinDefinitionUpdatedEvent(swinDefinition);
         return toDto(swinDefinition);
     }
 
@@ -112,6 +120,7 @@ public class SwinDefinitionAppService {
                 .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
         swinDefinitionDeletionDomainService.checkCanDelete(swinCode);
         swinDefinition.markAsDeleting(operator);
+        outboxService.publishSwinDefinitionDeletedEvent(swinDefinition);
         swinDefinitionRepository.deleteBySwinCode(swinCode);
     }
 
@@ -132,6 +141,7 @@ public class SwinDefinitionAppService {
                 .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
         swinDefinition.deactivate(modifyBy);
         swinDefinitionRepository.save(swinDefinition);
+        outboxService.publishSwinDefinitionUpdatedEvent(swinDefinition);
         return toDto(swinDefinition);
     }
 
@@ -211,6 +221,23 @@ public class SwinDefinitionAppService {
     }
 
     /**
+     * 根据车载节点代码获取所有有效的SWIN定义
+     *
+     * @param vehicleNodeCode 车载节点代码
+     * @return SWIN定义DTO列表
+     */
+    public List<SwinDefinitionDto> listSwinDefinitionsByVehicleNodeCode(String vehicleNodeCode) {
+        List<String> swinCodes = swinManagedSystemRepository.findSwinCodesByVehicleNodeCode(vehicleNodeCode);
+        return swinCodes.stream()
+                .map(swinDefinitionRepository::findBySwinCode)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(sd -> sd.getStatus() == SwinDefinitionStatus.ACTIVE)
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 领域对象转DTO
      *
      * @param swinDefinition 领域对象
@@ -259,6 +286,8 @@ public class SwinDefinitionAppService {
                 .id(swinManagedSystem.getId())
                 .swinCode(swinManagedSystem.getSwinCode())
                 .vehicleNodeCode(swinManagedSystem.getVehicleNodeCode())
+                .isTypeApprovalRelevant(swinManagedSystem.getIsTypeApprovalRelevant())
+                .approvedSoftwareBaseline(swinManagedSystem.getApprovedSoftwareBaseline())
                 .createBy(swinManagedSystem.getCreateBy())
                 .createTime(swinManagedSystem.getCreateTime())
                 .modifyBy(swinManagedSystem.getModifyBy())

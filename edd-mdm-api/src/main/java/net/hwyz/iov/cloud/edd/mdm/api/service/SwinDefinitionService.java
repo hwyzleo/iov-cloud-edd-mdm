@@ -72,4 +72,13 @@ public interface SwinDefinitionService {
     List<SwinDefinitionResponse> getSwinDefinitionsByTypeRef(
             @RequestParam String typeRefType,
             @RequestParam String typeRefCode);
+
+    /**
+     * 根据车载节点代码获取SWIN定义列表
+     *
+     * @param vehicleNodeCode 车载节点代码
+     * @return SWIN定义列表
+     */
+    @GetMapping("/listByNode/{vehicleNodeCode}")
+    List<SwinDefinitionResponse> listByNode(@PathVariable String vehicleNodeCode);
 }

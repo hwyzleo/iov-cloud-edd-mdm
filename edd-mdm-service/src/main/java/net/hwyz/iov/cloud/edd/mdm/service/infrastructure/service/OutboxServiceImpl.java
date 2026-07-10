@@ -18,6 +18,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.RxswinRegistry;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -63,6 +65,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineRel
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -751,5 +759,89 @@ public class OutboxServiceImpl implements OutboxService {
                 .build();
         outboxRepository.saveRxswinRegistryCreatedEvent(event);
         log.info("发布RXSWIN登记创建事件: {}", rxswinRegistry.getManifestCode());
+    }
+
+    @Override
+    public void publishSwinDefinitionCreatedEvent(SwinDefinition swinDefinition) {
+        SwinDefinitionCreatedEvent event = SwinDefinitionCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinDefinitionCreated")
+                .occurredAt(new Date())
+                .entityId(swinDefinition.getSwinCode())
+                .version(swinDefinition.getVersion())
+                .payload(swinDefinition)
+                .build();
+        outboxRepository.saveSwinDefinitionCreatedEvent(event);
+        log.info("发布SWIN定义创建事件: {}", swinDefinition.getSwinCode());
+    }
+
+    @Override
+    public void publishSwinDefinitionUpdatedEvent(SwinDefinition swinDefinition) {
+        SwinDefinitionUpdatedEvent event = SwinDefinitionUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinDefinitionUpdated")
+                .occurredAt(new Date())
+                .entityId(swinDefinition.getSwinCode())
+                .version(swinDefinition.getVersion())
+                .payload(swinDefinition)
+                .build();
+        outboxRepository.saveSwinDefinitionUpdatedEvent(event);
+        log.info("发布SWIN定义更新事件: {}", swinDefinition.getSwinCode());
+    }
+
+    @Override
+    public void publishSwinDefinitionDeletedEvent(SwinDefinition swinDefinition) {
+        SwinDefinitionDeletedEvent event = SwinDefinitionDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinDefinitionDeleted")
+                .occurredAt(new Date())
+                .entityId(swinDefinition.getSwinCode())
+                .version(swinDefinition.getVersion())
+                .payload(swinDefinition)
+                .build();
+        outboxRepository.saveSwinDefinitionDeletedEvent(event);
+        log.info("发布SWIN定义删除事件: {}", swinDefinition.getSwinCode());
+    }
+
+    @Override
+    public void publishSwinSchemeCreatedEvent(SwinScheme swinScheme) {
+        SwinSchemeCreatedEvent event = SwinSchemeCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinSchemeCreated")
+                .occurredAt(new Date())
+                .entityId(swinScheme.getCode())
+                .version(swinScheme.getVersion())
+                .payload(swinScheme)
+                .build();
+        outboxRepository.saveSwinSchemeCreatedEvent(event);
+        log.info("发布SWIN编码方案创建事件: {}", swinScheme.getCode());
+    }
+
+    @Override
+    public void publishSwinSchemeUpdatedEvent(SwinScheme swinScheme) {
+        SwinSchemeUpdatedEvent event = SwinSchemeUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinSchemeUpdated")
+                .occurredAt(new Date())
+                .entityId(swinScheme.getCode())
+                .version(swinScheme.getVersion())
+                .payload(swinScheme)
+                .build();
+        outboxRepository.saveSwinSchemeUpdatedEvent(event);
+        log.info("发布SWIN编码方案更新事件: {}", swinScheme.getCode());
+    }
+
+    @Override
+    public void publishSwinSchemeDeletedEvent(SwinScheme swinScheme) {
+        SwinSchemeDeletedEvent event = SwinSchemeDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinSchemeDeleted")
+                .occurredAt(new Date())
+                .entityId(swinScheme.getCode())
+                .version(swinScheme.getVersion())
+                .payload(swinScheme)
+                .build();
+        outboxRepository.saveSwinSchemeDeletedEvent(event);
+        log.info("发布SWIN编码方案删除事件: {}", swinScheme.getCode());
     }
 }

@@ -4,6 +4,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCrea
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionDuplicateSwinCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSchemeNotActiveException;
@@ -15,6 +16,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinDefinitio
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinRoute;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,12 +48,16 @@ class SwinDefinitionAppServiceTest {
     private SwinSchemeRepository swinSchemeRepository;
     @Mock
     private SwinDefinitionDeletionDomainService swinDefinitionDeletionDomainService;
+    @Mock
+    private SwinManagedSystemRepository swinManagedSystemRepository;
+    @Mock
+    private OutboxService outboxService;
 
     private SwinDefinitionAppService swinDefinitionAppService;
 
     @BeforeEach
     void setUp() {
-        swinDefinitionAppService = new SwinDefinitionAppService(swinDefinitionRepository, swinSchemeRepository, swinDefinitionDeletionDomainService);
+        swinDefinitionAppService = new SwinDefinitionAppService(swinDefinitionRepository, swinSchemeRepository, swinDefinitionDeletionDomainService, swinManagedSystemRepository, outboxService);
     }
 
     @Nested

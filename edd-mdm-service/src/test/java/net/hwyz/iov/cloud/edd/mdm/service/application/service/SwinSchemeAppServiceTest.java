@@ -4,6 +4,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeCreateCm
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinSchemeUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinSchemeQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinSchemeDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeDuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeHasReferenceException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeNotExistException;
@@ -40,12 +41,14 @@ class SwinSchemeAppServiceTest {
     private SwinSchemeRepository swinSchemeRepository;
     @Mock
     private SwinDefinitionRepository swinDefinitionRepository;
+    @Mock
+    private OutboxService outboxService;
 
     private SwinSchemeAppService swinSchemeAppService;
 
     @BeforeEach
     void setUp() {
-        swinSchemeAppService = new SwinSchemeAppService(swinSchemeRepository, swinDefinitionRepository);
+        swinSchemeAppService = new SwinSchemeAppService(swinSchemeRepository, swinDefinitionRepository, outboxService);
     }
 
     @Nested

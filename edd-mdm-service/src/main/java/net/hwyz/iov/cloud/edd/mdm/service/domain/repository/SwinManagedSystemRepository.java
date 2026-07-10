@@ -28,6 +28,14 @@ public interface SwinManagedSystemRepository {
     List<SwinManagedSystem> findBySwinCode(String swinCode);
 
     /**
+     * 根据车载节点代码查找关联的SWIN代码列表
+     *
+     * @param vehicleNodeCode 车载节点代码
+     * @return SWIN代码列表
+     */
+    List<String> findSwinCodesByVehicleNodeCode(String vehicleNodeCode);
+
+    /**
      * 检查SWIN代码和车载节点代码是否存在
      *
      * @param swinCode        SWIN代码

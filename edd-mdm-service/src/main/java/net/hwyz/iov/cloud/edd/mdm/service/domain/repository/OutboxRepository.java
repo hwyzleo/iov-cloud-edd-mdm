@@ -45,6 +45,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineRel
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEvent;
 
 import java.util.List;
 
@@ -391,4 +397,46 @@ public interface OutboxRepository {
      * @param event RXSWIN登记创建事件
      */
     void saveRxswinRegistryCreatedEvent(RxswinRegistryCreatedEvent event);
+
+    /**
+     * 保存SWIN定义创建事件
+     *
+     * @param event SWIN定义创建事件
+     */
+    void saveSwinDefinitionCreatedEvent(SwinDefinitionCreatedEvent event);
+
+    /**
+     * 保存SWIN定义更新事件
+     *
+     * @param event SWIN定义更新事件
+     */
+    void saveSwinDefinitionUpdatedEvent(SwinDefinitionUpdatedEvent event);
+
+    /**
+     * 保存SWIN定义删除事件
+     *
+     * @param event SWIN定义删除事件
+     */
+    void saveSwinDefinitionDeletedEvent(SwinDefinitionDeletedEvent event);
+
+    /**
+     * 保存SWIN编码方案创建事件
+     *
+     * @param event SWIN编码方案创建事件
+     */
+    void saveSwinSchemeCreatedEvent(SwinSchemeCreatedEvent event);
+
+    /**
+     * 保存SWIN编码方案更新事件
+     *
+     * @param event SWIN编码方案更新事件
+     */
+    void saveSwinSchemeUpdatedEvent(SwinSchemeUpdatedEvent event);
+
+    /**
+     * 保存SWIN编码方案删除事件
+     *
+     * @param event SWIN编码方案删除事件
+     */
+    void saveSwinSchemeDeletedEvent(SwinSchemeDeletedEvent event);
 }

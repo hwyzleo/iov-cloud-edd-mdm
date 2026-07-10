@@ -50,6 +50,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineRel
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.OutboxMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
@@ -1225,6 +1231,156 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存RXSWIN登记创建事件失败", e);
             throw new RuntimeException("保存RXSWIN登记创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinDefinitionCreatedEvent(SwinDefinitionCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_DEFINITION")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN定义创建事件失败", e);
+            throw new RuntimeException("保存SWIN定义创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinDefinitionUpdatedEvent(SwinDefinitionUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_DEFINITION")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN定义更新事件失败", e);
+            throw new RuntimeException("保存SWIN定义更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinDefinitionDeletedEvent(SwinDefinitionDeletedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_DEFINITION")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN定义删除事件失败", e);
+            throw new RuntimeException("保存SWIN定义删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinSchemeCreatedEvent(SwinSchemeCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_SCHEME")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN编码方案创建事件失败", e);
+            throw new RuntimeException("保存SWIN编码方案创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinSchemeUpdatedEvent(SwinSchemeUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_SCHEME")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN编码方案更新事件失败", e);
+            throw new RuntimeException("保存SWIN编码方案更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinSchemeDeletedEvent(SwinSchemeDeletedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_SCHEME")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN编码方案删除事件失败", e);
+            throw new RuntimeException("保存SWIN编码方案删除事件失败", e);
         }
     }
 }

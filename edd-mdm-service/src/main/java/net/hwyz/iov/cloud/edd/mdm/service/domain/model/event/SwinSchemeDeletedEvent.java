@@ -17,7 +17,10 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SwinSchemeDeletedEvent {
-    private String code;
-    private String operator;
-    private Date eventTime;
+    private String eventId;
+    private String eventType;
+    private Date occurredAt;
+    private String entityId;
+    private Integer version;
+    private Object payload;
 }

@@ -15,6 +15,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.RxswinRegistry;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
 
 /**
  * 事件发件箱服务端口
@@ -343,4 +345,46 @@ public interface OutboxService {
      * @param rxswinRegistry RXSWIN登记聚合根
      */
     void publishRxswinRegistryCreatedEvent(RxswinRegistry rxswinRegistry);
+
+    /**
+     * 发布SWIN定义创建事件（EEAD 子域，topic: mdm.eead.swin.event）
+     *
+     * @param swinDefinition SWIN定义聚合根
+     */
+    void publishSwinDefinitionCreatedEvent(SwinDefinition swinDefinition);
+
+    /**
+     * 发布SWIN定义更新事件（EEAD 子域）
+     *
+     * @param swinDefinition SWIN定义聚合根
+     */
+    void publishSwinDefinitionUpdatedEvent(SwinDefinition swinDefinition);
+
+    /**
+     * 发布SWIN定义删除事件（EEAD 子域）
+     *
+     * @param swinDefinition SWIN定义聚合根（删除前最后一份快照）
+     */
+    void publishSwinDefinitionDeletedEvent(SwinDefinition swinDefinition);
+
+    /**
+     * 发布SWIN编码方案创建事件（EEAD 子域，topic: mdm.eead.swin.event）
+     *
+     * @param swinScheme SWIN编码方案聚合根
+     */
+    void publishSwinSchemeCreatedEvent(SwinScheme swinScheme);
+
+    /**
+     * 发布SWIN编码方案更新事件（EEAD 子域）
+     *
+     * @param swinScheme SWIN编码方案聚合根
+     */
+    void publishSwinSchemeUpdatedEvent(SwinScheme swinScheme);
+
+    /**
+     * 发布SWIN编码方案删除事件（EEAD 子域）
+     *
+     * @param swinScheme SWIN编码方案聚合根（删除前最后一份快照）
+     */
+    void publishSwinSchemeDeletedEvent(SwinScheme swinScheme);
 }

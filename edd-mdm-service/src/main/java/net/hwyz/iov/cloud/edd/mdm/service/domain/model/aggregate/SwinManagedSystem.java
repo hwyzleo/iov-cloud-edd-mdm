@@ -23,6 +23,8 @@ public class SwinManagedSystem {
     private Long id;
     private String swinCode;
     private String vehicleNodeCode;
+    private Boolean isTypeApprovalRelevant;
+    private String approvedSoftwareBaseline;
     private String createBy;
     private Date createTime;
     private String modifyBy;
@@ -48,6 +50,8 @@ public class SwinManagedSystem {
         Date now = new Date();
         return SwinManagedSystem.builder()
                 .swinCode(swinCode).vehicleNodeCode(vehicleNodeCode)
+                .isTypeApprovalRelevant(false)
+                .approvedSoftwareBaseline(null)
                 .createBy(createBy).createTime(now)
                 .modifyBy(createBy).modifyTime(now)
                 .rowVersion(0).rowValid(true)

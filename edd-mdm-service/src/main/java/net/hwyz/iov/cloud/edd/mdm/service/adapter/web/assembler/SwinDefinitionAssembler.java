@@ -44,6 +44,8 @@ public class SwinDefinitionAssembler {
         }
         return SwinManagedSystemResponse.builder()
                 .id(dto.getId()).swinCode(dto.getSwinCode()).vehicleNodeCode(dto.getVehicleNodeCode())
+                .isTypeApprovalRelevant(dto.getIsTypeApprovalRelevant())
+                .approvedSoftwareBaseline(dto.getApprovedSoftwareBaseline())
                 .createBy(dto.getCreateBy()).createTime(dto.getCreateTime())
                 .modifyBy(dto.getModifyBy()).modifyTime(dto.getModifyTime())
                 .build();

@@ -41,6 +41,17 @@ public class SwinManagedSystemRepositoryImpl implements SwinManagedSystemReposit
     }
 
     @Override
+    public List<String> findSwinCodesByVehicleNodeCode(String vehicleNodeCode) {
+        LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SwinManagedSystemPo::getVehicleNodeCode, vehicleNodeCode);
+        wrapper.select(SwinManagedSystemPo::getSwinCode);
+        return swinManagedSystemMapper.selectList(wrapper).stream()
+                .map(SwinManagedSystemPo::getSwinCode)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public boolean existsBySwinCodeAndVehicleNodeCode(String swinCode, String vehicleNodeCode) {
         LambdaQueryWrapper<SwinManagedSystemPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SwinManagedSystemPo::getSwinCode, swinCode);
@@ -82,6 +93,8 @@ public class SwinManagedSystemRepositoryImpl implements SwinManagedSystemReposit
                 .id(domain.getId())
                 .swinCode(domain.getSwinCode())
                 .vehicleNodeCode(domain.getVehicleNodeCode())
+                .isTypeApprovalRelevant(domain.getIsTypeApprovalRelevant())
+                .approvedSoftwareBaseline(domain.getApprovedSoftwareBaseline())
                 .createBy(domain.getCreateBy()).createTime(domain.getCreateTime())
                 .modifyBy(domain.getModifyBy()).modifyTime(domain.getModifyTime())
                 .rowVersion(domain.getRowVersion()).rowValid(domain.getRowValid())
@@ -93,6 +106,8 @@ public class SwinManagedSystemRepositoryImpl implements SwinManagedSystemReposit
                 .id(po.getId())
                 .swinCode(po.getSwinCode())
                 .vehicleNodeCode(po.getVehicleNodeCode())
+                .isTypeApprovalRelevant(po.getIsTypeApprovalRelevant())
+                .approvedSoftwareBaseline(po.getApprovedSoftwareBaseline())
                 .createBy(po.getCreateBy()).createTime(po.getCreateTime())
                 .modifyBy(po.getModifyBy()).modifyTime(po.getModifyTime())
                 .rowVersion(po.getRowVersion()).rowValid(po.getRowValid())

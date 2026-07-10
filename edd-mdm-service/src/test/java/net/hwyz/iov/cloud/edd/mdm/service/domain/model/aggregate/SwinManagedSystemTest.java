@@ -36,6 +36,8 @@ class SwinManagedSystemTest {
             assertNotNull(managedSystem.getModifyTime());
             assertEquals(0, managedSystem.getRowVersion());
             assertTrue(managedSystem.getRowValid());
+            assertFalse(managedSystem.getIsTypeApprovalRelevant());
+            assertNull(managedSystem.getApprovedSoftwareBaseline());
         }
 
         @Test
