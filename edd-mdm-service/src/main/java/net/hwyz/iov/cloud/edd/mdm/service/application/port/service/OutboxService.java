@@ -13,6 +13,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
 
 /**
  * 事件发件箱服务端口
@@ -298,4 +299,40 @@ public interface OutboxService {
      * @param forceDelete 是否 force 旁路删除
      */
     void publishDeviceCategoryDeletedEvent(DeviceCategory category, boolean forceDelete);
+
+    /**
+     * 发布软件基线创建事件（Material 子域）
+     *
+     * @param baseline 软件基线聚合根
+     */
+    void publishSoftwareBaselineCreatedEvent(SoftwareBaseline baseline);
+
+    /**
+     * 发布软件基线更新事件（Material 子域）
+     *
+     * @param baseline 软件基线聚合根
+     */
+    void publishSoftwareBaselineUpdatedEvent(SoftwareBaseline baseline);
+
+    /**
+     * 发布软件基线发布事件（Material 子域）
+     *
+     * @param baseline 软件基线聚合根
+     */
+    void publishSoftwareBaselineReleasedEvent(SoftwareBaseline baseline);
+
+    /**
+     * 发布软件基线取代事件（Material 子域）
+     *
+     * @param baseline 软件基线聚合根
+     */
+    void publishSoftwareBaselineSupersededEvent(SoftwareBaseline baseline);
+
+    /**
+     * 发布软件基线删除事件（Material 子域）
+     *
+     * @param baseline    软件基线聚合根（删除前最后一份快照）
+     * @param forceDelete 是否 force 旁路删除
+     */
+    void publishSoftwareBaselineDeletedEvent(SoftwareBaseline baseline, boolean forceDelete);
 }

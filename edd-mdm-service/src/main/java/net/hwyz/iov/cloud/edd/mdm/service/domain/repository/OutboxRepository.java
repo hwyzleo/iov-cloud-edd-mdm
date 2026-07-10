@@ -39,6 +39,11 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
 
 import java.util.List;
 
@@ -321,6 +326,41 @@ public interface OutboxRepository {
      * @param event 设备类别删除事件
      */
     void saveDeviceCategoryDeletedEvent(DeviceCategoryDeletedEvent event);
+
+    /**
+     * 保存软件基线创建事件（Material 子域）
+     *
+     * @param event 软件基线创建事件
+     */
+    void saveSoftwareBaselineCreatedEvent(SoftwareBaselineCreatedEvent event);
+
+    /**
+     * 保存软件基线更新事件（Material 子域）
+     *
+     * @param event 软件基线更新事件
+     */
+    void saveSoftwareBaselineUpdatedEvent(SoftwareBaselineUpdatedEvent event);
+
+    /**
+     * 保存软件基线发布事件（Material 子域）
+     *
+     * @param event 软件基线发布事件
+     */
+    void saveSoftwareBaselineReleasedEvent(SoftwareBaselineReleasedEvent event);
+
+    /**
+     * 保存软件基线取代事件（Material 子域）
+     *
+     * @param event 软件基线取代事件
+     */
+    void saveSoftwareBaselineSupersededEvent(SoftwareBaselineSupersededEvent event);
+
+    /**
+     * 保存软件基线删除事件（Material 子域）
+     *
+     * @param event 软件基线删除事件
+     */
+    void saveSoftwareBaselineDeletedEvent(SoftwareBaselineDeletedEvent event);
 
     /**
      * 获取待发送的事件列表

@@ -6,6 +6,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.ConfigurationStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +41,8 @@ class ConfigurationAppServiceTest {
     private ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
     @Mock
     private OptionCodeRepository optionCodeRepository;
+    @Mock
+    private SoftwareBaselineRepository softwareBaselineRepository;
 
     private ConfigurationAppService configurationAppService;
 
@@ -49,7 +52,8 @@ class ConfigurationAppServiceTest {
                 productDomainService,
                 outboxService,
                 configurationOptionCodeBindingRepository,
-                optionCodeRepository
+                optionCodeRepository,
+                softwareBaselineRepository
         );
     }
 

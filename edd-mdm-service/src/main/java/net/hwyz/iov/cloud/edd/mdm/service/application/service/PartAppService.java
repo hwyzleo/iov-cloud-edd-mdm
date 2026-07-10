@@ -20,6 +20,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PartRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.PartNumberingDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class PartAppService {
     private final PartRepository partRepository;
     private final PartNumberingDomainService partNumberingDomainService;
     private final OutboxService outboxService;
+    private final SoftwareBaselineRepository softwareBaselineRepository;
 
     /**
      * 创建零件
@@ -176,6 +178,10 @@ public class PartAppService {
         } else {
             if (partRepository.existsBySubstitutePartCode(code)) {
                 throw new PartHasDownstreamRefException(code, 1);
+            }
+            long swBaselineRefCount = softwareBaselineRepository.countByPartCode(code);
+            if (swBaselineRefCount > 0) {
+                throw new PartHasDownstreamRefException(code, swBaselineRefCount);
             }
             partRepository.delete(part, operator, false);
         }

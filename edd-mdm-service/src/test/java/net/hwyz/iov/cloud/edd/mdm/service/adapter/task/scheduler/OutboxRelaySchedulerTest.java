@@ -280,6 +280,39 @@ class OutboxRelaySchedulerTest {
 
             verify(kafkaEventGateway).send(eq("mdm.material.part.event"), eq("00000001AA"), anyString());
         }
+
+        @Test
+        @DisplayName("软件基线创建事件 -> mdm.material.softwareBaseline.event")
+        void relayEvents_softwareBaselineCreated_routesToSingleTopic() {
+            OutboxPo event = buildOutboxPo("SOFTWARE_BASELINE", "SoftwareBaselineCreated", "SWB-V1");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(kafkaEventGateway).send(eq("mdm.material.softwareBaseline.event"), eq("SWB-V1"), anyString());
+        }
+
+        @Test
+        @DisplayName("软件基线发布事件 -> mdm.material.softwareBaseline.event")
+        void relayEvents_softwareBaselineReleased_routesToSingleTopic() {
+            OutboxPo event = buildOutboxPo("SOFTWARE_BASELINE", "SoftwareBaselineReleased", "SWB-V1");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(kafkaEventGateway).send(eq("mdm.material.softwareBaseline.event"), eq("SWB-V1"), anyString());
+        }
+
+        @Test
+        @DisplayName("软件基线删除事件 -> mdm.material.softwareBaseline.event")
+        void relayEvents_softwareBaselineDeleted_routesToSingleTopic() {
+            OutboxPo event = buildOutboxPo("SOFTWARE_BASELINE", "SoftwareBaselineDeleted", "SWB-V1");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(kafkaEventGateway).send(eq("mdm.material.softwareBaseline.event"), eq("SWB-V1"), anyString());
+        }
     }
 
     @Nested

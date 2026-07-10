@@ -101,7 +101,20 @@ public enum MdmErrorCode implements ErrorCode {
     PART_GENERATION_OVERFLOW("812918", "代次溢出（超过ZZ）"),
     PART_SEQ_OVERFLOW("812919", "零件号流水序号溢出"),
     PART_MANUAL_CODE_FORBIDDEN("812920", "无权限手动指定code"),
-    PART_NUMBERING_SOURCE_INVALID("812922", "发号来源为空或取值不在枚举范围");
+    PART_NUMBERING_SOURCE_INVALID("812922", "发号来源为空或取值不在枚举范围"),
+
+    // Material子域 - 软件基线相关 (812930-812940)
+    SW_BASELINE_NOT_EXIST("812930", "软件基线不存在"),
+    SW_BASELINE_DUPLICATE("812931", "软件基线 code 或 (锚点+版本) 已存在"),
+    SW_BASELINE_ANCHOR_INVALID("812932", "锚点 Configuration/Variant 引用无效或非 ACTIVE"),
+    SW_BASELINE_ITEM_PART_INVALID("812933", "基线项零件引用无效（不存在或非 ACTIVE）"),
+    SW_BASELINE_ITEM_DUPLICATE("812934", "同一基线下零件号重复"),
+    SW_BASELINE_STATUS_INVALID("812935", "基线状态流转非法"),
+    SW_BASELINE_EFFECTIVE_PERIOD_INVALID("812936", "生效期非法"),
+    SW_BASELINE_ITEM_NODE_MISMATCH("812937", "基线项冗余节点与零件承载节点不一致"),
+    SW_BASELINE_HAS_DOWNSTREAM_REF("812938", "软件基线被下游引用，删除被拒绝"),
+    SW_BASELINE_ITEM_NOT_SOFTWARE("812939", "基线项零件非软件件（is_software=false）"),
+    SW_BASELINE_FROZEN("812940", "基线已发布冻结，不可修改");
 
     private final String code;
     private final String message;

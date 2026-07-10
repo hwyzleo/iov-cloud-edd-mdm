@@ -44,6 +44,11 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.OutboxMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
@@ -1069,6 +1074,131 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存设备类别删除事件失败", e);
             throw new RuntimeException("保存设备类别删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSoftwareBaselineCreatedEvent(SoftwareBaselineCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SOFTWARE_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存软件基线创建事件失败", e);
+            throw new RuntimeException("保存软件基线创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSoftwareBaselineUpdatedEvent(SoftwareBaselineUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SOFTWARE_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存软件基线更新事件失败", e);
+            throw new RuntimeException("保存软件基线更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSoftwareBaselineReleasedEvent(SoftwareBaselineReleasedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SOFTWARE_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存软件基线发布事件失败", e);
+            throw new RuntimeException("保存软件基线发布事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSoftwareBaselineSupersededEvent(SoftwareBaselineSupersededEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SOFTWARE_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存软件基线取代事件失败", e);
+            throw new RuntimeException("保存软件基线取代事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSoftwareBaselineDeletedEvent(SoftwareBaselineDeletedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SOFTWARE_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存软件基线删除事件失败", e);
+            throw new RuntimeException("保存软件基线删除事件失败", e);
         }
     }
 }

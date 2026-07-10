@@ -10,10 +10,14 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionCodeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.VariantDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.VariantHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmBaseException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmErrorCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.VariantHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.AnchorType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.ProductDomainService;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.VariantOptionCodeBindingPo;
@@ -39,6 +43,7 @@ public class VariantAppService {
     private final OutboxService outboxService;
     private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
     private final OptionCodeRepository optionCodeRepository;
+    private final SoftwareBaselineRepository softwareBaselineRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public VariantDto createVariant(VariantCreateCmd cmd) {
@@ -85,6 +90,11 @@ public class VariantAppService {
         log.info("删除版本: {}", code);
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
+        }
+        long swBaselineRefCount = softwareBaselineRepository.countByAnchor(AnchorType.VARIANT, code);
+        if (swBaselineRefCount > 0) {
+            throw new MdmBaseException(MdmErrorCode.HAS_CHILDREN_REFERENCE,
+                    String.format("版本 %s 被软件基线引用，删除被拒绝（引用数量: %d）", code, swBaselineRefCount));
         }
         productDomainService.deleteVariant(code, modifyBy);
     }

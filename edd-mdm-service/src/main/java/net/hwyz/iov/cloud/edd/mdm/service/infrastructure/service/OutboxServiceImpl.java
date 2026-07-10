@@ -16,6 +16,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -55,6 +56,11 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PartDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.DeviceCategoryDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -658,5 +664,76 @@ public class OutboxServiceImpl implements OutboxService {
                 .build();
         outboxRepository.saveDeviceCategoryDeletedEvent(event);
         log.info("发布设备类别删除事件: {} forceDelete={}", category.getCode(), forceDelete);
+    }
+
+    @Override
+    public void publishSoftwareBaselineCreatedEvent(SoftwareBaseline baseline) {
+        SoftwareBaselineCreatedEvent event = SoftwareBaselineCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SoftwareBaselineCreated")
+                .occurredAt(new Date())
+                .entityId(baseline.getCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .build();
+        outboxRepository.saveSoftwareBaselineCreatedEvent(event);
+        log.info("发布软件基线创建事件: {}", baseline.getCode());
+    }
+
+    @Override
+    public void publishSoftwareBaselineUpdatedEvent(SoftwareBaseline baseline) {
+        SoftwareBaselineUpdatedEvent event = SoftwareBaselineUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SoftwareBaselineUpdated")
+                .occurredAt(new Date())
+                .entityId(baseline.getCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .build();
+        outboxRepository.saveSoftwareBaselineUpdatedEvent(event);
+        log.info("发布软件基线更新事件: {}", baseline.getCode());
+    }
+
+    @Override
+    public void publishSoftwareBaselineReleasedEvent(SoftwareBaseline baseline) {
+        SoftwareBaselineReleasedEvent event = SoftwareBaselineReleasedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SoftwareBaselineReleased")
+                .occurredAt(new Date())
+                .entityId(baseline.getCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .build();
+        outboxRepository.saveSoftwareBaselineReleasedEvent(event);
+        log.info("发布软件基线发布事件: {}", baseline.getCode());
+    }
+
+    @Override
+    public void publishSoftwareBaselineSupersededEvent(SoftwareBaseline baseline) {
+        SoftwareBaselineSupersededEvent event = SoftwareBaselineSupersededEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SoftwareBaselineSuperseded")
+                .occurredAt(new Date())
+                .entityId(baseline.getCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .build();
+        outboxRepository.saveSoftwareBaselineSupersededEvent(event);
+        log.info("发布软件基线取代事件: {}", baseline.getCode());
+    }
+
+    @Override
+    public void publishSoftwareBaselineDeletedEvent(SoftwareBaseline baseline, boolean forceDelete) {
+        SoftwareBaselineDeletedEvent event = SoftwareBaselineDeletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SoftwareBaselineDeleted")
+                .occurredAt(new Date())
+                .entityId(baseline.getCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .forceDelete(forceDelete)
+                .build();
+        outboxRepository.saveSoftwareBaselineDeletedEvent(event);
+        log.info("发布软件基线删除事件: {} forceDelete={}", baseline.getCode(), forceDelete);
     }
 }
