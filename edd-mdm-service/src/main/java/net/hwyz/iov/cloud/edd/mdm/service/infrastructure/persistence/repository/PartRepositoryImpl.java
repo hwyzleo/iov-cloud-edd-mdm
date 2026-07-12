@@ -80,11 +80,11 @@ public class PartRepositoryImpl implements PartRepository {
     }
 
     @Override
-    public List<Part> list(String categoryCode, String partType, String vehicleNodeCode,
-                           String supplierCode, String lifecycleStage, String status, int page, int size) {
+    public List<Part> list(String keyword, String categoryCode, String partType, String vehicleNodeCode,
+                           String supplierCode, String lifecycleStage, Boolean isSoftware, String status, int page, int size) {
         Page<PartPo> pageParam = new Page<>(page, size);
-        LambdaQueryWrapper<PartPo> wrapper = buildListWrapper(categoryCode, partType, vehicleNodeCode,
-                supplierCode, lifecycleStage, status);
+        LambdaQueryWrapper<PartPo> wrapper = buildListWrapper(keyword, categoryCode, partType, vehicleNodeCode,
+                supplierCode, lifecycleStage, isSoftware, status);
         wrapper.orderByDesc(PartPo::getCreateTime);
         Page<PartPo> result = partMapper.selectPage(pageParam, wrapper);
         return result.getRecords().stream()
@@ -93,10 +93,10 @@ public class PartRepositoryImpl implements PartRepository {
     }
 
     @Override
-    public long count(String categoryCode, String partType, String vehicleNodeCode,
-                      String supplierCode, String lifecycleStage, String status) {
-        LambdaQueryWrapper<PartPo> wrapper = buildListWrapper(categoryCode, partType, vehicleNodeCode,
-                supplierCode, lifecycleStage, status);
+    public long count(String keyword, String categoryCode, String partType, String vehicleNodeCode,
+                      String supplierCode, String lifecycleStage, Boolean isSoftware, String status) {
+        LambdaQueryWrapper<PartPo> wrapper = buildListWrapper(keyword, categoryCode, partType, vehicleNodeCode,
+                supplierCode, lifecycleStage, isSoftware, status);
         return partMapper.selectCount(wrapper);
     }
 
@@ -193,11 +193,17 @@ public class PartRepositoryImpl implements PartRepository {
         return Optional.ofNullable(partConverter.toDomain(po));
     }
 
-    private LambdaQueryWrapper<PartPo> buildListWrapper(String categoryCode, String partType,
-                                                         String vehicleNodeCode, String supplierCode,
-                                                         String lifecycleStage, String status) {
+    private LambdaQueryWrapper<PartPo> buildListWrapper(String keyword, String categoryCode, String partType,
+                                                          String vehicleNodeCode, String supplierCode,
+                                                          String lifecycleStage, Boolean isSoftware, String status) {
         LambdaQueryWrapper<PartPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PartPo::getRowValid, true);
+        if (keyword != null && !keyword.isBlank()) {
+            String pattern = "%" + keyword.trim() + "%";
+            wrapper.and(w -> w.like(PartPo::getCode, pattern)
+                    .or().like(PartPo::getName, pattern)
+                    .or().like(PartPo::getNameLocal, pattern));
+        }
         if (categoryCode != null && !categoryCode.isBlank()) {
             wrapper.eq(PartPo::getCategoryCode, categoryCode);
         }
@@ -212,6 +218,9 @@ public class PartRepositoryImpl implements PartRepository {
         }
         if (lifecycleStage != null && !lifecycleStage.isBlank()) {
             wrapper.eq(PartPo::getLifecycleStage, lifecycleStage);
+        }
+        if (isSoftware != null) {
+            wrapper.eq(PartPo::getIsSoftware, isSoftware);
         }
         if (status != null && !status.isBlank()) {
             wrapper.eq(PartPo::getStatus, status);

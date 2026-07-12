@@ -210,8 +210,9 @@ public class PartAppService {
     public List<PartDto> listParts(PartQuery query) {
         String status = query.isIncludeInactive() ? null : "ACTIVE";
         List<Part> parts = partRepository.list(
+                query.getKeyword(),
                 query.getCategoryCode(), query.getPartType(), query.getVehicleNodeCode(),
-                query.getSupplierCode(), query.getLifecycleStage(), status,
+                query.getSupplierCode(), query.getLifecycleStage(), query.getIsSoftware(), status,
                 query.getPage(), query.getSize()
         );
         return parts.stream()
@@ -222,18 +223,21 @@ public class PartAppService {
     /**
      * 查询零件总数
      *
+     * @param keyword         关键词（模糊搜索 code/name/nameLocal）
      * @param categoryCode    物料分类编码
      * @param partType        零件类型
      * @param vehicleNodeCode 车辆节点编码
      * @param supplierCode    供应商编码
      * @param lifecycleStage  生命周期阶段
+     * @param isSoftware      是否软件零件
      * @param includeInactive 是否包含失效记录
      * @return 总数
      */
-    public long countParts(String categoryCode, String partType, String vehicleNodeCode,
-                           String supplierCode, String lifecycleStage, boolean includeInactive) {
+    public long countParts(String keyword, String categoryCode, String partType, String vehicleNodeCode,
+                           String supplierCode, String lifecycleStage, Boolean isSoftware, boolean includeInactive) {
         String status = includeInactive ? null : "ACTIVE";
-        return partRepository.count(categoryCode, partType, vehicleNodeCode, supplierCode, lifecycleStage, status);
+        return partRepository.count(keyword, categoryCode, partType, vehicleNodeCode, supplierCode,
+                lifecycleStage, isSoftware, status);
     }
 
     /**

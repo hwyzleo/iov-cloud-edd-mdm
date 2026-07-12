@@ -23,11 +23,11 @@ public interface PartRepository {
 
     void delete(Part part, String operator, boolean forceDelete);
 
-    List<Part> list(String categoryCode, String partType, String vehicleNodeCode,
-                    String supplierCode, String lifecycleStage, String status, int page, int size);
+    List<Part> list(String keyword, String categoryCode, String partType, String vehicleNodeCode,
+                    String supplierCode, String lifecycleStage, Boolean isSoftware, String status, int page, int size);
 
-    long count(String categoryCode, String partType, String vehicleNodeCode,
-               String supplierCode, String lifecycleStage, String status);
+    long count(String keyword, String categoryCode, String partType, String vehicleNodeCode,
+               String supplierCode, String lifecycleStage, Boolean isSoftware, String status);
 
     List<Part> listAllActive();
 

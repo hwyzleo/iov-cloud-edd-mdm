@@ -182,22 +182,26 @@ public class MptPartController {
      *
      * @param page            页码
      * @param size            每页大小
+     * @param keyword         关键词（对 code/name/nameLocal 做模糊搜索）
      * @param categoryCode    物料分类编码
      * @param partType        零件类型
      * @param vehicleNodeCode 车辆节点编码
      * @param supplierCode    供应商编码
      * @param lifecycleStage  生命周期阶段
+     * @param isSoftware      是否软件零件
      * @param includeInactive 是否包含失效记录
      * @return 零件分页响应
      */
     @GetMapping("/list")
     public ApiResponse<PartPageResponse> list(@RequestParam(defaultValue = "1") Integer page,
                                                @RequestParam(defaultValue = "10") Integer size,
+                                               @RequestParam(required = false) String keyword,
                                                @RequestParam(required = false) String categoryCode,
                                                @RequestParam(required = false) String partType,
                                                @RequestParam(required = false) String vehicleNodeCode,
                                                @RequestParam(required = false) String supplierCode,
                                                @RequestParam(required = false) String lifecycleStage,
+                                               @RequestParam(required = false) Boolean isSoftware,
                                                @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
@@ -205,17 +209,19 @@ public class MptPartController {
                 PartQuery.builder()
                         .page(page)
                         .size(size)
+                        .keyword(keyword)
                         .categoryCode(categoryCode)
                         .partType(partType)
                         .vehicleNodeCode(vehicleNodeCode)
                         .supplierCode(supplierCode)
                         .lifecycleStage(lifecycleStage)
+                        .isSoftware(isSoftware)
                         .includeInactive(includeInactiveFlag)
                         .build()
         );
 
-        long total = partAppService.countParts(categoryCode, partType, vehicleNodeCode,
-                supplierCode, lifecycleStage, includeInactiveFlag);
+        long total = partAppService.countParts(keyword, categoryCode, partType, vehicleNodeCode,
+                supplierCode, lifecycleStage, isSoftware, includeInactiveFlag);
 
         List<PartResponse> rows = parts.stream()
                 .map(partAssembler::toResponse)

@@ -27,6 +27,11 @@ public class PartQuery {
     private int size;
 
     /**
+     * 关键词（对 code/name/nameLocal 做模糊搜索）
+     */
+    private String keyword;
+
+    /**
      * 物料分类编码
      */
     private String categoryCode;
@@ -55,6 +60,11 @@ public class PartQuery {
      * 关重特性（KEY/MAJOR/SIMPLE）
      */
     private String isKeyPart;
+
+    /**
+     * 是否软件零件
+     */
+    private Boolean isSoftware;
 
     /**
      * 是否包含失效记录
