@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.service;
 
 import lombok.RequiredArgsConstructor;
-import net.hwyz.iov.cloud.edd.mdm.api.service.PartService;
+import net.hwyz.iov.cloud.edd.mdm.api.service.MdmPartService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartBriefResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartResponse;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/service/part/v1")
 @RequiredArgsConstructor
-public class ServicePartController implements PartService {
+public class ServiceMdmPartController implements MdmPartService {
 
     private final PartAppService partAppService;
     private final PartAssembler partAssembler;

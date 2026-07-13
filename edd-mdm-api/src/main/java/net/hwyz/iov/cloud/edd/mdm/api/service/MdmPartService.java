@@ -1,6 +1,6 @@
 package net.hwyz.iov.cloud.edd.mdm.api.service;
 
-import net.hwyz.iov.cloud.edd.mdm.api.fallback.PartServiceFallbackFactory;
+import net.hwyz.iov.cloud.edd.mdm.api.fallback.MdmPartServiceFallbackFactory;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartBriefResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartResponse;
@@ -17,8 +17,8 @@ import java.util.List;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "partService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/part/v1", fallbackFactory = PartServiceFallbackFactory.class)
-public interface PartService {
+@FeignClient(contextId = "mdmPartService", value = ServiceNameConstants.EDD_MDM, path = "/api/service/part/v1", fallbackFactory = MdmPartServiceFallbackFactory.class)
+public interface MdmPartService {
 
     /**
      * 获取零件全量快照

@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.api.fallback;
 
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.edd.mdm.api.service.PartService;
+import net.hwyz.iov.cloud.edd.mdm.api.service.MdmPartService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartBriefResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.PartResponse;
@@ -18,11 +18,11 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class PartServiceFallbackFactory implements FallbackFactory<PartService> {
+public class MdmPartServiceFallbackFactory implements FallbackFactory<MdmPartService> {
 
     @Override
-    public PartService create(Throwable throwable) {
-        return new PartService() {
+    public MdmPartService create(Throwable throwable) {
+        return new MdmPartService() {
             @Override
             public PartPageResponse snapshot(Boolean includeInactive, Integer page, Integer size) {
                 log.error("零件服务获取全量快照调用失败", throwable);
