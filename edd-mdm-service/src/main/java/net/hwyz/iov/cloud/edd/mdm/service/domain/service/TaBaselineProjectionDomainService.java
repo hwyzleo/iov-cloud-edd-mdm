@@ -15,9 +15,11 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SoftwareBaselineIt
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.AnchorType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinDefinitionStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.BaselineStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -45,6 +47,8 @@ public class TaBaselineProjectionDomainService {
     private final SoftwareBaselineRepository softwareBaselineRepository;
     private final SwinManagedSystemRepository swinManagedSystemRepository;
     private final SwinDefinitionRepository swinDefinitionRepository;
+    private final VariantRepository variantRepository;
+    private final ConfigurationRepository configurationRepository;
 
     /**
      * 执行卷积投影
@@ -84,11 +88,15 @@ public class TaBaselineProjectionDomainService {
                     .build();
         }
 
-        // 4. 获取锚点范围内 RELEASED SoftwareBaseline
-        List<SoftwareBaseline> baselines = softwareBaselineRepository.findActiveByAnchor(anchorType, anchorCode);
+        // 4. 获取锚点范围内 RELEASED SoftwareBaseline（支持层级继承）
+        List<SoftwareBaselineRepository.AnchorEntry> anchorEntries = resolveAnchorsForProjection(anchorType, anchorCode);
+        log.info("查询锚点范围内的软件基线，锚点条目数: {}", anchorEntries.size());
+        List<SoftwareBaseline> baselines = softwareBaselineRepository.findActiveByAnchors(anchorEntries);
+        log.info("查询到的软件基线数: {}", baselines.size());
         List<SoftwareBaseline> releasedBaselines = baselines.stream()
                 .filter(b -> b.getBaselineStatus() == BaselineStatus.RELEASED)
                 .collect(Collectors.toList());
+        log.info("RELEASED 状态的软件基线数: {}", releasedBaselines.size());
 
         if (releasedBaselines.isEmpty()) {
             throw new TaBaselineNoSourceException(anchorType.name(), anchorCode);
@@ -194,6 +202,61 @@ public class TaBaselineProjectionDomainService {
      */
     private String resolveAnchorCode(SwinDefinition swinDefinition) {
         return swinDefinition.getTypeRefCode();
+    }
+
+    /**
+     * 解析用于投影的锚点列表（支持层级继承）
+     * <p>
+     * 产品层级：MODEL -> VARIANT -> CONFIGURATION
+     * <ul>
+     *   <li>当 SWIN 锚点是 VARIANT 时，查找该 VARIANT 下的 CONFIGURATION 级别软件基线</li>
+     *   <li>当 SWIN 锚点是 MODEL 时，查找该 MODEL 下所有 VARIANT 和 CONFIGURATION 级别的软件基线</li>
+     * </ul>
+     *
+     * @param anchorType 锚点类型
+     * @param anchorCode 锚点代码
+     * @return 锚点条目列表
+     */
+    private List<SoftwareBaselineRepository.AnchorEntry> resolveAnchorsForProjection(AnchorType anchorType, String anchorCode) {
+        List<SoftwareBaselineRepository.AnchorEntry> entries = new ArrayList<>();
+
+        if (anchorType == AnchorType.VARIANT) {
+            // VARIANT 锚点：查找 VARIANT 和 CONFIGURATION 级别的软件基线
+            entries.add(new SoftwareBaselineRepository.AnchorEntry(AnchorType.VARIANT, anchorCode));
+            // 查找该 VARIANT 下的所有 CONFIGURATION
+            List<String> configCodes = configurationRepository.findAll(1, Integer.MAX_VALUE, anchorCode, false)
+                    .stream()
+                    .map(config -> config.getCode())
+                    .collect(Collectors.toList());
+            log.debug("VARIANT {} 下的 CONFIGURATION: {}", anchorCode, configCodes);
+            for (String configCode : configCodes) {
+                entries.add(new SoftwareBaselineRepository.AnchorEntry(AnchorType.CONFIGURATION, configCode));
+            }
+        } else if (anchorType == AnchorType.MODEL) {
+            // MODEL 锚点：查找 MODEL、VARIANT 和 CONFIGURATION 级别的软件基线
+            entries.add(new SoftwareBaselineRepository.AnchorEntry(AnchorType.MODEL, anchorCode));
+            // 查找该 MODEL 下的所有 VARIANT
+            List<String> variantCodes = variantRepository.findAll(1, Integer.MAX_VALUE, anchorCode, null, null, false)
+                    .stream()
+                    .map(variant -> variant.getCode())
+                    .collect(Collectors.toList());
+            log.debug("MODEL {} 下的 VARIANT: {}", anchorCode, variantCodes);
+            for (String variantCode : variantCodes) {
+                entries.add(new SoftwareBaselineRepository.AnchorEntry(AnchorType.VARIANT, variantCode));
+                // 查找该 VARIANT 下的所有 CONFIGURATION
+                List<String> configCodes = configurationRepository.findAll(1, Integer.MAX_VALUE, variantCode, false)
+                        .stream()
+                        .map(config -> config.getCode())
+                        .collect(Collectors.toList());
+                log.debug("VARIANT {} 下的 CONFIGURATION: {}", variantCode, configCodes);
+                for (String configCode : configCodes) {
+                    entries.add(new SoftwareBaselineRepository.AnchorEntry(AnchorType.CONFIGURATION, configCode));
+                }
+            }
+        }
+
+        log.info("解析锚点 {}:{} 得到 {} 个锚点条目: {}", anchorType, anchorCode, entries.size(), entries);
+        return entries;
     }
 
     /**

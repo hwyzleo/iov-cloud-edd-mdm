@@ -153,6 +153,38 @@ public class SoftwareBaselineRepositoryImpl implements SoftwareBaselineRepositor
     }
 
     @Override
+    public List<SoftwareBaseline> findActiveByAnchors(List<AnchorEntry> anchorEntries) {
+        if (anchorEntries == null || anchorEntries.isEmpty()) {
+            return List.of();
+        }
+        LambdaQueryWrapper<SoftwareBaselinePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SoftwareBaselinePo::getRowValid, true);
+        wrapper.eq(SoftwareBaselinePo::getBaselineStatus, "RELEASED");
+        // 构建 (anchorType, anchorCode) 的 OR 条件
+        // 使用 nested + or 组合：WHERE ... AND ((type=? AND code=?) OR (type=? AND code=?) OR ...)
+        wrapper.and(w -> {
+            for (int i = 0; i < anchorEntries.size(); i++) {
+                AnchorEntry entry = anchorEntries.get(i);
+                if (i == 0) {
+                    w.nested(nested -> nested
+                            .eq(SoftwareBaselinePo::getAnchorType, entry.anchorType().name())
+                            .eq(SoftwareBaselinePo::getAnchorCode, entry.anchorCode())
+                    );
+                } else {
+                    w.or().nested(nested -> nested
+                            .eq(SoftwareBaselinePo::getAnchorType, entry.anchorType().name())
+                            .eq(SoftwareBaselinePo::getAnchorCode, entry.anchorCode())
+                    );
+                }
+            }
+        });
+        wrapper.orderByDesc(SoftwareBaselinePo::getBaselineVersion);
+        return softwareBaselineMapper.selectList(wrapper).stream()
+                .map(po -> loadItems(softwareBaselineConverter.toDomain(po)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<SoftwareBaseline> listAllActive() {
         LambdaQueryWrapper<SoftwareBaselinePo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SoftwareBaselinePo::getRowValid, true);

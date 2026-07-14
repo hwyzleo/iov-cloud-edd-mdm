@@ -15,6 +15,12 @@ import java.util.Optional;
  */
 public interface SoftwareBaselineRepository {
 
+    /**
+     * 锚点条目，用于多锚点查询
+     */
+    record AnchorEntry(AnchorType anchorType, String anchorCode) {
+    }
+
     SoftwareBaseline save(SoftwareBaseline baseline, String operationType);
 
     Optional<SoftwareBaseline> findByCode(String code);
@@ -35,6 +41,17 @@ public interface SoftwareBaselineRepository {
     long snapshotCount(boolean includeDraft, boolean includeSuperseded);
 
     List<SoftwareBaseline> findActiveByAnchor(AnchorType anchorType, String anchorCode);
+
+    /**
+     * 按多个锚点查找 RELEASED 状态的软件基线
+     * <p>
+     * 用于 TA 基线卷积投影时，支持锚点层级继承。
+     * 例如：当 SWIN 锚点是 MODEL 时，可查找该 MODEL 下所有 VARIANT 或 CONFIGURATION 级别的软件基线。
+     *
+     * @param anchorEntries 锚点列表，每个元素为 [anchorType, anchorCode]
+     * @return 匹配的 RELEASED 软件基线列表
+     */
+    List<SoftwareBaseline> findActiveByAnchors(List<AnchorEntry> anchorEntries);
 
     List<SoftwareBaseline> listAllActive();
 

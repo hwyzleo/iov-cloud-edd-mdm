@@ -21,6 +21,9 @@ import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,7 @@ public class TypeApprovalBaselineAppService {
     private final TypeApprovalBaselineDeletionDomainService typeApprovalBaselineDeletionDomainService;
     private final TaBaselineCodeGenerator taBaselineCodeGenerator;
     private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
 
     /**
      * 执行卷积投影生成/刷新TA基线
@@ -73,8 +77,14 @@ public class TypeApprovalBaselineAppService {
         String taBaselineCode = taBaselineCodeGenerator.nextValue();
 
         // 4. 创建TA基线
-        String sourceBaselineScope = projectionResult.getSourceBaselineCodes() != null ?
-                String.join(",", projectionResult.getSourceBaselineCodes()) : null;
+        String sourceBaselineScope = null;
+        if (projectionResult.getSourceBaselineCodes() != null && !projectionResult.getSourceBaselineCodes().isEmpty()) {
+            try {
+                sourceBaselineScope = objectMapper.writeValueAsString(projectionResult.getSourceBaselineCodes());
+            } catch (JsonProcessingException e) {
+                log.warn("序列化sourceBaselineCodes JSON失败", e);
+            }
+        }
 
         TypeApprovalBaseline baseline = TypeApprovalBaseline.create(
                 taBaselineCode,
