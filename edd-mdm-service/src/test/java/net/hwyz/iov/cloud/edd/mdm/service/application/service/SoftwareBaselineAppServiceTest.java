@@ -16,6 +16,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SoftwareBaselineDeletionDomainService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SoftwareBaselineDomainService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SoftwareBaselineRepublishDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -47,6 +48,8 @@ class SoftwareBaselineAppServiceTest {
     @Mock
     private SoftwareBaselineDeletionDomainService softwareBaselineDeletionDomainService;
     @Mock
+    private SoftwareBaselineRepublishDomainService softwareBaselineRepublishDomainService;
+    @Mock
     private OutboxService outboxService;
 
     private SoftwareBaselineAppService appService;
@@ -57,6 +60,7 @@ class SoftwareBaselineAppServiceTest {
                 softwareBaselineRepository,
                 softwareBaselineDomainService,
                 softwareBaselineDeletionDomainService,
+                softwareBaselineRepublishDomainService,
                 outboxService
         );
     }
