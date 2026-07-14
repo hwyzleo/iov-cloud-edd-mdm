@@ -340,6 +340,17 @@ public interface OutboxService {
     void publishSoftwareBaselineDeletedEvent(SoftwareBaseline baseline, boolean forceDelete);
 
     /**
+     * 发布软件基线补发事件（Material 子域）
+     * <p>
+     * 按当前 baseline_status 复用既有事件类型，以当前全量聚合快照为 payload，
+     * 经既有 Outbox 重发；事件信封附加 republish=true 标记。
+     *
+     * @param baseline         软件基线聚合根
+     * @param republishBatchId 补发批次ID（批量补发时使用，单条补发为null）
+     */
+    void publishSoftwareBaselineRepublishEvent(SoftwareBaseline baseline, String republishBatchId);
+
+    /**
      * 发布RXSWIN登记创建事件（EEAD 子域）
      *
      * @param rxswinRegistry RXSWIN登记聚合根

@@ -8,10 +8,13 @@ import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SoftwareBaselineResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SoftwareBaselineAssembler;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineItemBindCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineRepublishRequest;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SoftwareBaselineQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineHistoryDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineRepublishBatchResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineRepublishResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SoftwareBaselineAppService;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -141,5 +144,22 @@ public class MptSoftwareBaselineController {
                 .total((long) rows.size())
                 .rows(rows)
                 .build());
+    }
+
+    /**
+     * 单条补发
+     */
+    @PostMapping("/{code}/republish")
+    public ApiResponse<SoftwareBaselineRepublishResult> republish(@PathVariable String code) {
+        return ApiResponse.ok(softwareBaselineAppService.republish(code));
+    }
+
+    /**
+     * 批量补发
+     */
+    @PostMapping("/republish:batch")
+    public ApiResponse<SoftwareBaselineRepublishBatchResult> republishBatch(
+            @RequestBody SoftwareBaselineRepublishRequest request) {
+        return ApiResponse.ok(softwareBaselineAppService.republishBatch(request));
     }
 }

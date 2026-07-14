@@ -53,4 +53,28 @@ public interface SoftwareBaselineRepository {
     void deleteItemByBaselineAndPart(String baselineCode, String partCode);
 
     List<SoftwareBaselineItem> findItemsByBaselineCode(String baselineCode);
+
+    /**
+     * 按过滤条件统计基线数量
+     *
+     * @param anchorType     锚定层级类型
+     * @param anchorCode     锚点编码
+     * @param baselineStatus 基线状态
+     * @param codes          指定基线编码列表
+     * @return 命中数量
+     */
+    long countByFilter(String anchorType, String anchorCode, String baselineStatus, List<String> codes);
+
+    /**
+     * 按过滤条件分页查询基线编码列表
+     *
+     * @param anchorType     锚定层级类型
+     * @param anchorCode     锚点编码
+     * @param baselineStatus 基线状态
+     * @param codes          指定基线编码列表
+     * @param page           页码
+     * @param size           每页大小
+     * @return 基线编码列表
+     */
+    List<String> listCodesByFilter(String anchorType, String anchorCode, String baselineStatus, List<String> codes, int page, int size);
 }

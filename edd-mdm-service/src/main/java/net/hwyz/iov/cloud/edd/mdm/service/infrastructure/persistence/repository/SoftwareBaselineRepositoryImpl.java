@@ -244,6 +244,50 @@ public class SoftwareBaselineRepositoryImpl implements SoftwareBaselineRepositor
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public long countByFilter(String anchorType, String anchorCode, String baselineStatus, List<String> codes) {
+        LambdaQueryWrapper<SoftwareBaselinePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SoftwareBaselinePo::getRowValid, true);
+        if (anchorType != null && !anchorType.isBlank()) {
+            wrapper.eq(SoftwareBaselinePo::getAnchorType, anchorType);
+        }
+        if (anchorCode != null && !anchorCode.isBlank()) {
+            wrapper.eq(SoftwareBaselinePo::getAnchorCode, anchorCode);
+        }
+        if (baselineStatus != null && !baselineStatus.isBlank()) {
+            wrapper.eq(SoftwareBaselinePo::getBaselineStatus, baselineStatus);
+        }
+        if (codes != null && !codes.isEmpty()) {
+            wrapper.in(SoftwareBaselinePo::getCode, codes);
+        }
+        return softwareBaselineMapper.selectCount(wrapper);
+    }
+
+    @Override
+    public List<String> listCodesByFilter(String anchorType, String anchorCode, String baselineStatus,
+                                           List<String> codes, int page, int size) {
+        Page<SoftwareBaselinePo> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<SoftwareBaselinePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SoftwareBaselinePo::getRowValid, true);
+        if (anchorType != null && !anchorType.isBlank()) {
+            wrapper.eq(SoftwareBaselinePo::getAnchorType, anchorType);
+        }
+        if (anchorCode != null && !anchorCode.isBlank()) {
+            wrapper.eq(SoftwareBaselinePo::getAnchorCode, anchorCode);
+        }
+        if (baselineStatus != null && !baselineStatus.isBlank()) {
+            wrapper.eq(SoftwareBaselinePo::getBaselineStatus, baselineStatus);
+        }
+        if (codes != null && !codes.isEmpty()) {
+            wrapper.in(SoftwareBaselinePo::getCode, codes);
+        }
+        wrapper.orderByAsc(SoftwareBaselinePo::getCode);
+        Page<SoftwareBaselinePo> result = softwareBaselineMapper.selectPage(pageParam, wrapper);
+        return result.getRecords().stream()
+                .map(SoftwareBaselinePo::getCode)
+                .collect(Collectors.toList());
+    }
+
     private LambdaQueryWrapper<SoftwareBaselinePo> buildListWrapper(String anchorType, String anchorCode,
                                                                      String baselineStatus, String status) {
         LambdaQueryWrapper<SoftwareBaselinePo> wrapper = new LambdaQueryWrapper<>();

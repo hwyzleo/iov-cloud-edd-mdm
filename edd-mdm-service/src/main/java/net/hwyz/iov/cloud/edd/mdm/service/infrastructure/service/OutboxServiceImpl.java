@@ -64,6 +64,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpd
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineRepublishEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionUpdatedEvent;
@@ -745,6 +746,41 @@ public class OutboxServiceImpl implements OutboxService {
                 .build();
         outboxRepository.saveSoftwareBaselineDeletedEvent(event);
         log.info("发布软件基线删除事件: {} forceDelete={}", baseline.getCode(), forceDelete);
+    }
+
+    @Override
+    public void publishSoftwareBaselineRepublishEvent(SoftwareBaseline baseline, String republishBatchId) {
+        String eventType = resolveEventTypeByStatus(baseline.getBaselineStatus() != null ? baseline.getBaselineStatus().name() : null);
+        SoftwareBaselineRepublishEvent event = SoftwareBaselineRepublishEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType(eventType)
+                .occurredAt(new Date())
+                .entityId(baseline.getCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .republish(true)
+                .republishBatchId(republishBatchId)
+                .build();
+        outboxRepository.saveSoftwareBaselineRepublishEvent(event);
+        log.info("发布软件基线补发事件: {} eventType={} republishBatchId={}", baseline.getCode(), eventType, republishBatchId);
+    }
+
+    /**
+     * 根据基线状态解析事件类型
+     *
+     * @param baselineStatus 基线状态
+     * @return 事件类型
+     */
+    private String resolveEventTypeByStatus(String baselineStatus) {
+        if (baselineStatus == null) {
+            return "SoftwareBaselineUpdated";
+        }
+        return switch (baselineStatus) {
+            case "DRAFT" -> "SoftwareBaselineUpdated";
+            case "RELEASED" -> "SoftwareBaselineReleased";
+            case "SUPERSEDED" -> "SoftwareBaselineSuperseded";
+            default -> "SoftwareBaselineUpdated";
+        };
     }
 
     @Override

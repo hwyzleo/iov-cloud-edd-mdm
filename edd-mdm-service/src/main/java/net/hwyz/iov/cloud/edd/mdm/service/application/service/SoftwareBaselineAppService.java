@@ -4,14 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineItemBindCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineRepublishRequest;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SoftwareBaselineUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SoftwareBaselineQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineItemDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineRepublishBatchResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SoftwareBaselineRepublishResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SoftwareBaselineItemDuplicateException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SoftwareBaselineNotExistException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SoftwareBaselineRepublishBatchLimitExceededException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaseline;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SoftwareBaselineItem;
@@ -19,11 +23,15 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.AnchorType;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SoftwareBaselineDeletionDomainService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SoftwareBaselineDomainService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SoftwareBaselineRepublishDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -39,7 +47,14 @@ public class SoftwareBaselineAppService {
     private final SoftwareBaselineRepository softwareBaselineRepository;
     private final SoftwareBaselineDomainService softwareBaselineDomainService;
     private final SoftwareBaselineDeletionDomainService softwareBaselineDeletionDomainService;
+    private final SoftwareBaselineRepublishDomainService softwareBaselineRepublishDomainService;
     private final OutboxService outboxService;
+
+    @Value("${mdm.material.software-baseline.republish.batch-max-size:500}")
+    private long republishBatchMaxSize;
+
+    @Value("${mdm.material.software-baseline.republish.batch-commit-size:100}")
+    private int republishBatchCommitSize;
 
     @Transactional(rollbackFor = Exception.class)
     public SoftwareBaselineDto createSoftwareBaseline(SoftwareBaselineCreateCmd cmd) {
@@ -221,6 +236,89 @@ public class SoftwareBaselineAppService {
         return softwareBaselineRepository.findHistoryByCode(code).stream()
                 .map(this::toHistoryDto)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 单条补发
+     *
+     * @param code 基线编码
+     * @return 补发结果
+     */
+    public SoftwareBaselineRepublishResult republish(String code) {
+        log.info("单条补发软件基线: {}", code);
+
+        SoftwareBaseline baseline = softwareBaselineRepository.findByCode(code)
+                .orElseThrow(() -> new SoftwareBaselineNotExistException(code));
+
+        String eventType = softwareBaselineRepublishDomainService.resolveEventTypeByStatus(
+                baseline.getBaselineStatus() != null ? baseline.getBaselineStatus().name() : null);
+
+        outboxService.publishSoftwareBaselineRepublishEvent(baseline, null);
+
+        log.info("软件基线补发成功: code={}, eventType={}", code, eventType);
+        return SoftwareBaselineRepublishResult.builder()
+                .code(code)
+                .eventType(eventType)
+                .republished(true)
+                .build();
+    }
+
+    /**
+     * 批量补发
+     *
+     * @param request 批量补发请求
+     * @return 批量补发结果
+     */
+    public SoftwareBaselineRepublishBatchResult republishBatch(SoftwareBaselineRepublishRequest request) {
+        log.info("批量补发软件基线: anchorType={}, anchorCode={}, baselineStatus={}, codes={}, all={}",
+                request.getAnchorType(), request.getAnchorCode(), request.getBaselineStatus(),
+                request.getCodes(), request.getAll());
+
+        List<String> codes = request.getAll() != null && request.getAll() ? null : request.getCodes();
+
+        long hitCount = softwareBaselineRepublishDomainService.countByFilter(
+                request.getAnchorType(), request.getAnchorCode(), request.getBaselineStatus(), codes);
+
+        if (hitCount > republishBatchMaxSize) {
+            throw new SoftwareBaselineRepublishBatchLimitExceededException(hitCount, republishBatchMaxSize);
+        }
+
+        String batchId = UUID.randomUUID().toString();
+        long publishedCount = 0;
+        long failedCount = 0;
+
+        int totalPages = (int) Math.ceil((double) hitCount / republishBatchCommitSize);
+        for (int page = 1; page <= totalPages; page++) {
+            List<String> batchCodes = softwareBaselineRepublishDomainService.listCodesByFilter(
+                    request.getAnchorType(), request.getAnchorCode(), request.getBaselineStatus(),
+                    codes, page, republishBatchCommitSize);
+
+            for (String code : batchCodes) {
+                try {
+                    SoftwareBaseline baseline = softwareBaselineRepository.findByCode(code).orElse(null);
+                    if (baseline != null) {
+                        outboxService.publishSoftwareBaselineRepublishEvent(baseline, batchId);
+                        publishedCount++;
+                    } else {
+                        failedCount++;
+                        log.warn("批量补发时基线不存在: {}", code);
+                    }
+                } catch (Exception e) {
+                    failedCount++;
+                    log.error("批量补发基线失败: code={}", code, e);
+                }
+            }
+        }
+
+        log.info("批量补发完成: batchId={}, hitCount={}, publishedCount={}, failedCount={}",
+                batchId, hitCount, publishedCount, failedCount);
+
+        return SoftwareBaselineRepublishBatchResult.builder()
+                .hitCount(hitCount)
+                .publishedCount(publishedCount)
+                .failedCount(failedCount)
+                .batchId(batchId)
+                .build();
     }
 
     private SoftwareBaselineDto toDto(SoftwareBaseline baseline) {

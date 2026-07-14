@@ -49,6 +49,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpd
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineRepublishEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionUpdatedEvent;
@@ -1206,6 +1207,31 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存软件基线删除事件失败", e);
             throw new RuntimeException("保存软件基线删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSoftwareBaselineRepublishEvent(SoftwareBaselineRepublishEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SOFTWARE_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存软件基线补发事件失败", e);
+            throw new RuntimeException("保存软件基线补发事件失败", e);
         }
     }
 

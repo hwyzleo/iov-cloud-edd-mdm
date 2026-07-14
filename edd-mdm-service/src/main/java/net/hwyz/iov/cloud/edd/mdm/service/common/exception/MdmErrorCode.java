@@ -121,7 +121,8 @@ public enum MdmErrorCode implements ErrorCode {
     SW_BASELINE_ITEM_NODE_MISMATCH("812937", "基线项冗余节点与零件承载节点不一致"),
     SW_BASELINE_HAS_DOWNSTREAM_REF("812938", "软件基线被下游引用，删除被拒绝"),
     SW_BASELINE_ITEM_NOT_SOFTWARE("812939", "基线项零件非软件件（is_software=false）"),
-    SW_BASELINE_FROZEN("812940", "基线已发布冻结，不可修改");
+    SW_BASELINE_FROZEN("812940", "基线已发布冻结，不可修改"),
+    SW_BASELINE_REPUBLISH_BATCH_LIMIT_EXCEEDED("812941", "单次批量补发命中数量超过配置上限");
 
     private final String code;
     private final String message;

@@ -44,6 +44,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineUpd
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineSupersededEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SoftwareBaselineRepublishEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.RxswinRegistryCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionUpdatedEvent;
@@ -368,6 +369,13 @@ public interface OutboxRepository {
      * @param event 软件基线删除事件
      */
     void saveSoftwareBaselineDeletedEvent(SoftwareBaselineDeletedEvent event);
+
+    /**
+     * 保存软件基线补发事件（Material 子域）
+     *
+     * @param event 软件基线补发事件
+     */
+    void saveSoftwareBaselineRepublishEvent(SoftwareBaselineRepublishEvent event);
 
     /**
      * 获取待发送的事件列表

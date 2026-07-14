@@ -1,2 +1,9 @@
 mybatis-plus:
   type-aliases-package: net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po
+
+mdm:
+  material:
+    software-baseline:
+      republish:
+        batch-max-size: 500
+        batch-commit-size: 100
