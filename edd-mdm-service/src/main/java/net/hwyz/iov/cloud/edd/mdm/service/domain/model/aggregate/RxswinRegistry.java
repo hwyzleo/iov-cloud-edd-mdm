@@ -26,6 +26,12 @@ public class RxswinRegistry {
     private String manifestDigest;
     private String swinCode;
     private String rxswinValue;
+    /**
+     * 软件基线代码（语义变更）
+     * <p>
+     * CR-030 变更：该字段语义明确为引用 ta_baseline_code（RELEASED / FROZEN）。
+     * 仍可选、松引用、不建强外键。登记时若提供则校验 TA 基线存在。
+     */
     private String softwareBaselineCode;
     private String status;
     private Date approvedAt;

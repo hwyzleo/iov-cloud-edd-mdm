@@ -53,6 +53,14 @@ public class RxswinRegistryRepositoryImpl implements RxswinRegistryRepository {
     }
 
     @Override
+    public long countBySoftwareBaselineCode(String softwareBaselineCode) {
+        LambdaQueryWrapper<RxswinRegistryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RxswinRegistryPo::getSoftwareBaselineCode, softwareBaselineCode);
+        wrapper.eq(RxswinRegistryPo::getRowValid, true);
+        return rxswinRegistryMapper.selectCount(wrapper);
+    }
+
+    @Override
     public List<RxswinRegistry> findPaginated(int page, int size, String manifestCode, String rxswinValue,
                                                 String swinCode, String softwareBaselineCode,
                                                 Date registeredAtStart, Date registeredAtEnd) {

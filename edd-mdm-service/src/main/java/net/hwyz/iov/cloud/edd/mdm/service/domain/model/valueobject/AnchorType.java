@@ -7,5 +7,6 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject;
  */
 public enum AnchorType {
     CONFIGURATION,
-    VARIANT
+    VARIANT,
+    MODEL
 }

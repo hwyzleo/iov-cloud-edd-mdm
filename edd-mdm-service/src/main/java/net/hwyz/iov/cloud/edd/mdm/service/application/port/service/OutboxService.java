@@ -17,6 +17,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaselin
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.RxswinRegistry;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.TypeApprovalBaseline;
 
 /**
  * 事件发件箱服务端口
@@ -398,4 +399,33 @@ public interface OutboxService {
      * @param swinScheme SWIN编码方案聚合根（删除前最后一份快照）
      */
     void publishSwinSchemeDeletedEvent(SwinScheme swinScheme);
+
+    /**
+     * 发布型式批准基线创建事件（EEAD 子域）
+     *
+     * @param baseline 型式批准基线聚合根
+     */
+    void publishTypeApprovalBaselineCreatedEvent(TypeApprovalBaseline baseline);
+
+    /**
+     * 发布型式批准基线发布事件（EEAD 子域）
+     *
+     * @param baseline 型式批准基线聚合根
+     */
+    void publishTypeApprovalBaselineReleasedEvent(TypeApprovalBaseline baseline);
+
+    /**
+     * 发布型式批准基线冻结事件（EEAD 子域）
+     *
+     * @param baseline 型式批准基线聚合根
+     */
+    void publishTypeApprovalBaselineFrozenEvent(TypeApprovalBaseline baseline);
+
+    /**
+     * 发布型式批准基线删除事件（EEAD 子域）
+     *
+     * @param baseline    型式批准基线聚合根（删除前最后一份快照）
+     * @param forceDelete 是否 force 旁路删除
+     */
+    void publishTypeApprovalBaselineDeletedEvent(TypeApprovalBaseline baseline, boolean forceDelete);
 }

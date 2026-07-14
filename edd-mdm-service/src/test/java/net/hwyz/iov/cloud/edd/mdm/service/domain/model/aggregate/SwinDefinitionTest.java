@@ -187,7 +187,7 @@ class SwinDefinitionTest {
             SwinDefinition swinDefinition = createTestDefinition();
             int originalVersion = swinDefinition.getVersion();
 
-            SwinManagedSystem managedSystem = SwinManagedSystem.create("SWIN001", "VN001", "testUser");
+            SwinManagedSystem managedSystem = SwinManagedSystem.create("SWIN001", "VN001", true, "testUser");
             swinDefinition.addManagedSystem(managedSystem);
 
             assertEquals(1, swinDefinition.getManagedSystems().size());
@@ -199,7 +199,7 @@ class SwinDefinitionTest {
         @DisplayName("移除管理软件系统成功")
         void removeManagedSystem_success() {
             SwinDefinition swinDefinition = createTestDefinition();
-            SwinManagedSystem managedSystem = SwinManagedSystem.create("SWIN001", "VN001", "testUser");
+            SwinManagedSystem managedSystem = SwinManagedSystem.create("SWIN001", "VN001", true, "testUser");
             swinDefinition.addManagedSystem(managedSystem);
             int versionAfterAdd = swinDefinition.getVersion();
 

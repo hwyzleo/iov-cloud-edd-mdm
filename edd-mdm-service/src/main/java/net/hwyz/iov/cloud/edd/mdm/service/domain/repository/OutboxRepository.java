@@ -52,6 +52,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionDelet
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineReleasedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineFrozenEvent;
 
 import java.util.List;
 
@@ -447,4 +450,32 @@ public interface OutboxRepository {
      * @param event SWIN编码方案删除事件
      */
     void saveSwinSchemeDeletedEvent(SwinSchemeDeletedEvent event);
+
+    /**
+     * 保存型式批准基线创建事件
+     *
+     * @param event 型式批准基线创建事件
+     */
+    void saveTypeApprovalBaselineCreatedEvent(TypeApprovalBaselineCreatedEvent event);
+
+    /**
+     * 保存型式批准基线发布事件
+     *
+     * @param event 型式批准基线发布事件
+     */
+    void saveTypeApprovalBaselineReleasedEvent(TypeApprovalBaselineReleasedEvent event);
+
+    /**
+     * 保存型式批准基线冻结事件
+     *
+     * @param event 型式批准基线冻结事件
+     */
+    void saveTypeApprovalBaselineFrozenEvent(TypeApprovalBaselineFrozenEvent event);
+
+    /**
+     * 保存型式批准基线删除事件
+     *
+     * @param event 型式批准基线删除事件
+     */
+    void saveTypeApprovalBaselineDeletedEvent(TypeApprovalBaselineCreatedEvent event);
 }

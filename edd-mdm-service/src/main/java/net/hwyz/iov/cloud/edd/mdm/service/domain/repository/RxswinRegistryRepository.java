@@ -36,6 +36,14 @@ public interface RxswinRegistryRepository {
     long countBySwinCode(String swinCode);
 
     /**
+     * 根据softwareBaselineCode统计引用数（供TA基线删除保护使用）
+     *
+     * @param softwareBaselineCode 软件基线代码
+     * @return 有效登记引用数
+     */
+    long countBySoftwareBaselineCode(String softwareBaselineCode);
+
+    /**
      * 分页查询RXSWIN登记记录
      *
      * @param page              页码

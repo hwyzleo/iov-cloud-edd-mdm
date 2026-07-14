@@ -20,6 +20,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SoftwareBaselin
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.RxswinRegistry;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.TypeApprovalBaseline;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.BrandDeactivatedEvent;
@@ -72,6 +73,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionDelet
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineReleasedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineFrozenEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -879,5 +883,118 @@ public class OutboxServiceImpl implements OutboxService {
                 .build();
         outboxRepository.saveSwinSchemeDeletedEvent(event);
         log.info("发布SWIN编码方案删除事件: {}", swinScheme.getCode());
+    }
+
+    @Override
+    public void publishTypeApprovalBaselineCreatedEvent(TypeApprovalBaseline baseline) {
+        TypeApprovalBaselineCreatedEvent event = TypeApprovalBaselineCreatedEvent.builder()
+                .aggregateType("TYPE_APPROVAL_BASELINE")
+                .aggregateId(baseline.getTaBaselineCode())
+                .eventType("TypeApprovalBaselineCreated")
+                .timestamp(new Date())
+                .operator(baseline.getCreateBy())
+                .taBaselineCode(baseline.getTaBaselineCode())
+                .swinCode(baseline.getSwinCode())
+                .anchorType(baseline.getAnchorType() != null ? baseline.getAnchorType().name() : null)
+                .anchorCode(baseline.getAnchorCode())
+                .status(baseline.getStatus() != null ? baseline.getStatus().name() : null)
+                .projectionDigest(baseline.getProjectionDigest())
+                .sourceBaselineScope(baseline.getSourceBaselineScope())
+                .version(baseline.getVersion())
+                .items(baseline.getActiveItems().stream()
+                        .map(item -> TypeApprovalBaselineCreatedEvent.TaBaselineItemEvent.builder()
+                                .vehicleNodeCode(item.getVehicleNodeCode())
+                                .partCode(item.getPartCode())
+                                .approvedVersion(item.getApprovedVersion())
+                                .sourceBaselineCode(item.getSourceBaselineCode())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList()))
+                .build();
+        outboxRepository.saveTypeApprovalBaselineCreatedEvent(event);
+        log.info("发布型式批准基线创建事件: {}", baseline.getTaBaselineCode());
+    }
+
+    @Override
+    public void publishTypeApprovalBaselineReleasedEvent(TypeApprovalBaseline baseline) {
+        TypeApprovalBaselineReleasedEvent event = TypeApprovalBaselineReleasedEvent.builder()
+                .aggregateType("TYPE_APPROVAL_BASELINE")
+                .aggregateId(baseline.getTaBaselineCode())
+                .eventType("TypeApprovalBaselineReleased")
+                .timestamp(new Date())
+                .operator(baseline.getModifyBy())
+                .taBaselineCode(baseline.getTaBaselineCode())
+                .swinCode(baseline.getSwinCode())
+                .anchorType(baseline.getAnchorType() != null ? baseline.getAnchorType().name() : null)
+                .anchorCode(baseline.getAnchorCode())
+                .status(baseline.getStatus() != null ? baseline.getStatus().name() : null)
+                .projectionDigest(baseline.getProjectionDigest())
+                .version(baseline.getVersion())
+                .items(baseline.getActiveItems().stream()
+                        .map(item -> TypeApprovalBaselineCreatedEvent.TaBaselineItemEvent.builder()
+                                .vehicleNodeCode(item.getVehicleNodeCode())
+                                .partCode(item.getPartCode())
+                                .approvedVersion(item.getApprovedVersion())
+                                .sourceBaselineCode(item.getSourceBaselineCode())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList()))
+                .build();
+        outboxRepository.saveTypeApprovalBaselineReleasedEvent(event);
+        log.info("发布型式批准基线发布事件: {}", baseline.getTaBaselineCode());
+    }
+
+    @Override
+    public void publishTypeApprovalBaselineFrozenEvent(TypeApprovalBaseline baseline) {
+        TypeApprovalBaselineFrozenEvent event = TypeApprovalBaselineFrozenEvent.builder()
+                .aggregateType("TYPE_APPROVAL_BASELINE")
+                .aggregateId(baseline.getTaBaselineCode())
+                .eventType("TypeApprovalBaselineFrozen")
+                .timestamp(new Date())
+                .operator(baseline.getModifyBy())
+                .taBaselineCode(baseline.getTaBaselineCode())
+                .swinCode(baseline.getSwinCode())
+                .anchorType(baseline.getAnchorType() != null ? baseline.getAnchorType().name() : null)
+                .anchorCode(baseline.getAnchorCode())
+                .status(baseline.getStatus() != null ? baseline.getStatus().name() : null)
+                .projectionDigest(baseline.getProjectionDigest())
+                .version(baseline.getVersion())
+                .items(baseline.getActiveItems().stream()
+                        .map(item -> TypeApprovalBaselineCreatedEvent.TaBaselineItemEvent.builder()
+                                .vehicleNodeCode(item.getVehicleNodeCode())
+                                .partCode(item.getPartCode())
+                                .approvedVersion(item.getApprovedVersion())
+                                .sourceBaselineCode(item.getSourceBaselineCode())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList()))
+                .build();
+        outboxRepository.saveTypeApprovalBaselineFrozenEvent(event);
+        log.info("发布型式批准基线冻结事件: {}", baseline.getTaBaselineCode());
+    }
+
+    @Override
+    public void publishTypeApprovalBaselineDeletedEvent(TypeApprovalBaseline baseline, boolean forceDelete) {
+        TypeApprovalBaselineCreatedEvent event = TypeApprovalBaselineCreatedEvent.builder()
+                .aggregateType("TYPE_APPROVAL_BASELINE")
+                .aggregateId(baseline.getTaBaselineCode())
+                .eventType("TypeApprovalBaselineDeleted")
+                .timestamp(new Date())
+                .operator(baseline.getModifyBy())
+                .taBaselineCode(baseline.getTaBaselineCode())
+                .swinCode(baseline.getSwinCode())
+                .anchorType(baseline.getAnchorType() != null ? baseline.getAnchorType().name() : null)
+                .anchorCode(baseline.getAnchorCode())
+                .status(baseline.getStatus() != null ? baseline.getStatus().name() : null)
+                .projectionDigest(baseline.getProjectionDigest())
+                .version(baseline.getVersion())
+                .items(baseline.getActiveItems().stream()
+                        .map(item -> TypeApprovalBaselineCreatedEvent.TaBaselineItemEvent.builder()
+                                .vehicleNodeCode(item.getVehicleNodeCode())
+                                .partCode(item.getPartCode())
+                                .approvedVersion(item.getApprovedVersion())
+                                .sourceBaselineCode(item.getSourceBaselineCode())
+                                .build())
+                        .collect(java.util.stream.Collectors.toList()))
+                .build();
+        outboxRepository.saveTypeApprovalBaselineDeletedEvent(event);
+        log.info("发布型式批准基线删除事件: code={}, forceDelete={}", baseline.getTaBaselineCode(), forceDelete);
     }
 }

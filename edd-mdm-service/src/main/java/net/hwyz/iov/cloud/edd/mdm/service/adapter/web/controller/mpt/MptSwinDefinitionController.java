@@ -7,6 +7,7 @@ import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SwinDefinitionAssembler;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinManagedSystemAddCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SwinDefinitionAppService;
@@ -52,6 +53,20 @@ public class MptSwinDefinitionController {
     public ApiResponse<SwinDefinitionResponse> deactivate(@PathVariable String swinCode) {
         SwinDefinitionDto dto = swinDefinitionAppService.deactivateSwinDefinition(swinCode, null);
         return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
+    }
+
+    @PostMapping("/{swinCode}/managedSystems")
+    public ApiResponse<SwinDefinitionResponse> addManagedSystem(@PathVariable String swinCode,
+                                                                 @Valid @RequestBody SwinManagedSystemAddCmd cmd) {
+        SwinDefinitionDto dto = swinDefinitionAppService.addManagedSystem(swinCode, cmd);
+        return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
+    }
+
+    @DeleteMapping("/{swinCode}/managedSystems/{vehicleNodeCode}")
+    public ApiResponse<Void> removeManagedSystem(@PathVariable String swinCode,
+                                                  @PathVariable String vehicleNodeCode) {
+        swinDefinitionAppService.removeManagedSystem(swinCode, vehicleNodeCode);
+        return ApiResponse.ok();
     }
 
     @GetMapping("/{swinCode}")

@@ -25,7 +25,7 @@ class SwinManagedSystemTest {
             String vehicleNodeCode = "VN001";
             String createBy = "testUser";
 
-            SwinManagedSystem managedSystem = SwinManagedSystem.create(swinCode, vehicleNodeCode, createBy);
+            SwinManagedSystem managedSystem = SwinManagedSystem.create(swinCode, vehicleNodeCode, true, createBy);
 
             assertNotNull(managedSystem);
             assertEquals(swinCode, managedSystem.getSwinCode());
@@ -36,7 +36,7 @@ class SwinManagedSystemTest {
             assertNotNull(managedSystem.getModifyTime());
             assertEquals(0, managedSystem.getRowVersion());
             assertTrue(managedSystem.getRowValid());
-            assertFalse(managedSystem.getIsTypeApprovalRelevant());
+            assertTrue(managedSystem.getIsTypeApprovalRelevant());
             assertNull(managedSystem.getApprovedSoftwareBaseline());
         }
 
@@ -44,7 +44,7 @@ class SwinManagedSystemTest {
         @DisplayName("创建失败 - swinCode 为空")
         void create_blankSwinCode_throwsException() {
             assertThrows(IllegalArgumentException.class, () -> {
-                SwinManagedSystem.create("", "VN001", "testUser");
+                SwinManagedSystem.create("", "VN001", true, "testUser");
             });
         }
 
@@ -52,7 +52,7 @@ class SwinManagedSystemTest {
         @DisplayName("创建失败 - swinCode 为 null")
         void create_nullSwinCode_throwsException() {
             assertThrows(IllegalArgumentException.class, () -> {
-                SwinManagedSystem.create(null, "VN001", "testUser");
+                SwinManagedSystem.create(null, "VN001", true, "testUser");
             });
         }
 
@@ -60,7 +60,7 @@ class SwinManagedSystemTest {
         @DisplayName("创建失败 - vehicleNodeCode 为空")
         void create_blankVehicleNodeCode_throwsException() {
             assertThrows(IllegalArgumentException.class, () -> {
-                SwinManagedSystem.create("SWIN001", "", "testUser");
+                SwinManagedSystem.create("SWIN001", "", true, "testUser");
             });
         }
 
@@ -68,7 +68,7 @@ class SwinManagedSystemTest {
         @DisplayName("创建失败 - vehicleNodeCode 为 null")
         void create_nullVehicleNodeCode_throwsException() {
             assertThrows(IllegalArgumentException.class, () -> {
-                SwinManagedSystem.create("SWIN001", null, "testUser");
+                SwinManagedSystem.create("SWIN001", null, true, "testUser");
             });
         }
     }

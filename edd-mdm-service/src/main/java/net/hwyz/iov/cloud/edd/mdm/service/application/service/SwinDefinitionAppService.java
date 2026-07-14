@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinManagedSystemAddCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinManagedSystemDto;
@@ -12,16 +13,22 @@ import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionDuplica
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSchemeNotActiveException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSingleSwinConflictException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinManagedSystemDuplicateException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinManagedSystemNotExistException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinManagedSystemVehicleNodeNotActiveException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinSchemeNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinDefinition;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinManagedSystem;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.SwinScheme;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.VehicleNode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinRoute;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinDefinitionStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VehicleNodeStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -45,6 +52,7 @@ public class SwinDefinitionAppService {
     private final SwinSchemeRepository swinSchemeRepository;
     private final SwinDefinitionDeletionDomainService swinDefinitionDeletionDomainService;
     private final SwinManagedSystemRepository swinManagedSystemRepository;
+    private final VehicleNodeRepository vehicleNodeRepository;
     private final OutboxService outboxService;
 
     /**
@@ -143,6 +151,73 @@ public class SwinDefinitionAppService {
         swinDefinitionRepository.save(swinDefinition);
         outboxService.publishSwinDefinitionUpdatedEvent(swinDefinition);
         return toDto(swinDefinition);
+    }
+
+    /**
+     * 添加受管系统到SWIN定义
+     *
+     * @param swinCode SWIN代码
+     * @param cmd      添加受管系统命令
+     * @return 更新后的SWIN定义DTO
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public SwinDefinitionDto addManagedSystem(String swinCode, SwinManagedSystemAddCmd cmd) {
+        log.info("添加受管系统到SWIN定义: swinCode={}, vehicleNodeCode={}", swinCode, cmd.getVehicleNodeCode());
+
+        SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode)
+                .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
+
+        String vehicleNodeCode = cmd.getVehicleNodeCode();
+        if (swinManagedSystemRepository.existsBySwinCodeAndVehicleNodeCode(swinCode, vehicleNodeCode)) {
+            throw new SwinManagedSystemDuplicateException(swinCode, vehicleNodeCode);
+        }
+
+        VehicleNode vehicleNode = vehicleNodeRepository.findByCode(vehicleNodeCode)
+                .orElseThrow(() -> new net.hwyz.iov.cloud.edd.mdm.service.common.exception.VehicleNodeNotExistException(vehicleNodeCode));
+        if (vehicleNode.getStatus() != VehicleNodeStatus.ACTIVE) {
+            throw new SwinManagedSystemVehicleNodeNotActiveException(vehicleNodeCode, vehicleNode.getStatus().name());
+        }
+
+        String createBy = cmd.getCreateBy();
+        if (createBy == null || createBy.isBlank()) {
+            createBy = SecurityUtils.getUsername();
+        }
+
+        SwinManagedSystem managedSystem = SwinManagedSystem.create(swinCode, vehicleNodeCode, cmd.getIsTypeApprovalRelevant(), createBy);
+        swinManagedSystemRepository.save(managedSystem);
+
+        swinDefinition.addManagedSystem(managedSystem);
+        swinDefinitionRepository.save(swinDefinition);
+        outboxService.publishSwinDefinitionUpdatedEvent(swinDefinition);
+
+        log.info("添加受管系统成功: swinCode={}, vehicleNodeCode={}", swinCode, vehicleNodeCode);
+        return toDto(swinDefinition);
+    }
+
+    /**
+     * 从SWIN定义移除受管系统
+     *
+     * @param swinCode        SWIN代码
+     * @param vehicleNodeCode 车载节点代码
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void removeManagedSystem(String swinCode, String vehicleNodeCode) {
+        log.info("从SWIN定义移除受管系统: swinCode={}, vehicleNodeCode={}", swinCode, vehicleNodeCode);
+
+        SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode)
+                .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
+
+        if (!swinManagedSystemRepository.existsBySwinCodeAndVehicleNodeCode(swinCode, vehicleNodeCode)) {
+            throw new SwinManagedSystemNotExistException(swinCode, vehicleNodeCode);
+        }
+
+        swinManagedSystemRepository.deleteBySwinCodeAndVehicleNodeCode(swinCode, vehicleNodeCode);
+
+        swinDefinition.removeManagedSystem(vehicleNodeCode);
+        swinDefinitionRepository.save(swinDefinition);
+        outboxService.publishSwinDefinitionUpdatedEvent(swinDefinition);
+
+        log.info("移除受管系统成功: swinCode={}, vehicleNodeCode={}", swinCode, vehicleNodeCode);
     }
 
     /**

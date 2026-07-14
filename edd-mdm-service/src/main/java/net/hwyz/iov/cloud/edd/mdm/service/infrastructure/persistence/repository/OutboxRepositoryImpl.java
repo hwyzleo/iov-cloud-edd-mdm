@@ -57,6 +57,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionDelet
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineReleasedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineFrozenEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.OutboxMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
@@ -1407,6 +1410,106 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存SWIN编码方案删除事件失败", e);
             throw new RuntimeException("保存SWIN编码方案删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveTypeApprovalBaselineCreatedEvent(TypeApprovalBaselineCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("TYPE_APPROVAL_BASELINE")
+                    .aggregateId(event.getAggregateId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getTimestamp())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存型式批准基线创建事件失败", e);
+            throw new RuntimeException("保存型式批准基线创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveTypeApprovalBaselineReleasedEvent(TypeApprovalBaselineReleasedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("TYPE_APPROVAL_BASELINE")
+                    .aggregateId(event.getAggregateId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getTimestamp())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存型式批准基线发布事件失败", e);
+            throw new RuntimeException("保存型式批准基线发布事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveTypeApprovalBaselineFrozenEvent(TypeApprovalBaselineFrozenEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("TYPE_APPROVAL_BASELINE")
+                    .aggregateId(event.getAggregateId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getTimestamp())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存型式批准基线冻结事件失败", e);
+            throw new RuntimeException("保存型式批准基线冻结事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveTypeApprovalBaselineDeletedEvent(TypeApprovalBaselineCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("TYPE_APPROVAL_BASELINE")
+                    .aggregateId(event.getAggregateId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getTimestamp())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存型式批准基线删除事件失败", e);
+            throw new RuntimeException("保存型式批准基线删除事件失败", e);
         }
     }
 }

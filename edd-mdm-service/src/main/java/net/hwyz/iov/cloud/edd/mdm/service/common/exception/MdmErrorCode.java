@@ -77,6 +77,20 @@ public enum MdmErrorCode implements ErrorCode {
     RXSWIN_SEQ_OVERFLOW("812327", "RXSWIN 16位十进制序列溢出"),
     RXSWIN_SWIN_NOT_ACTIVE("812328", "登记引用的swinCode对应TypeSwinDefinition存在但非ACTIVE"),
 
+    // EEAD子域 - 型式批准基线相关 (812329-812340)
+    TA_BASELINE_NOT_EXIST("812329", "TA基线不存在"),
+    TA_BASELINE_NO_SOURCE("812330", "锚点范围内无RELEASED SoftwareBaseline"),
+    TA_BASELINE_PROJECTION_CONFLICT("812331", "型批相关投影不唯一（同一型式判定失败）"),
+    TA_BASELINE_NODE_PART_MAPPING("812332", "node↔part映射缺失或歧义"),
+    TA_BASELINE_ANCHOR_MISMATCH("812333", "锚点层级与SWIN型式引用不一致"),
+    TA_BASELINE_FROZEN("812334", "FROZEN后不可修改"),
+    TA_BASELINE_HAS_REFERENCE("812335", "被RXSWIN Registry / SwinManagedSystem引用，禁止删除"),
+    TA_BASELINE_DUPLICATE("812336", "同锚点+同projection_digest重复"),
+    TA_BASELINE_SWIN_NOT_ACTIVE("812337", "引用的SWIN不存在或非ACTIVE"),
+    TA_BASELINE_SOURCE_NOT_RELEASED("812338", "参与卷积的SoftwareBaseline非RELEASED"),
+    TA_BASELINE_STATUS_INVALID("812339", "TA基线状态流转非法"),
+    TA_BASELINE_SEQ_OVERFLOW("812340", "TA基线序列号溢出"),
+
     // ==================== Org 子域 (8125XX) ====================
     PLANT_NOT_EXIST("812501", "工厂不存在"),
     PLANT_CODE_EXIST("812502", "工厂 code 已存在"),
@@ -122,7 +136,10 @@ public enum MdmErrorCode implements ErrorCode {
     SW_BASELINE_HAS_DOWNSTREAM_REF("812938", "软件基线被下游引用，删除被拒绝"),
     SW_BASELINE_ITEM_NOT_SOFTWARE("812939", "基线项零件非软件件（is_software=false）"),
     SW_BASELINE_FROZEN("812940", "基线已发布冻结，不可修改"),
-    SW_BASELINE_REPUBLISH_BATCH_LIMIT_EXCEEDED("812941", "单次批量补发命中数量超过配置上限");
+    SW_BASELINE_REPUBLISH_BATCH_LIMIT_EXCEEDED("812941", "单次批量补发命中数量超过配置上限"),
+
+    // EEAD子域 - SWIN管理软件系统补充 (812341)
+    SWIN_MANAGED_SYSTEM_NOT_EXIST("812341", "SWIN定义下的受管系统不存在");
 
     private final String code;
     private final String message;

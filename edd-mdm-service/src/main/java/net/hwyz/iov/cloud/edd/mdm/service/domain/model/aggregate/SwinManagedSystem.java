@@ -24,6 +24,13 @@ public class SwinManagedSystem {
     private String swinCode;
     private String vehicleNodeCode;
     private Boolean isTypeApprovalRelevant;
+    /**
+     * 来源标注（语义降级）
+     * <p>
+     * CR-030 变更：该字段从"型批基准真值来源"降级为"来源标注"。
+     * 型批基准真值改由 TA 基线（TypeApprovalBaseline）承载。
+     * 字段保留、向后兼容、不硬迁移、不删列。
+     */
     private String approvedSoftwareBaseline;
     private String createBy;
     private Date createTime;
@@ -35,12 +42,13 @@ public class SwinManagedSystem {
     /**
      * 创建新的管理软件系统
      *
-     * @param swinCode        SWIN定义代码
-     * @param vehicleNodeCode 车载节点代码
-     * @param createBy        创建人
+     * @param swinCode               SWIN定义代码
+     * @param vehicleNodeCode        车载节点代码
+     * @param isTypeApprovalRelevant 是否型式批准相关
+     * @param createBy               创建人
      * @return 新创建的SwinManagedSystem实例
      */
-    public static SwinManagedSystem create(String swinCode, String vehicleNodeCode, String createBy) {
+    public static SwinManagedSystem create(String swinCode, String vehicleNodeCode, Boolean isTypeApprovalRelevant, String createBy) {
         if (swinCode == null || swinCode.isBlank()) {
             throw new IllegalArgumentException("SWIN代码不能为空");
         }
@@ -50,7 +58,7 @@ public class SwinManagedSystem {
         Date now = new Date();
         return SwinManagedSystem.builder()
                 .swinCode(swinCode).vehicleNodeCode(vehicleNodeCode)
-                .isTypeApprovalRelevant(false)
+                .isTypeApprovalRelevant(isTypeApprovalRelevant != null && isTypeApprovalRelevant)
                 .approvedSoftwareBaseline(null)
                 .createBy(createBy).createTime(now)
                 .modifyBy(createBy).modifyTime(now)
