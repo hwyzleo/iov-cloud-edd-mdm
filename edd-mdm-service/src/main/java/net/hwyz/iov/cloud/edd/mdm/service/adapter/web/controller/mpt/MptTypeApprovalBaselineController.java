@@ -5,6 +5,9 @@ import net.hwyz.iov.cloud.edd.mdm.api.vo.response.TypeApprovalBaselinePageRespon
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.TypeApprovalBaselineResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.TypeApprovalBaselineAssembler;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.TaBaselineProjectRequest;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.TaBaselineRepublishRequest;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TaBaselineRepublishBatchResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TaBaselineRepublishResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TypeApprovalBaselineDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.TypeApprovalBaselineAppService;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
@@ -60,6 +63,22 @@ public class MptTypeApprovalBaselineController {
                                      @RequestParam(defaultValue = "false") boolean forceDelete) {
         typeApprovalBaselineAppService.delete(code, forceDelete);
         return ApiResponse.ok();
+    }
+
+    /**
+     * 单条补发TA基线事件
+     */
+    @PostMapping("/{code}/action/republish")
+    public ApiResponse<TaBaselineRepublishResult> republish(@PathVariable("code") String code) {
+        return ApiResponse.ok(typeApprovalBaselineAppService.republish(code));
+    }
+
+    /**
+     * 批量补发TA基线事件
+     */
+    @PostMapping("/action/republish:batch")
+    public ApiResponse<TaBaselineRepublishBatchResult> republishBatch(@RequestBody TaBaselineRepublishRequest request) {
+        return ApiResponse.ok(typeApprovalBaselineAppService.republishBatch(request));
     }
 
     /**

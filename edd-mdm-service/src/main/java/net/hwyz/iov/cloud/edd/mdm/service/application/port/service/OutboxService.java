@@ -387,6 +387,28 @@ public interface OutboxService {
     void publishSwinSchemeCreatedEvent(SwinScheme swinScheme);
 
     /**
+     * 发布TA基线补发事件（EEAD 子域）
+     * <p>
+     * 按当前 status 复用既有事件类型，以当前全量聚合快照为 payload，
+     * 经既有 Outbox 重发；事件信封附加 republish=true 标记。
+     *
+     * @param baseline         TA基线聚合根
+     * @param republishBatchId 补发批次ID（批量补发时使用，单条补发为null）
+     */
+    void publishTypeApprovalBaselineRepublishEvent(TypeApprovalBaseline baseline, String republishBatchId);
+
+    /**
+     * 发布SWIN定义补发事件（EEAD 子域）
+     * <p>
+     * 以 SwinDefinitionUpdated + 当前全量快照（含 managedSystems）重发，
+     * 事件信封附加 republish=true 标记。
+     *
+     * @param swinDefinition   SWIN定义聚合根
+     * @param republishBatchId 补发批次ID（批量补发时使用，单条补发为null）
+     */
+    void publishSwinDefinitionRepublishEvent(SwinDefinition swinDefinition, String republishBatchId);
+
+    /**
      * 发布SWIN编码方案更新事件（EEAD 子域）
      *
      * @param swinScheme SWIN编码方案聚合根

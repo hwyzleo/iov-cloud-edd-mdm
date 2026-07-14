@@ -151,4 +151,44 @@ public class SwinDefinitionRepositoryImpl implements SwinDefinitionRepository {
                 .managedSystems(managedSystems)
                 .build();
     }
+
+    @Override
+    public long countByFilter(String schemeCode, String typeRefType, String typeRefCode, String status, List<String> swinCodes) {
+        LambdaQueryWrapper<SwinDefinitionPo> wrapper = buildFilterWrapper(schemeCode, typeRefType, typeRefCode, status, swinCodes);
+        return swinDefinitionMapper.selectCount(wrapper);
+    }
+
+    @Override
+    public List<String> listSwinCodesByFilter(String schemeCode, String typeRefType, String typeRefCode, String status,
+                                               List<String> swinCodes, int page, int size) {
+        Page<SwinDefinitionPo> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<SwinDefinitionPo> wrapper = buildFilterWrapper(schemeCode, typeRefType, typeRefCode, status, swinCodes);
+        wrapper.select(SwinDefinitionPo::getSwinCode);
+        wrapper.orderByAsc(SwinDefinitionPo::getId);
+        Page<SwinDefinitionPo> result = swinDefinitionMapper.selectPage(pageParam, wrapper);
+        return result.getRecords().stream()
+                .map(SwinDefinitionPo::getSwinCode)
+                .collect(Collectors.toList());
+    }
+
+    private LambdaQueryWrapper<SwinDefinitionPo> buildFilterWrapper(String schemeCode, String typeRefType,
+                                                                      String typeRefCode, String status, List<String> swinCodes) {
+        LambdaQueryWrapper<SwinDefinitionPo> wrapper = new LambdaQueryWrapper<>();
+        if (schemeCode != null && !schemeCode.isBlank()) {
+            wrapper.eq(SwinDefinitionPo::getSchemeCode, schemeCode);
+        }
+        if (typeRefType != null && !typeRefType.isBlank()) {
+            wrapper.eq(SwinDefinitionPo::getTypeRefType, typeRefType);
+        }
+        if (typeRefCode != null && !typeRefCode.isBlank()) {
+            wrapper.eq(SwinDefinitionPo::getTypeRefCode, typeRefCode);
+        }
+        if (status != null && !status.isBlank()) {
+            wrapper.eq(SwinDefinitionPo::getStatus, status);
+        }
+        if (swinCodes != null && !swinCodes.isEmpty()) {
+            wrapper.in(SwinDefinitionPo::getSwinCode, swinCodes);
+        }
+        return wrapper;
+    }
 }

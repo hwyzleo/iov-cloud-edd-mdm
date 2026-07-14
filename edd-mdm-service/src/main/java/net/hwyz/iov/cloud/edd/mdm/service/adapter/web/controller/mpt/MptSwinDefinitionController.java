@@ -6,10 +6,13 @@ import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionPageResponse;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.SwinDefinitionResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.SwinDefinitionAssembler;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionRepublishRequest;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinManagedSystemAddCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionRepublishBatchResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionRepublishResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.SwinDefinitionAppService;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.*;
@@ -73,6 +76,22 @@ public class MptSwinDefinitionController {
     public ApiResponse<SwinDefinitionResponse> getBySwinCode(@PathVariable String swinCode) {
         SwinDefinitionDto dto = swinDefinitionAppService.getSwinDefinitionBySwinCode(swinCode);
         return ApiResponse.ok(swinDefinitionAssembler.toResponse(dto));
+    }
+
+    /**
+     * 单条补发SWIN定义事件
+     */
+    @PostMapping("/{swinCode}/action/republish")
+    public ApiResponse<SwinDefinitionRepublishResult> republish(@PathVariable String swinCode) {
+        return ApiResponse.ok(swinDefinitionAppService.republish(swinCode));
+    }
+
+    /**
+     * 批量补发SWIN定义事件
+     */
+    @PostMapping("/action/republish:batch")
+    public ApiResponse<SwinDefinitionRepublishBatchResult> republishBatch(@RequestBody SwinDefinitionRepublishRequest request) {
+        return ApiResponse.ok(swinDefinitionAppService.republishBatch(request));
     }
 
     @GetMapping("/list")

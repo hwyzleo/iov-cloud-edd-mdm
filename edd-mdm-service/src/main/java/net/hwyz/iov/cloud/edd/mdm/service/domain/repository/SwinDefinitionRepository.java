@@ -100,4 +100,31 @@ public interface SwinDefinitionRepository {
      * @param swinCode SWIN代码
      */
     void deleteBySwinCode(String swinCode);
+
+    /**
+     * 根据过滤条件统计SWIN定义数量（供批量补发）
+     *
+     * @param schemeCode   编码方案代码（可选）
+     * @param typeRefType  引用类型（可选）
+     * @param typeRefCode  引用代码（可选）
+     * @param status       状态（可选）
+     * @param swinCodes    指定SWIN代码列表（可选）
+     * @return SWIN定义数量
+     */
+    long countByFilter(String schemeCode, String typeRefType, String typeRefCode, String status, List<String> swinCodes);
+
+    /**
+     * 根据过滤条件分页查询SWIN代码列表（供批量补发）
+     *
+     * @param schemeCode   编码方案代码（可选）
+     * @param typeRefType  引用类型（可选）
+     * @param typeRefCode  引用代码（可选）
+     * @param status       状态（可选）
+     * @param swinCodes    指定SWIN代码列表（可选）
+     * @param page         页码
+     * @param size         每页大小
+     * @return SWIN代码列表
+     */
+    List<String> listSwinCodesByFilter(String schemeCode, String typeRefType, String typeRefCode, String status,
+                                        List<String> swinCodes, int page, int size);
 }

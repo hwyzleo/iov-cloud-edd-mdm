@@ -3,14 +3,18 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionRepublishRequest;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinDefinitionUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.SwinManagedSystemAddCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SwinDefinitionQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionRepublishBatchResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinDefinitionRepublishResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SwinManagedSystemDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionDuplicateSwinCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionNotExistException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionRepublishBatchLimitExceededException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSchemeNotActiveException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinDefinitionSingleSwinConflictException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SwinManagedSystemDuplicateException;
@@ -30,12 +34,15 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRep
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionRepublishDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -51,9 +58,16 @@ public class SwinDefinitionAppService {
     private final SwinDefinitionRepository swinDefinitionRepository;
     private final SwinSchemeRepository swinSchemeRepository;
     private final SwinDefinitionDeletionDomainService swinDefinitionDeletionDomainService;
+    private final SwinDefinitionRepublishDomainService swinDefinitionRepublishDomainService;
     private final SwinManagedSystemRepository swinManagedSystemRepository;
     private final VehicleNodeRepository vehicleNodeRepository;
     private final OutboxService outboxService;
+
+    @Value("${mdm.eead.swin-definition.republish.batch-max-size:500}")
+    private long republishBatchMaxSize;
+
+    @Value("${mdm.eead.swin-definition.republish.batch-commit-size:100}")
+    private int republishBatchCommitSize;
 
     /**
      * 创建SWIN定义
@@ -344,6 +358,93 @@ public class SwinDefinitionAppService {
                 .modifyBy(swinDefinition.getModifyBy())
                 .modifyTime(swinDefinition.getModifyTime())
                 .managedSystems(managedSystems)
+                .build();
+    }
+
+    /**
+     * 单条补发SWIN定义事件（EEAD 子域）
+     * <p>
+     * 落地 MDM-DSN-CR-031（US-131）
+     *
+     * @param swinCode SWIN代码
+     * @return 补发结果
+     */
+    public SwinDefinitionRepublishResult republish(String swinCode) {
+        log.info("补发SWIN定义事件: {}", swinCode);
+
+        SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode)
+                .orElseThrow(() -> new SwinDefinitionNotExistException(swinCode));
+
+        String eventType = swinDefinitionRepublishDomainService.resolveEventType();
+        outboxService.publishSwinDefinitionRepublishEvent(swinDefinition, null);
+
+        log.info("SWIN定义补发成功: {} eventType={}", swinCode, eventType);
+        return SwinDefinitionRepublishResult.builder()
+                .swinCode(swinCode)
+                .eventType(eventType)
+                .republished(true)
+                .build();
+    }
+
+    /**
+     * 批量补发SWIN定义事件（EEAD 子域）
+     * <p>
+     * 落地 MDM-DSN-CR-031（US-132）
+     *
+     * @param request 批量补发请求
+     * @return 批量补发结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public SwinDefinitionRepublishBatchResult republishBatch(SwinDefinitionRepublishRequest request) {
+        log.info("批量补发SWIN定义事件: request={}", request);
+
+        String batchId = UUID.randomUUID().toString();
+
+        // 1. 统计命中数量
+        long hitCount = swinDefinitionRepository.countByFilter(
+                request.getSchemeCode(), request.getTypeRefType(), request.getTypeRefCode(),
+                request.getStatus(), request.getSwinCodes());
+
+        // 2. 检查是否超过批量上限
+        if (hitCount > republishBatchMaxSize) {
+            throw new SwinDefinitionRepublishBatchLimitExceededException(hitCount, republishBatchMaxSize);
+        }
+
+        // 3. 分批提交
+        long publishedCount = 0;
+        long failedCount = 0;
+        int totalPages = (int) Math.ceil((double) hitCount / republishBatchCommitSize);
+
+        for (int page = 1; page <= totalPages; page++) {
+            List<String> swinCodes = swinDefinitionRepository.listSwinCodesByFilter(
+                    request.getSchemeCode(), request.getTypeRefType(), request.getTypeRefCode(),
+                    request.getStatus(), request.getSwinCodes(), page, republishBatchCommitSize);
+
+            for (String swinCode : swinCodes) {
+                try {
+                    SwinDefinition swinDefinition = swinDefinitionRepository.findBySwinCode(swinCode).orElse(null);
+                    if (swinDefinition != null) {
+                        outboxService.publishSwinDefinitionRepublishEvent(swinDefinition, batchId);
+                        publishedCount++;
+                    } else {
+                        failedCount++;
+                        log.warn("批量补发SWIN定义事件: SWIN定义不存在, swinCode={}", swinCode);
+                    }
+                } catch (Exception e) {
+                    failedCount++;
+                    log.error("批量补发SWIN定义事件失败: swinCode={}", swinCode, e);
+                }
+            }
+        }
+
+        log.info("批量补发SWIN定义事件完成: batchId={}, hitCount={}, publishedCount={}, failedCount={}",
+                batchId, hitCount, publishedCount, failedCount);
+
+        return SwinDefinitionRepublishBatchResult.builder()
+                .hitCount(hitCount)
+                .publishedCount(publishedCount)
+                .failedCount(failedCount)
+                .batchId(batchId)
                 .build();
     }
 

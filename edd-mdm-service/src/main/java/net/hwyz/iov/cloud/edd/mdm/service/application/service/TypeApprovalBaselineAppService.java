@@ -3,21 +3,28 @@ package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.TaBaselineProjectRequest;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.TaBaselineRepublishRequest;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TaBaselineHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TaBaselineItemDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TaBaselineRepublishBatchResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TaBaselineRepublishResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.TypeApprovalBaselineDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.TaBaselineDuplicateException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.TaBaselineNotExistException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.TaBaselineRepublishBatchLimitExceededException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.TypeApprovalBaseline;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.TaBaselineHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.TaBaselineItem;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.AnchorType;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.TaBaselineStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.TypeApprovalBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.TaBaselineCodeGenerator;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.TaBaselineProjectionDomainService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.TaBaselineRepublishDomainService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.TypeApprovalBaselineDeletionDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -40,9 +48,16 @@ public class TypeApprovalBaselineAppService {
     private final TypeApprovalBaselineRepository typeApprovalBaselineRepository;
     private final TaBaselineProjectionDomainService taBaselineProjectionDomainService;
     private final TypeApprovalBaselineDeletionDomainService typeApprovalBaselineDeletionDomainService;
+    private final TaBaselineRepublishDomainService taBaselineRepublishDomainService;
     private final TaBaselineCodeGenerator taBaselineCodeGenerator;
     private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
+
+    @Value("${mdm.eead.ta-baseline.republish.batch-max-size:500}")
+    private long republishBatchMaxSize;
+
+    @Value("${mdm.eead.ta-baseline.republish.batch-commit-size:100}")
+    private int republishBatchCommitSize;
 
     /**
      * 执行卷积投影生成/刷新TA基线
@@ -314,6 +329,93 @@ public class TypeApprovalBaselineAppService {
                 .modifyTime(history.getModifyTime())
                 .itemsSnapshot(history.getItemsSnapshot() != null ?
                         history.getItemsSnapshot().stream().map(this::toItemDto).collect(Collectors.toList()) : null)
+                .build();
+    }
+
+    /**
+     * 单条补发TA基线事件（EEAD 子域）
+     * <p>
+     * 落地 MDM-DSN-CR-031（US-129）
+     *
+     * @param code TA基线编码
+     * @return 补发结果
+     */
+    public TaBaselineRepublishResult republish(String code) {
+        log.info("补发TA基线事件: {}", code);
+
+        TypeApprovalBaseline baseline = typeApprovalBaselineRepository.findByCode(code)
+                .orElseThrow(() -> new TaBaselineNotExistException(code));
+
+        String eventType = taBaselineRepublishDomainService.resolveEventType(baseline.getStatus());
+        outboxService.publishTypeApprovalBaselineRepublishEvent(baseline, null);
+
+        log.info("TA基线补发成功: {} eventType={}", code, eventType);
+        return TaBaselineRepublishResult.builder()
+                .code(code)
+                .eventType(eventType)
+                .republished(true)
+                .build();
+    }
+
+    /**
+     * 批量补发TA基线事件（EEAD 子域）
+     * <p>
+     * 落地 MDM-DSN-CR-031（US-130）
+     *
+     * @param request 批量补发请求
+     * @return 批量补发结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public TaBaselineRepublishBatchResult republishBatch(TaBaselineRepublishRequest request) {
+        log.info("批量补发TA基线事件: request={}", request);
+
+        String batchId = UUID.randomUUID().toString();
+
+        // 1. 统计命中数量
+        long hitCount = typeApprovalBaselineRepository.countByFilter(
+                request.getSwinCode(), request.getAnchorType(), request.getAnchorCode(),
+                request.getStatus(), request.getCodes());
+
+        // 2. 检查是否超过批量上限
+        if (hitCount > republishBatchMaxSize) {
+            throw new TaBaselineRepublishBatchLimitExceededException(hitCount, republishBatchMaxSize);
+        }
+
+        // 3. 分批提交
+        long publishedCount = 0;
+        long failedCount = 0;
+        int totalPages = (int) Math.ceil((double) hitCount / republishBatchCommitSize);
+
+        for (int page = 1; page <= totalPages; page++) {
+            List<String> codes = typeApprovalBaselineRepository.listCodesByFilter(
+                    request.getSwinCode(), request.getAnchorType(), request.getAnchorCode(),
+                    request.getStatus(), request.getCodes(), page, republishBatchCommitSize);
+
+            for (String code : codes) {
+                try {
+                    TypeApprovalBaseline baseline = typeApprovalBaselineRepository.findByCode(code).orElse(null);
+                    if (baseline != null) {
+                        outboxService.publishTypeApprovalBaselineRepublishEvent(baseline, batchId);
+                        publishedCount++;
+                    } else {
+                        failedCount++;
+                        log.warn("批量补发TA基线事件: 基线不存在, code={}", code);
+                    }
+                } catch (Exception e) {
+                    failedCount++;
+                    log.error("批量补发TA基线事件失败: code={}", code, e);
+                }
+            }
+        }
+
+        log.info("批量补发TA基线事件完成: batchId={}, hitCount={}, publishedCount={}, failedCount={}",
+                batchId, hitCount, publishedCount, failedCount);
+
+        return TaBaselineRepublishBatchResult.builder()
+                .hitCount(hitCount)
+                .publishedCount(publishedCount)
+                .failedCount(failedCount)
+                .batchId(batchId)
                 .build();
     }
 

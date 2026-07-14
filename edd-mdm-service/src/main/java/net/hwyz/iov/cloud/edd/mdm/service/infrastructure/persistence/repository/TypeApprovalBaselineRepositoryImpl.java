@@ -236,4 +236,45 @@ public class TypeApprovalBaselineRepositoryImpl implements TypeApprovalBaselineR
                 po.getModifyBy());
         taBaselineHistoryMapper.insert(historyPo);
     }
+
+    @Override
+    public long countByFilter(String swinCode, String anchorType, String anchorCode, String status, List<String> codes) {
+        LambdaQueryWrapper<TypeApprovalBaselinePo> wrapper = buildFilterWrapper(swinCode, anchorType, anchorCode, status, codes);
+        return typeApprovalBaselineMapper.selectCount(wrapper);
+    }
+
+    @Override
+    public List<String> listCodesByFilter(String swinCode, String anchorType, String anchorCode, String status,
+                                           List<String> codes, int page, int size) {
+        Page<TypeApprovalBaselinePo> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<TypeApprovalBaselinePo> wrapper = buildFilterWrapper(swinCode, anchorType, anchorCode, status, codes);
+        wrapper.select(TypeApprovalBaselinePo::getTaBaselineCode);
+        wrapper.orderByAsc(TypeApprovalBaselinePo::getId);
+        Page<TypeApprovalBaselinePo> result = typeApprovalBaselineMapper.selectPage(pageParam, wrapper);
+        return result.getRecords().stream()
+                .map(TypeApprovalBaselinePo::getTaBaselineCode)
+                .collect(Collectors.toList());
+    }
+
+    private LambdaQueryWrapper<TypeApprovalBaselinePo> buildFilterWrapper(String swinCode, String anchorType,
+                                                                           String anchorCode, String status, List<String> codes) {
+        LambdaQueryWrapper<TypeApprovalBaselinePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TypeApprovalBaselinePo::getRowValid, true);
+        if (swinCode != null && !swinCode.isBlank()) {
+            wrapper.eq(TypeApprovalBaselinePo::getSwinCode, swinCode);
+        }
+        if (anchorType != null && !anchorType.isBlank()) {
+            wrapper.eq(TypeApprovalBaselinePo::getAnchorType, anchorType);
+        }
+        if (anchorCode != null && !anchorCode.isBlank()) {
+            wrapper.eq(TypeApprovalBaselinePo::getAnchorCode, anchorCode);
+        }
+        if (status != null && !status.isBlank()) {
+            wrapper.eq(TypeApprovalBaselinePo::getStatus, status);
+        }
+        if (codes != null && !codes.isEmpty()) {
+            wrapper.in(TypeApprovalBaselinePo::getTaBaselineCode, codes);
+        }
+        return wrapper;
+    }
 }

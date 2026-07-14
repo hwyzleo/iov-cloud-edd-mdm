@@ -60,6 +60,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEv
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineFrozenEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineRepublishEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionRepublishEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.mapper.OutboxMapper;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
@@ -1510,6 +1512,56 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存型式批准基线删除事件失败", e);
             throw new RuntimeException("保存型式批准基线删除事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveTypeApprovalBaselineRepublishEvent(TypeApprovalBaselineRepublishEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("TYPE_APPROVAL_BASELINE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存型式批准基线补发事件失败", e);
+            throw new RuntimeException("保存型式批准基线补发事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveSwinDefinitionRepublishEvent(SwinDefinitionRepublishEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("SWIN_DEFINITION")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存SWIN定义补发事件失败", e);
+            throw new RuntimeException("保存SWIN定义补发事件失败", e);
         }
     }
 }

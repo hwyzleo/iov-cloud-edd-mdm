@@ -139,7 +139,11 @@ public enum MdmErrorCode implements ErrorCode {
     SW_BASELINE_REPUBLISH_BATCH_LIMIT_EXCEEDED("812941", "单次批量补发命中数量超过配置上限"),
 
     // EEAD子域 - SWIN管理软件系统补充 (812341)
-    SWIN_MANAGED_SYSTEM_NOT_EXIST("812341", "SWIN定义下的受管系统不存在");
+    SWIN_MANAGED_SYSTEM_NOT_EXIST("812341", "SWIN定义下的受管系统不存在"),
+
+    // EEAD子域 - 补发相关 (812342-812343)
+    TA_BASELINE_REPUBLISH_BATCH_LIMIT_EXCEEDED("812342", "TA基线单次批量补发命中数量超过配置上限"),
+    SWIN_DEFINITION_REPUBLISH_BATCH_LIMIT_EXCEEDED("812343", "SWIN定义单次批量补发命中数量超过配置上限");
 
     private final String code;
     private final String message;

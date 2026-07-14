@@ -76,6 +76,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinSchemeDeletedEv
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineReleasedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineFrozenEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.TypeApprovalBaselineRepublishEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.SwinDefinitionRepublishEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
 import org.springframework.stereotype.Service;
 
@@ -996,5 +998,56 @@ public class OutboxServiceImpl implements OutboxService {
                 .build();
         outboxRepository.saveTypeApprovalBaselineDeletedEvent(event);
         log.info("发布型式批准基线删除事件: code={}, forceDelete={}", baseline.getTaBaselineCode(), forceDelete);
+    }
+
+    @Override
+    public void publishTypeApprovalBaselineRepublishEvent(TypeApprovalBaseline baseline, String republishBatchId) {
+        String eventType = resolveTaBaselineEventTypeByStatus(baseline.getStatus() != null ? baseline.getStatus().name() : null);
+        TypeApprovalBaselineRepublishEvent event = TypeApprovalBaselineRepublishEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType(eventType)
+                .occurredAt(new Date())
+                .entityId(baseline.getTaBaselineCode())
+                .version(baseline.getVersion())
+                .payload(baseline)
+                .republish(true)
+                .republishBatchId(republishBatchId)
+                .build();
+        outboxRepository.saveTypeApprovalBaselineRepublishEvent(event);
+        log.info("发布型式批准基线补发事件: {} eventType={} republishBatchId={}", baseline.getTaBaselineCode(), eventType, republishBatchId);
+    }
+
+    @Override
+    public void publishSwinDefinitionRepublishEvent(SwinDefinition swinDefinition, String republishBatchId) {
+        SwinDefinitionRepublishEvent event = SwinDefinitionRepublishEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("SwinDefinitionUpdated")
+                .occurredAt(new Date())
+                .entityId(swinDefinition.getSwinCode())
+                .version(swinDefinition.getVersion())
+                .payload(swinDefinition)
+                .republish(true)
+                .republishBatchId(republishBatchId)
+                .build();
+        outboxRepository.saveSwinDefinitionRepublishEvent(event);
+        log.info("发布SWIN定义补发事件: {} eventType=SwinDefinitionUpdated republishBatchId={}", swinDefinition.getSwinCode(), republishBatchId);
+    }
+
+    /**
+     * 根据TA基线状态解析事件类型
+     *
+     * @param status 基线状态
+     * @return 事件类型
+     */
+    private String resolveTaBaselineEventTypeByStatus(String status) {
+        if (status == null) {
+            return "TypeApprovalBaselineCreated";
+        }
+        return switch (status) {
+            case "DRAFT" -> "TypeApprovalBaselineCreated";
+            case "RELEASED" -> "TypeApprovalBaselineReleased";
+            case "FROZEN" -> "TypeApprovalBaselineFrozen";
+            default -> "TypeApprovalBaselineCreated";
+        };
     }
 }

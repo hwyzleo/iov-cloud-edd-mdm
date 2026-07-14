@@ -138,4 +138,31 @@ public interface TypeApprovalBaselineRepository {
      * @return 基线项列表
      */
     List<TaBaselineItem> findItemsByBaselineId(Long taBaselineId);
+
+    /**
+     * 根据过滤条件统计基线数量（供批量补发）
+     *
+     * @param swinCode   SWIN 代码（可选）
+     * @param anchorType 锚定层级类型（可选）
+     * @param anchorCode 锚点编码（可选）
+     * @param status     状态（可选）
+     * @param codes      指定基线编码列表（可选）
+     * @return 基线数量
+     */
+    long countByFilter(String swinCode, String anchorType, String anchorCode, String status, List<String> codes);
+
+    /**
+     * 根据过滤条件分页查询基线编码列表（供批量补发）
+     *
+     * @param swinCode   SWIN 代码（可选）
+     * @param anchorType 锚定层级类型（可选）
+     * @param anchorCode 锚点编码（可选）
+     * @param status     状态（可选）
+     * @param codes      指定基线编码列表（可选）
+     * @param page       页码
+     * @param size       每页大小
+     * @return 基线编码列表
+     */
+    List<String> listCodesByFilter(String swinCode, String anchorType, String anchorCode, String status,
+                                    List<String> codes, int page, int size);
 }

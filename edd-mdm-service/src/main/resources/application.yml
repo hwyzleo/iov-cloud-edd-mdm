@@ -7,3 +7,12 @@ mdm:
       republish:
         batch-max-size: 500
         batch-commit-size: 100
+  eead:
+    ta-baseline:
+      republish:
+        batch-max-size: 500
+        batch-commit-size: 100
+    swin-definition:
+      republish:
+        batch-max-size: 500
+        batch-commit-size: 100
