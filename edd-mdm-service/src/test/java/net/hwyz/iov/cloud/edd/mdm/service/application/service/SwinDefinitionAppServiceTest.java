@@ -18,6 +18,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SwinSchemeSta
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinDefinitionRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinManagedSystemRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SwinSchemeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SwinDefinitionDeletionDomainService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,13 +52,15 @@ class SwinDefinitionAppServiceTest {
     @Mock
     private SwinManagedSystemRepository swinManagedSystemRepository;
     @Mock
+    private VehicleNodeRepository vehicleNodeRepository;
+    @Mock
     private OutboxService outboxService;
 
     private SwinDefinitionAppService swinDefinitionAppService;
 
     @BeforeEach
     void setUp() {
-        swinDefinitionAppService = new SwinDefinitionAppService(swinDefinitionRepository, swinSchemeRepository, swinDefinitionDeletionDomainService, swinManagedSystemRepository, outboxService);
+        swinDefinitionAppService = new SwinDefinitionAppService(swinDefinitionRepository, swinSchemeRepository, swinDefinitionDeletionDomainService, swinManagedSystemRepository, vehicleNodeRepository, outboxService);
     }
 
     @Nested
