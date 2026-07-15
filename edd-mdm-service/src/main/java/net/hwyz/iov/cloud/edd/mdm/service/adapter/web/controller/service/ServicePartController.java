@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/service/part/v1")
 @RequiredArgsConstructor
-public class ServiceMdmPartController implements MdmPartService {
+public class ServicePartController implements MdmPartService {
 
     private final PartAppService partAppService;
     private final PartAssembler partAssembler;

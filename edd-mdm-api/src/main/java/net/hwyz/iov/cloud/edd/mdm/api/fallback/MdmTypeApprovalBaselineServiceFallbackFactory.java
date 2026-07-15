@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.api.fallback;
 
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.edd.mdm.api.service.TypeApprovalBaselineService;
+import net.hwyz.iov.cloud.edd.mdm.api.service.MdmTypeApprovalBaselineService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.TypeApprovalBaselineResponse;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -16,12 +16,12 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class TypeApprovalBaselineServiceFallbackFactory implements FallbackFactory<TypeApprovalBaselineService> {
+public class MdmTypeApprovalBaselineServiceFallbackFactory implements FallbackFactory<MdmTypeApprovalBaselineService> {
 
     @Override
-    public TypeApprovalBaselineService create(Throwable cause) {
+    public MdmTypeApprovalBaselineService create(Throwable cause) {
         log.error("TypeApprovalBaselineService 调用降级", cause);
-        return new TypeApprovalBaselineService() {
+        return new MdmTypeApprovalBaselineService() {
             @Override
             public TypeApprovalBaselineResponse getByCode(String code) {
                 return null;

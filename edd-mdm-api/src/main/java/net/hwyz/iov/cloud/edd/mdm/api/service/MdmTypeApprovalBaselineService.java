@@ -1,12 +1,11 @@
 package net.hwyz.iov.cloud.edd.mdm.api.service;
 
-import net.hwyz.iov.cloud.edd.mdm.api.fallback.TypeApprovalBaselineServiceFallbackFactory;
+import net.hwyz.iov.cloud.edd.mdm.api.fallback.MdmTypeApprovalBaselineServiceFallbackFactory;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.TypeApprovalBaselineResponse;
 import net.hwyz.iov.cloud.framework.common.constant.ServiceNameConstants;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -15,10 +14,10 @@ import java.util.List;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "typeApprovalBaselineService", value = ServiceNameConstants.EDD_MDM,
-        path = "/api/service/mdm/eead/v1/typeApprovalBaseline",
-        fallbackFactory = TypeApprovalBaselineServiceFallbackFactory.class)
-public interface TypeApprovalBaselineService {
+@FeignClient(contextId = "mdmTypeApprovalBaselineService", value = ServiceNameConstants.EDD_MDM,
+        path = "/api/service/typeApprovalBaseline/v1",
+        fallbackFactory = MdmTypeApprovalBaselineServiceFallbackFactory.class)
+public interface MdmTypeApprovalBaselineService {
 
     /**
      * 根据编码查询TA基线
