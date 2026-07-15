@@ -1,6 +1,6 @@
 package net.hwyz.iov.cloud.edd.mdm.api.service;
 
-import net.hwyz.iov.cloud.edd.mdm.api.fallback.RxswinRegistryServiceFallbackFactory;
+import net.hwyz.iov.cloud.edd.mdm.api.fallback.MdmRxswinRegistryServiceFallbackFactory;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.request.RxswinRegisterRequest;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.RxswinRegistryResponse;
 import net.hwyz.iov.cloud.framework.common.constant.ServiceNameConstants;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
  *
  * @author hwyz_leo
  */
-@FeignClient(contextId = "rxswinRegistryService", value = ServiceNameConstants.EDD_MDM,
-        path = "/api/service/mdm/eead/v1/rxswin",
-        fallbackFactory = RxswinRegistryServiceFallbackFactory.class)
-public interface RxswinRegistryService {
+@FeignClient(contextId = "mdmRxswinRegistryService", value = ServiceNameConstants.EDD_MDM,
+        path = "/api/service/rxswin/v1",
+        fallbackFactory = MdmRxswinRegistryServiceFallbackFactory.class)
+public interface MdmRxswinRegistryService {
 
     /**
      * RXSWIN幂等登记

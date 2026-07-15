@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.adapter.web.controller.service;
 
 import lombok.RequiredArgsConstructor;
-import net.hwyz.iov.cloud.edd.mdm.api.service.RxswinRegistryService;
+import net.hwyz.iov.cloud.edd.mdm.api.service.MdmRxswinRegistryService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.request.RxswinRegisterRequest;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.RxswinRegistryResponse;
 import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.RxswinRegistryAssembler;
@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.*;
  * @author hwyz_leo
  */
 @RestController
-@RequestMapping("/api/service/mdm/eead/v1/rxswin")
+@RequestMapping("/api/service/rxswin/v1")
 @RequiredArgsConstructor
-public class ServiceRxswinRegistryController implements RxswinRegistryService {
+public class ServiceRxswinRegistryController implements MdmRxswinRegistryService {
 
     private final RxswinRegistryAppService rxswinRegistryAppService;
     private final RxswinRegistryAssembler rxswinRegistryAssembler;

@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.api.fallback;
 
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.edd.mdm.api.service.RxswinRegistryService;
+import net.hwyz.iov.cloud.edd.mdm.api.service.MdmRxswinRegistryService;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.request.RxswinRegisterRequest;
 import net.hwyz.iov.cloud.edd.mdm.api.vo.response.RxswinRegistryResponse;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -14,11 +14,11 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class RxswinRegistryServiceFallbackFactory implements FallbackFactory<RxswinRegistryService> {
+public class MdmRxswinRegistryServiceFallbackFactory implements FallbackFactory<MdmRxswinRegistryService> {
 
     @Override
-    public RxswinRegistryService create(Throwable throwable) {
-        return new RxswinRegistryService() {
+    public MdmRxswinRegistryService create(Throwable throwable) {
+        return new MdmRxswinRegistryService() {
             @Override
             public RxswinRegistryResponse register(RxswinRegisterRequest request) {
                 log.error("RXSWIN登记服务登记调用失败: manifestCode={}", request.getManifestCode(), throwable);
