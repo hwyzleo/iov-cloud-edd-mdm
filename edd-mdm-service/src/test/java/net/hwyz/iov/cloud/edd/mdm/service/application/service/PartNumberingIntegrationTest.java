@@ -45,7 +45,7 @@ class PartNumberingIntegrationTest {
     }
 
     @Test
-    void testCreateSoftwarePartWithSPrefix() {
+    void testCreateSoftwarePartWithoutSPrefix() {
         PartCreateCmd cmd = PartCreateCmd.builder()
                 .name("软件件")
                 .categoryCode("CAT001")
@@ -60,9 +60,31 @@ class PartNumberingIntegrationTest {
 
         assertNotNull(dto.getId());
         assertNotNull(dto.getCode());
-        assertTrue(dto.getCode().startsWith("S"));
+        assertFalse(dto.getCode().startsWith("S"));
         assertTrue(dto.getCode().endsWith("AA"));
-        assertTrue(dto.getBaseNo().startsWith("S"));
+        assertTrue(dto.getBaseNo().matches("\\d{8}"));
+    }
+
+    @Test
+    void testCreateSoftwareAssemblyPart() {
+        PartCreateCmd cmd = PartCreateCmd.builder()
+                .name("软件总成件")
+                .categoryCode("CAT001")
+                .partType("STANDARD_PART")
+                .isSoftware(true)
+                .isAssembly(true)
+                .fotaUpgradeable(true)
+                .lifecycleStage("PROTOTYPE")
+                .createBy("test")
+                .build();
+
+        PartDto dto = partAppService.createPart(cmd);
+
+        assertNotNull(dto.getId());
+        assertNotNull(dto.getCode());
+        assertFalse(dto.getCode().startsWith("S"));
+        assertTrue(dto.getCode().endsWith("AA"));
+        assertTrue(dto.getBaseNo().matches("\\d{8}"));
     }
 
     @Test

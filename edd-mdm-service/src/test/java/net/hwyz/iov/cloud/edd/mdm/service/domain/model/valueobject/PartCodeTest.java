@@ -7,7 +7,7 @@ class PartCodeTest {
 
     @Test
     void testGenerateHardware() {
-        PartCode pc = PartCode.generate(false, 1);
+        PartCode pc = PartCode.generate(false, false, 1);
         assertEquals("00000001AA", pc.code());
         assertEquals("00000001", pc.baseNo());
         assertEquals("AA", pc.generation().value());
@@ -15,22 +15,30 @@ class PartCodeTest {
 
     @Test
     void testGenerateSoftware() {
-        PartCode pc = PartCode.generate(true, 1);
-        assertEquals("S00000001AA", pc.code());
-        assertEquals("S00000001", pc.baseNo());
+        PartCode pc = PartCode.generate(true, false, 1);
+        assertEquals("00000001AA", pc.code());
+        assertEquals("00000001", pc.baseNo());
+        assertEquals("AA", pc.generation().value());
+    }
+
+    @Test
+    void testGenerateSoftwareAssembly() {
+        PartCode pc = PartCode.generate(true, true, 1);
+        assertEquals("00000001AA", pc.code());
+        assertEquals("00000001", pc.baseNo());
         assertEquals("AA", pc.generation().value());
     }
 
     @Test
     void testGenerateLargeSeq() {
-        PartCode pc = PartCode.generate(false, 99999999);
+        PartCode pc = PartCode.generate(false, false, 99999999);
         assertEquals("99999999AA", pc.code());
         assertEquals("99999999", pc.baseNo());
     }
 
     @Test
     void testGenerateOverflow() {
-        assertThrows(IllegalArgumentException.class, () -> PartCode.generate(false, 100000000));
+        assertThrows(IllegalArgumentException.class, () -> PartCode.generate(false, false, 100000000));
     }
 
     @Test
@@ -43,9 +51,9 @@ class PartCodeTest {
 
     @Test
     void testParseSoftware() {
-        PartCode pc = PartCode.parse("S1810021AB");
-        assertEquals("S1810021AB", pc.code());
-        assertEquals("S1810021", pc.baseNo());
+        PartCode pc = PartCode.parse("1810021AB");
+        assertEquals("1810021AB", pc.code());
+        assertEquals("1810021", pc.baseNo());
         assertEquals("AB", pc.generation().value());
     }
 
@@ -67,10 +75,10 @@ class PartCodeTest {
 
     @Test
     void testNextGenerationSoftware() {
-        PartCode pc = PartCode.parse("S1810021AA");
+        PartCode pc = PartCode.parse("1810021AA");
         PartCode next = pc.nextGeneration();
-        assertEquals("S1810021AB", next.code());
-        assertEquals("S1810021", next.baseNo());
+        assertEquals("1810021AB", next.code());
+        assertEquals("1810021", next.baseNo());
     }
 
     @Test

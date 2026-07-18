@@ -61,7 +61,8 @@ public class PartAppService {
 
         // 系统发号
         boolean isSoftware = cmd.getIsSoftware() != null && cmd.getIsSoftware();
-        PartCode partCode = partNumberingDomainService.generatePartCode(isSoftware);
+        boolean isAssembly = cmd.getIsAssembly() != null && cmd.getIsAssembly();
+        PartCode partCode = partNumberingDomainService.generatePartCode(isSoftware, isAssembly);
         log.info("系统发号生成零件号: {}", partCode.code());
 
         Part part = Part.create(

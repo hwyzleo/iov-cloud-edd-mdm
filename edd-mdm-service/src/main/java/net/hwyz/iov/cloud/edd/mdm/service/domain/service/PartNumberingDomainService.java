@@ -12,15 +12,14 @@ import net.hwyz.iov.cloud.edd.mdm.service.common.exception.PartSeqOverflowExcept
 
 /**
  * Part零件号发号领域服务
- * CR-023 新增
+ * CR-023 新增，CR-032 移除软件件S前缀
  *
  * 职责：
  * 1. 全局单一序列取号
- * 2. 前缀判定（软件件S前缀）
- * 3. 拼接code/base_no
- * 4. UK兜底重试一次
- * 5. 代次升级next代次生成
- * 6. 上游code冲突两层决策兜底
+ * 2. 拼接code/base_no（软硬件统一无前缀骨架）
+ * 3. UK兜底重试一次
+ * 4. 代次升级next代次生成
+ * 5. 上游code冲突两层决策兜底
  */
 @Slf4j
 @Service
@@ -33,9 +32,10 @@ public class PartNumberingDomainService {
     /**
      * 系统发号生成零件号
      * @param isSoftware 是否软件件
+     * @param isAssembly 是否总成件
      * @return 零件号值对象
      */
-    public PartCode generatePartCode(boolean isSoftware) {
+    public PartCode generatePartCode(boolean isSoftware, boolean isAssembly) {
         // 1. 行锁自增取号
         long seq = partSeqRepository.allocateNextSeq();
         log.debug("分配零件号序号: {}", seq);
@@ -46,7 +46,7 @@ public class PartNumberingDomainService {
         }
 
         // 3. 拼接code
-        PartCode partCode = PartCode.generate(isSoftware, seq);
+        PartCode partCode = PartCode.generate(isSoftware, isAssembly, seq);
         log.debug("生成零件号: code={}, baseNo={}", partCode.code(), partCode.baseNo());
 
         // 4. UK兜底检查
@@ -56,7 +56,7 @@ public class PartNumberingDomainService {
             if (seq > PartCode.getSeqMax()) {
                 throw new PartSeqOverflowException(seq);
             }
-            partCode = PartCode.generate(isSoftware, seq);
+            partCode = PartCode.generate(isSoftware, isAssembly, seq);
             if (partRepository.existsByCode(partCode.code())) {
                 throw new PartCodeGenConflictException(partCode.code());
             }

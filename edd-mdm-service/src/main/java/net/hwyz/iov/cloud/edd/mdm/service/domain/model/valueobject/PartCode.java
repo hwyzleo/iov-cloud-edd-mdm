@@ -2,8 +2,8 @@ package net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject;
 
 /**
  * 零件号值对象
- * 封装 [可选前缀] + 8位零填充流水 + 2位字母代次 的拼装/解析/反解
- * CR-023 新增
+ * 封装 8位零填充流水 + 2位字母代次 的拼装/解析/反解
+ * CR-023 新增，CR-032 移除软件件S前缀，软硬件统一无前缀骨架
  */
 public record PartCode(String code, String baseNo, PartGeneration generation) {
     private static final int SEQ_LENGTH = 8;
@@ -11,14 +11,15 @@ public record PartCode(String code, String baseNo, PartGeneration generation) {
 
     /**
      * 系统发号构造
+     * 软硬件统一无前缀骨架：8位零填充流水 + 2位字母代次
+     * 软硬件区分仅由 is_software 承载，不编入 code/base_no
      */
-    public static PartCode generate(boolean isSoftware, long seq) {
+    public static PartCode generate(boolean isSoftware, boolean isAssembly, long seq) {
         if (seq > SEQ_MAX) {
             throw new IllegalArgumentException("序号溢出: " + seq);
         }
-        String prefix = isSoftware ? "S" : "";
         String seqStr = String.format("%0" + SEQ_LENGTH + "d", seq);
-        String baseNo = prefix + seqStr;
+        String baseNo = seqStr;
         String code = baseNo + PartGeneration.AA.value();
         return new PartCode(code, baseNo, PartGeneration.AA);
     }

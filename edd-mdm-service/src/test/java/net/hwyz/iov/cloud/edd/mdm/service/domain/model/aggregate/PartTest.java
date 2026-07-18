@@ -30,7 +30,7 @@ class PartTest {
         @Test
         @DisplayName("创建成功 - 所有字段正确填充")
         void create_success() {
-            PartCode partCode = PartCode.generate(false, 1);
+            PartCode partCode = PartCode.generate(false, false, 1);
             Part part = Part.create(
                     partCode, "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
                     "MC001", PartType.STANDARD_PART, "NODE001", "SUP001",
@@ -96,7 +96,7 @@ class PartTest {
             cal.set(2026, Calendar.JANUARY, 1);
             Date to = cal.getTime();
 
-            PartCode partCode = PartCode.generate(false, 1);
+            PartCode partCode = PartCode.generate(false, false, 1);
             assertThrows(IllegalArgumentException.class, () ->
                     Part.create(
                             partCode, "前保险杠总成", null, null,
@@ -117,7 +117,7 @@ class PartTest {
         @Test
         @DisplayName("创建成功 - effectiveFrom 和 effectiveTo 都为 null")
         void create_bothDatesNull_success() {
-            PartCode partCode = PartCode.generate(false, 1);
+            PartCode partCode = PartCode.generate(false, false, 1);
             Part part = Part.create(
                     partCode, "前保险杠总成", null, null,
                     "MC001", PartType.STANDARD_PART, null, null,
@@ -377,7 +377,7 @@ class PartTest {
     }
 
     private Part createTestPart() {
-        PartCode partCode = PartCode.generate(false, 1);
+        PartCode partCode = PartCode.generate(false, false, 1);
         return Part.create(
                 partCode, "前保险杠总成", "Front Bumper Assembly", "前保险杠总成描述",
                 "MC001", PartType.STANDARD_PART, "NODE001", "SUP001",
