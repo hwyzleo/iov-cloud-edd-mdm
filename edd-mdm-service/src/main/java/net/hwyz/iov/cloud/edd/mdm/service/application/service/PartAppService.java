@@ -213,8 +213,8 @@ public class PartAppService {
         List<Part> parts = partRepository.list(
                 query.getKeyword(),
                 query.getCategoryCode(), query.getPartType(), query.getVehicleNodeCode(),
-                query.getSupplierCode(), query.getLifecycleStage(), query.getIsSoftware(), status,
-                query.getPage(), query.getSize()
+                query.getSupplierCode(), query.getLifecycleStage(), query.getIsSoftware(), query.getIsAssembly(),
+                status, query.getPage(), query.getSize()
         );
         return parts.stream()
                 .map(this::toDto)
@@ -231,23 +231,27 @@ public class PartAppService {
      * @param supplierCode    供应商编码
      * @param lifecycleStage  生命周期阶段
      * @param isSoftware      是否软件零件
+     * @param isAssembly      是否总成件
      * @param includeInactive 是否包含失效记录
      * @return 总数
      */
     public long countParts(String keyword, String categoryCode, String partType, String vehicleNodeCode,
-                           String supplierCode, String lifecycleStage, Boolean isSoftware, boolean includeInactive) {
+                           String supplierCode, String lifecycleStage, Boolean isSoftware, Boolean isAssembly,
+                           boolean includeInactive) {
         String status = includeInactive ? null : "ACTIVE";
         return partRepository.count(keyword, categoryCode, partType, vehicleNodeCode, supplierCode,
-                lifecycleStage, isSoftware, status);
+                lifecycleStage, isSoftware, isAssembly, status);
     }
 
     /**
      * 查询所有ACTIVE零件
      *
+     * @param isSoftware 是否软件零件
+     * @param isAssembly 是否总成件
      * @return 零件DTO列表
      */
-    public List<PartDto> listAllActiveParts() {
-        List<Part> parts = partRepository.listAllActive();
+    public List<PartDto> listAllActiveParts(Boolean isSoftware, Boolean isAssembly) {
+        List<Part> parts = partRepository.listAllActive(isSoftware, isAssembly);
         return parts.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());

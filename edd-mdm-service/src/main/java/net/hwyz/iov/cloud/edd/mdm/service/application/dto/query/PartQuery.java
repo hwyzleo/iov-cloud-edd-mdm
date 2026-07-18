@@ -67,6 +67,11 @@ public class PartQuery {
     private Boolean isSoftware;
 
     /**
+     * 是否总成件
+     */
+    private Boolean isAssembly;
+
+    /**
      * 是否包含失效记录
      */
     private boolean includeInactive;

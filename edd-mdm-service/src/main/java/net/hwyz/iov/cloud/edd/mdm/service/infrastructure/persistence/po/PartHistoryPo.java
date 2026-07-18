@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -41,16 +42,24 @@ public class PartHistoryPo {
     private String partType;
     private String vehicleNodeCode;
     private String supplierCode;
+    @TableField("is_software")
     private Boolean isSoftware;
+    @TableField("is_assembly")
     private Boolean isAssembly;
+    @TableField("fota_upgradeable")
     private Boolean fotaUpgradeable;
+    @TableField("is_safety_critical")
     private Boolean isSafetyCritical;
     private String isKeyPart;
+    @TableField("is_regulatory_part")
     private Boolean isRegulatoryPart;
+    @TableField("is_frame_part")
     private Boolean isFramePart;
+    @TableField("is_accurately_traced")
     private Boolean isAccuratelyTraced;
     private String ffaCode;
     private String ffaDesc;
+    @TableField("is_digitate")
     private Boolean isDigitate;
     private String initialModel;
     private String productionCode;

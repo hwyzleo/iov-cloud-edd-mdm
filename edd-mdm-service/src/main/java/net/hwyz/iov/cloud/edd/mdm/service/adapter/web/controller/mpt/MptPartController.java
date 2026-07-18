@@ -189,6 +189,7 @@ public class MptPartController {
      * @param supplierCode    供应商编码
      * @param lifecycleStage  生命周期阶段
      * @param isSoftware      是否软件零件
+     * @param isAssembly      是否总成件
      * @param includeInactive 是否包含失效记录
      * @return 零件分页响应
      */
@@ -202,6 +203,7 @@ public class MptPartController {
                                                @RequestParam(required = false) String supplierCode,
                                                @RequestParam(required = false) String lifecycleStage,
                                                @RequestParam(required = false) Boolean isSoftware,
+                                               @RequestParam(required = false) Boolean isAssembly,
                                                @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
@@ -216,12 +218,13 @@ public class MptPartController {
                         .supplierCode(supplierCode)
                         .lifecycleStage(lifecycleStage)
                         .isSoftware(isSoftware)
+                        .isAssembly(isAssembly)
                         .includeInactive(includeInactiveFlag)
                         .build()
         );
 
         long total = partAppService.countParts(keyword, categoryCode, partType, vehicleNodeCode,
-                supplierCode, lifecycleStage, isSoftware, includeInactiveFlag);
+                supplierCode, lifecycleStage, isSoftware, isAssembly, includeInactiveFlag);
 
         List<PartResponse> rows = parts.stream()
                 .map(partAssembler::toResponse)
@@ -236,11 +239,14 @@ public class MptPartController {
     /**
      * 查询所有ACTIVE零件
      *
+     * @param isSoftware 是否软件零件
+     * @param isAssembly 是否总成件
      * @return 零件响应列表
      */
     @GetMapping("/listAll")
-    public ApiResponse<List<PartResponse>> listAll() {
-        List<PartDto> dtoList = partAppService.listAllActiveParts();
+    public ApiResponse<List<PartResponse>> listAll(@RequestParam(required = false) Boolean isSoftware,
+                                                    @RequestParam(required = false) Boolean isAssembly) {
+        List<PartDto> dtoList = partAppService.listAllActiveParts(isSoftware, isAssembly);
         List<PartResponse> rows = dtoList.stream()
                 .map(partAssembler::toResponse)
                 .collect(Collectors.toList());
@@ -250,11 +256,14 @@ public class MptPartController {
     /**
      * 导出零件
      *
+     * @param isSoftware 是否软件零件
+     * @param isAssembly 是否总成件
      * @return 零件响应列表
      */
     @GetMapping("/export")
-    public ApiResponse<List<PartResponse>> export() {
-        List<PartDto> dtoList = partAppService.listAllActiveParts();
+    public ApiResponse<List<PartResponse>> export(@RequestParam(required = false) Boolean isSoftware,
+                                                   @RequestParam(required = false) Boolean isAssembly) {
+        List<PartDto> dtoList = partAppService.listAllActiveParts(isSoftware, isAssembly);
         List<PartResponse> rows = dtoList.stream()
                 .map(partAssembler::toResponse)
                 .collect(Collectors.toList());

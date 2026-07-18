@@ -1,6 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Part;
@@ -81,11 +82,12 @@ public class PartRepositoryImpl implements PartRepository {
 
     @Override
     public List<Part> list(String keyword, String categoryCode, String partType, String vehicleNodeCode,
-                           String supplierCode, String lifecycleStage, Boolean isSoftware, String status, int page, int size) {
+                           String supplierCode, String lifecycleStage, Boolean isSoftware, Boolean isAssembly,
+                           String status, int page, int size) {
         Page<PartPo> pageParam = new Page<>(page, size);
-        LambdaQueryWrapper<PartPo> wrapper = buildListWrapper(keyword, categoryCode, partType, vehicleNodeCode,
-                supplierCode, lifecycleStage, isSoftware, status);
-        wrapper.orderByDesc(PartPo::getCreateTime);
+        QueryWrapper<PartPo> wrapper = buildListWrapper(keyword, categoryCode, partType, vehicleNodeCode,
+                supplierCode, lifecycleStage, isSoftware, isAssembly, status);
+        wrapper.orderByDesc("create_time");
         Page<PartPo> result = partMapper.selectPage(pageParam, wrapper);
         return result.getRecords().stream()
                 .map(partConverter::toDomain)
@@ -94,18 +96,24 @@ public class PartRepositoryImpl implements PartRepository {
 
     @Override
     public long count(String keyword, String categoryCode, String partType, String vehicleNodeCode,
-                      String supplierCode, String lifecycleStage, Boolean isSoftware, String status) {
-        LambdaQueryWrapper<PartPo> wrapper = buildListWrapper(keyword, categoryCode, partType, vehicleNodeCode,
-                supplierCode, lifecycleStage, isSoftware, status);
+                      String supplierCode, String lifecycleStage, Boolean isSoftware, Boolean isAssembly, String status) {
+        QueryWrapper<PartPo> wrapper = buildListWrapper(keyword, categoryCode, partType, vehicleNodeCode,
+                supplierCode, lifecycleStage, isSoftware, isAssembly, status);
         return partMapper.selectCount(wrapper);
     }
 
     @Override
-    public List<Part> listAllActive() {
-        LambdaQueryWrapper<PartPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PartPo::getRowValid, true);
-        wrapper.eq(PartPo::getStatus, "ACTIVE");
-        wrapper.orderByAsc(PartPo::getCode);
+    public List<Part> listAllActive(Boolean isSoftware, Boolean isAssembly) {
+        QueryWrapper<PartPo> wrapper = new QueryWrapper<>();
+        wrapper.eq("row_valid", true);
+        wrapper.eq("status", "ACTIVE");
+        if (isSoftware != null) {
+            wrapper.eq("is_software", isSoftware);
+        }
+        if (isAssembly != null) {
+            wrapper.eq("is_assembly", isAssembly);
+        }
+        wrapper.orderByAsc("code");
         return partMapper.selectList(wrapper).stream()
                 .map(partConverter::toDomain)
                 .collect(Collectors.toList());
@@ -193,39 +201,43 @@ public class PartRepositoryImpl implements PartRepository {
         return Optional.ofNullable(partConverter.toDomain(po));
     }
 
-    private LambdaQueryWrapper<PartPo> buildListWrapper(String keyword, String categoryCode, String partType,
-                                                          String vehicleNodeCode, String supplierCode,
-                                                          String lifecycleStage, Boolean isSoftware, String status) {
-        LambdaQueryWrapper<PartPo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PartPo::getRowValid, true);
+    private QueryWrapper<PartPo> buildListWrapper(String keyword, String categoryCode, String partType,
+                                                      String vehicleNodeCode, String supplierCode,
+                                                      String lifecycleStage, Boolean isSoftware, Boolean isAssembly,
+                                                      String status) {
+        QueryWrapper<PartPo> wrapper = new QueryWrapper<>();
+        wrapper.eq("row_valid", true);
         if (keyword != null && !keyword.isBlank()) {
             String pattern = "%" + keyword.trim() + "%";
-            wrapper.and(w -> w.like(PartPo::getCode, pattern)
-                    .or().like(PartPo::getName, pattern)
-                    .or().like(PartPo::getNameLocal, pattern));
+            wrapper.and(w -> w.like("code", pattern)
+                    .or().like("name", pattern)
+                    .or().like("name_local", pattern));
         }
         if (categoryCode != null && !categoryCode.isBlank()) {
-            wrapper.eq(PartPo::getCategoryCode, categoryCode);
+            wrapper.eq("category_code", categoryCode);
         }
         if (partType != null && !partType.isBlank()) {
-            wrapper.eq(PartPo::getPartType, partType);
+            wrapper.eq("part_type", partType);
         }
         if (vehicleNodeCode != null && !vehicleNodeCode.isBlank()) {
-            wrapper.eq(PartPo::getVehicleNodeCode, vehicleNodeCode);
+            wrapper.eq("vehicle_node_code", vehicleNodeCode);
         }
         if (supplierCode != null && !supplierCode.isBlank()) {
-            wrapper.eq(PartPo::getSupplierCode, supplierCode);
+            wrapper.eq("supplier_code", supplierCode);
         }
         if (lifecycleStage != null && !lifecycleStage.isBlank()) {
-            wrapper.eq(PartPo::getLifecycleStage, lifecycleStage);
+            wrapper.eq("lifecycle_stage", lifecycleStage);
         }
         if (isSoftware != null) {
-            wrapper.eq(PartPo::getIsSoftware, isSoftware);
+            wrapper.eq("is_software", isSoftware);
+        }
+        if (isAssembly != null) {
+            wrapper.eq("is_assembly", isAssembly);
         }
         if (status != null && !status.isBlank()) {
-            wrapper.eq(PartPo::getStatus, status);
+            wrapper.eq("status", status);
         } else {
-            wrapper.eq(PartPo::getStatus, "ACTIVE");
+            wrapper.eq("status", "ACTIVE");
         }
         return wrapper;
     }

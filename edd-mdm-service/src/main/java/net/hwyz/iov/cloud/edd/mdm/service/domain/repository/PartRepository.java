@@ -24,12 +24,13 @@ public interface PartRepository {
     void delete(Part part, String operator, boolean forceDelete);
 
     List<Part> list(String keyword, String categoryCode, String partType, String vehicleNodeCode,
-                    String supplierCode, String lifecycleStage, Boolean isSoftware, String status, int page, int size);
+                    String supplierCode, String lifecycleStage, Boolean isSoftware, Boolean isAssembly,
+                    String status, int page, int size);
 
     long count(String keyword, String categoryCode, String partType, String vehicleNodeCode,
-               String supplierCode, String lifecycleStage, Boolean isSoftware, String status);
+               String supplierCode, String lifecycleStage, Boolean isSoftware, Boolean isAssembly, String status);
 
-    List<Part> listAllActive();
+    List<Part> listAllActive(Boolean isSoftware, Boolean isAssembly);
 
     List<Part> snapshot(boolean includeInactive, int page, int size);
 
