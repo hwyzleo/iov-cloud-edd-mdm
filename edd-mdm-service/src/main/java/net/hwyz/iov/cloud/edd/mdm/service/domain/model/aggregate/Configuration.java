@@ -20,6 +20,11 @@ import java.util.Date;
 @AllArgsConstructor
 public class Configuration {
 
+    /**
+     * 配置名称/本地化名称最大长度（CR-033：由 128 放宽至 512，与数据库列宽一致）
+     */
+    public static final int NAME_MAX_LENGTH = 512;
+
     private Long id;
     private String code;
     private String name;

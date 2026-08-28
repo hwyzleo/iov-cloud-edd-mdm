@@ -52,6 +52,8 @@ public class ConfigurationAppService {
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
         }
+        // CR-033：创建/更新前校验名称长度，超限在持久化前拒绝（不进入主表/history/outbox）
+        validateNameLength(cmd.getName(), cmd.getNameLocal());
         // CR-005：code 由系统按 {variantCode}+7位零填充自增序号生成，不再接受外部传入
         Configuration configuration = productDomainService.createConfiguration(
                 cmd.getName(), cmd.getNameLocal(),
@@ -68,12 +70,28 @@ public class ConfigurationAppService {
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
         }
+        // CR-033：创建/更新前校验名称长度，超限在持久化前拒绝（不进入主表/history/outbox）
+        validateNameLength(cmd.getName(), cmd.getNameLocal());
         // CR-005：code 来自 path 参数，不可变；cmd 中不再含 code 字段
         Configuration configuration = productDomainService.updateConfiguration(
                 code, cmd.getName(), cmd.getNameLocal(),
                 cmd.getDescription(), cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
         outboxService.publishConfigurationUpdatedEvent(configuration);
         return convertToDto(configuration);
+    }
+
+    /**
+     * CR-033：校验配置名称/本地化名称长度不超过 512 字符
+     */
+    private void validateNameLength(String name, String nameLocal) {
+        if (name != null && name.length() > Configuration.NAME_MAX_LENGTH) {
+            throw new MdmBaseException(MdmErrorCode.CONFIGURATION_NAME_TOO_LONG,
+                    String.format("配置名称超过 %d 字符上限（当前 %d）", Configuration.NAME_MAX_LENGTH, name.length()));
+        }
+        if (nameLocal != null && nameLocal.length() > Configuration.NAME_MAX_LENGTH) {
+            throw new MdmBaseException(MdmErrorCode.CONFIGURATION_NAME_TOO_LONG,
+                    String.format("本地化名称超过 %d 字符上限（当前 %d）", Configuration.NAME_MAX_LENGTH, nameLocal.length()));
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)

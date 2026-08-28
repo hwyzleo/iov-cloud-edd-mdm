@@ -38,6 +38,7 @@ public enum MdmErrorCode implements ErrorCode {
     VARIANT_HAS_ACTIVE_CHILDREN("812121", "版本下存在活跃配置，失效被拒绝"),
     OPTION_FAMILY_HAS_ACTIVE_CHILDREN("812122", "选项族下存在活跃选项码，失效被拒绝"),
     OPTION_FAMILY_CATEGORY_INVALID("812123", "选项族商品分类（category）为空或取值不在枚举范围"),
+    CONFIGURATION_NAME_TOO_LONG("812124", "配置名称/本地化名称超过512字符上限"),
 
     // ==================== EEAD 子域 (8123XX) ====================
     VEHICLE_NODE_NOT_EXIST("812301", "车载节点不存在"),

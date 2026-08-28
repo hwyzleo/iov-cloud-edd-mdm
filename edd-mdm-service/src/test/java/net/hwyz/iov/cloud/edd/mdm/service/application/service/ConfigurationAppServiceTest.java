@@ -1,7 +1,11 @@
 package net.hwyz.iov.cloud.edd.mdm.service.application.service;
 
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.ConfigurationCreateCmd;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.ConfigurationUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.ConfigurationDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmBaseException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmErrorCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.ConfigurationStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
@@ -147,6 +151,110 @@ class ConfigurationAppServiceTest {
 
             // Then
             assertTrue(result.isEmpty());
+        }
+    }
+
+    @Nested
+    @DisplayName("createConfiguration/updateConfiguration 名称长度校验测试（CR-033）")
+    class NameLengthValidationTests {
+
+        @Test
+        @DisplayName("创建 - name 512 字符成功写入")
+        void createConfiguration_name512_success() {
+            // Given
+            String name = "n".repeat(Configuration.NAME_MAX_LENGTH);
+            ConfigurationCreateCmd cmd = ConfigurationCreateCmd.builder()
+                    .name(name).nameLocal("本地名称").variantCode("VAR001")
+                    .description("desc").createBy("admin").build();
+            Configuration config = createTestConfiguration("VAR0010000001", "VAR001");
+            when(productDomainService.createConfiguration(anyString(), anyString(), anyString(), anyString(),
+                    any(), any(), anyString())).thenReturn(config);
+
+            // When
+            ConfigurationDto result = configurationAppService.createConfiguration(cmd);
+
+            // Then
+            assertNotNull(result);
+            verify(productDomainService).createConfiguration(eq(name), anyString(), eq("VAR001"),
+                    anyString(), any(), any(), eq("admin"));
+            verify(outboxService).publishConfigurationCreatedEvent(config);
+        }
+
+        @Test
+        @DisplayName("创建 - name 513 字符被拒，不进入持久化与事件")
+        void createConfiguration_name513_rejected() {
+            // Given
+            String name = "n".repeat(Configuration.NAME_MAX_LENGTH + 1);
+            ConfigurationCreateCmd cmd = ConfigurationCreateCmd.builder()
+                    .name(name).nameLocal("本地名称").variantCode("VAR001")
+                    .description("desc").createBy("admin").build();
+
+            // When
+            MdmBaseException ex = assertThrows(MdmBaseException.class,
+                    () -> configurationAppService.createConfiguration(cmd));
+
+            // Then
+            assertEquals(MdmErrorCode.CONFIGURATION_NAME_TOO_LONG.getCode(), ex.getErrorCode().getCode());
+            verifyNoInteractions(productDomainService);
+            verifyNoInteractions(outboxService);
+        }
+
+        @Test
+        @DisplayName("创建 - nameLocal 513 字符被拒，不进入持久化与事件")
+        void createConfiguration_nameLocal513_rejected() {
+            // Given
+            String nameLocal = "n".repeat(Configuration.NAME_MAX_LENGTH + 1);
+            ConfigurationCreateCmd cmd = ConfigurationCreateCmd.builder()
+                    .name("正常名称").nameLocal(nameLocal).variantCode("VAR001")
+                    .description("desc").createBy("admin").build();
+
+            // When
+            MdmBaseException ex = assertThrows(MdmBaseException.class,
+                    () -> configurationAppService.createConfiguration(cmd));
+
+            // Then
+            assertEquals(MdmErrorCode.CONFIGURATION_NAME_TOO_LONG.getCode(), ex.getErrorCode().getCode());
+            verifyNoInteractions(productDomainService);
+            verifyNoInteractions(outboxService);
+        }
+
+        @Test
+        @DisplayName("更新 - name 513 字符被拒，不进入持久化与事件")
+        void updateConfiguration_name513_rejected() {
+            // Given
+            String name = "n".repeat(Configuration.NAME_MAX_LENGTH + 1);
+            ConfigurationUpdateCmd cmd = ConfigurationUpdateCmd.builder()
+                    .name(name).nameLocal("本地名称").description("desc").modifyBy("admin").build();
+
+            // When
+            MdmBaseException ex = assertThrows(MdmBaseException.class,
+                    () -> configurationAppService.updateConfiguration("VAR0010000001", cmd));
+
+            // Then
+            assertEquals(MdmErrorCode.CONFIGURATION_NAME_TOO_LONG.getCode(), ex.getErrorCode().getCode());
+            verifyNoInteractions(productDomainService);
+            verifyNoInteractions(outboxService);
+        }
+
+        @Test
+        @DisplayName("更新 - name 512 字符成功写入")
+        void updateConfiguration_name512_success() {
+            // Given
+            String name = "n".repeat(Configuration.NAME_MAX_LENGTH);
+            ConfigurationUpdateCmd cmd = ConfigurationUpdateCmd.builder()
+                    .name(name).nameLocal("本地名称").description("desc").modifyBy("admin").build();
+            Configuration config = createTestConfiguration("VAR0010000001", "VAR001");
+            when(productDomainService.updateConfiguration(anyString(), anyString(), anyString(), anyString(),
+                    any(), any(), anyString())).thenReturn(config);
+
+            // When
+            ConfigurationDto result = configurationAppService.updateConfiguration("VAR0010000001", cmd);
+
+            // Then
+            assertNotNull(result);
+            verify(productDomainService).updateConfiguration(eq("VAR0010000001"), eq(name), anyString(),
+                    anyString(), any(), any(), eq("admin"));
+            verify(outboxService).publishConfigurationUpdatedEvent(config);
         }
     }
 

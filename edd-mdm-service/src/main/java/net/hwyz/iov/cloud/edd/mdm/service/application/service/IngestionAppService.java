@@ -428,6 +428,9 @@ public class IngestionAppService {
         String messageId = cmd.getMessageId();
         Map<String, Object> payload = cmd.getPayload();
 
+        // CR-033：上游接入路径同样校验 name/nameLocal 长度，超限按 schema 非法拒绝（不进入主表/history/outbox）
+        validateConfigurationNameLength((String) payload.get("name"), (String) payload.get("nameLocal"));
+
         // ===== CR-005 第 1 层：用 (sourceSystem, sourceId) 定位本地记录（幂等更新锚） =====
         Configuration existing = configurationRepository
                 .findBySourceSystemAndSourceId(sourceSystem, sourceId).orElse(null);
@@ -525,5 +528,19 @@ public class IngestionAppService {
 
         return IngestionResult.builder().entityId(saved.getId())
                 .version(saved.getVersion()).operationType("CREATED").build();
+    }
+
+    /**
+     * CR-033：上游接入路径校验 Configuration name/nameLocal 长度不超过 512，超限抛 schema 异常（持久化前拒绝）
+     */
+    private void validateConfigurationNameLength(String name, String nameLocal) {
+        if (name != null && name.length() > Configuration.NAME_MAX_LENGTH) {
+            throw new IngestionSchemaException(
+                    String.format("Configuration name 超过 %d 字符上限（当前 %d）", Configuration.NAME_MAX_LENGTH, name.length()));
+        }
+        if (nameLocal != null && nameLocal.length() > Configuration.NAME_MAX_LENGTH) {
+            throw new IngestionSchemaException(
+                    String.format("Configuration nameLocal 超过 %d 字符上限（当前 %d）", Configuration.NAME_MAX_LENGTH, nameLocal.length()));
+        }
     }
 }
