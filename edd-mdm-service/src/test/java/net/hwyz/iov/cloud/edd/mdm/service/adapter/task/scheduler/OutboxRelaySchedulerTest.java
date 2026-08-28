@@ -2,7 +2,10 @@ package net.hwyz.iov.cloud.edd.mdm.service.adapter.task.scheduler;
 
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.gateway.KafkaEventGateway;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.messaging.kafka.KafkaTopicResolver;
 import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po.OutboxPo;
+import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicCatalog;
+import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicProvisioningStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,12 +25,11 @@ import static org.mockito.Mockito.*;
 /**
  * 事件发件箱Relay定时任务单元测试
  * <p>
- * 验证 topic 路由规则：
+ * 验证 topic 路由规则与 Provisioning 门禁（MDM-DSN-CR-034）：
  * - Product 子域（多 topic）：eventType 直接作为 topic
  * - Party 子域（多 topic）：eventType 直接作为 topic
- * - EEAD 子域（单 topic）：aggregateType 映射到单一 topic
- * - Org 子域（单 topic）：aggregateType 映射到单一 topic
- * - Material 子域（单 topic）：aggregateType 映射到单一 topic
+ * - EEAD / Org / Material 子域（单 topic）：aggregateType 映射到固定 topic
+ * - NOT_READY 暂停、READY 恢复、DISABLED 兼容路径
  *
  * @author hwyz_leo
  */
@@ -40,11 +43,23 @@ class OutboxRelaySchedulerTest {
     @Mock
     private KafkaEventGateway kafkaEventGateway;
 
+    @Mock
+    private KafkaTopicProvisioningStatus provisioningStatus;
+
+    private KafkaTopicResolver kafkaTopicResolver;
     private OutboxRelayScheduler scheduler;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
-        scheduler = new OutboxRelayScheduler(outboxRepository, kafkaEventGateway);
+        KafkaTopicCatalog catalog = mock(KafkaTopicCatalog.class);
+        lenient().when(catalog.contains(anyString())).thenReturn(true);
+        ObjectProvider<KafkaTopicCatalog> provider = mock(ObjectProvider.class);
+        lenient().when(provider.getIfAvailable()).thenReturn(catalog);
+        kafkaTopicResolver = new KafkaTopicResolver(provider);
+
+        scheduler = new OutboxRelayScheduler(outboxRepository, kafkaEventGateway, kafkaTopicResolver, provisioningStatus);
+        when(provisioningStatus.state()).thenReturn(KafkaTopicProvisioningStatus.State.READY);
     }
 
     @Nested
@@ -118,50 +133,6 @@ class OutboxRelaySchedulerTest {
         }
 
         @Test
-        @DisplayName("车载节点更新事件 → mdm.eead.vehicleNode.event")
-        void relayEvents_vehicleNodeUpdated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("VEHICLE_NODE", "VehicleNodeUpdated", "TBOX");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.eead.vehicleNode.event"), eq("TBOX"), anyString());
-        }
-
-        @Test
-        @DisplayName("车载节点删除事件 → mdm.eead.vehicleNode.event")
-        void relayEvents_vehicleNodeDeleted_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("VEHICLE_NODE", "VehicleNodeDeleted", "TBOX");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.eead.vehicleNode.event"), eq("TBOX"), anyString());
-        }
-
-        @Test
-        @DisplayName("设备类别创建事件 → mdm.eead.deviceCategory.event")
-        void relayEvents_deviceCategoryCreated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("DEVICE_CATEGORY", "DeviceCategoryCreated", "DC001");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.eead.deviceCategory.event"), eq("DC001"), anyString());
-        }
-
-        @Test
-        @DisplayName("设备类别更新事件 → mdm.eead.deviceCategory.event")
-        void relayEvents_deviceCategoryUpdated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("DEVICE_CATEGORY", "DeviceCategoryUpdated", "DC001");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.eead.deviceCategory.event"), eq("DC001"), anyString());
-        }
-
-        @Test
         @DisplayName("设备类别删除事件 → mdm.eead.deviceCategory.event")
         void relayEvents_deviceCategoryDeleted_routesToSingleTopic() {
             OutboxPo event = buildOutboxPo("DEVICE_CATEGORY", "DeviceCategoryDeleted", "DC001");
@@ -170,6 +141,28 @@ class OutboxRelaySchedulerTest {
             scheduler.relayEvents();
 
             verify(kafkaEventGateway).send(eq("mdm.eead.deviceCategory.event"), eq("DC001"), anyString());
+        }
+
+        @Test
+        @DisplayName("SWIN 方案创建事件 → mdm.eead.swinScheme.event")
+        void relayEvents_swinSchemeCreated_routesToSwinSchemeTopic() {
+            OutboxPo event = buildOutboxPo("SWIN_SCHEME", "SwinSchemeCreated", "SCHEME_001");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(kafkaEventGateway).send(eq("mdm.eead.swinScheme.event"), eq("SCHEME_001"), anyString());
+        }
+
+        @Test
+        @DisplayName("TA 基线发布事件 → mdm.eead.typeApprovalBaseline.event")
+        void relayEvents_taBaselineReleased_routesToTypeApprovalBaselineTopic() {
+            OutboxPo event = buildOutboxPo("TYPE_APPROVAL_BASELINE", "TypeApprovalBaselineReleased", "TAB_001");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(kafkaEventGateway).send(eq("mdm.eead.typeApprovalBaseline.event"), eq("TAB_001"), anyString());
         }
     }
 
@@ -187,77 +180,11 @@ class OutboxRelaySchedulerTest {
 
             verify(kafkaEventGateway).send(eq("mdm.org.plant.event"), eq("PLT_CN_CD_01"), anyString());
         }
-
-        @Test
-        @DisplayName("工厂更新事件 → mdm.org.plant.event")
-        void relayEvents_plantUpdated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("PLANT", "PlantUpdated", "PLT_CN_CD_01");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.org.plant.event"), eq("PLT_CN_CD_01"), anyString());
-        }
-
-        @Test
-        @DisplayName("工厂删除事件 → mdm.org.plant.event")
-        void relayEvents_plantDeleted_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("PLANT", "PlantDeleted", "PLT_CN_CD_01");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.org.plant.event"), eq("PLT_CN_CD_01"), anyString());
-        }
     }
 
     @Nested
     @DisplayName("Material 子域 - 单 topic 映射")
     class MaterialTopicTests {
-
-        @Test
-        @DisplayName("物料分类创建事件 → mdm.material.category.event")
-        void relayEvents_materialCategoryCreated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("MATERIAL_CATEGORY", "MaterialCategoryCreated", "CAT001");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.material.category.event"), eq("CAT001"), anyString());
-        }
-
-        @Test
-        @DisplayName("物料分类更新事件 → mdm.material.category.event")
-        void relayEvents_materialCategoryUpdated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("MATERIAL_CATEGORY", "MaterialCategoryUpdated", "CAT001");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.material.category.event"), eq("CAT001"), anyString());
-        }
-
-        @Test
-        @DisplayName("物料分类删除事件 → mdm.material.category.event")
-        void relayEvents_materialCategoryDeleted_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("MATERIAL_CATEGORY", "MaterialCategoryDeleted", "CAT001");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.material.category.event"), eq("CAT001"), anyString());
-        }
-
-        @Test
-        @DisplayName("零件创建事件 → mdm.material.part.event")
-        void relayEvents_partCreated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("PART", "PartCreated", "00000001AA");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.material.part.event"), eq("00000001AA"), anyString());
-        }
 
         @Test
         @DisplayName("零件更新事件 → mdm.material.part.event")
@@ -271,29 +198,7 @@ class OutboxRelaySchedulerTest {
         }
 
         @Test
-        @DisplayName("零件删除事件 → mdm.material.part.event")
-        void relayEvents_partDeleted_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("PART", "PartDeleted", "00000001AA");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.material.part.event"), eq("00000001AA"), anyString());
-        }
-
-        @Test
-        @DisplayName("软件基线创建事件 -> mdm.material.softwareBaseline.event")
-        void relayEvents_softwareBaselineCreated_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("SOFTWARE_BASELINE", "SoftwareBaselineCreated", "SWB-V1");
-            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
-
-            scheduler.relayEvents();
-
-            verify(kafkaEventGateway).send(eq("mdm.material.softwareBaseline.event"), eq("SWB-V1"), anyString());
-        }
-
-        @Test
-        @DisplayName("软件基线发布事件 -> mdm.material.softwareBaseline.event")
+        @DisplayName("软件基线发布事件 → mdm.material.softwareBaseline.event")
         void relayEvents_softwareBaselineReleased_routesToSingleTopic() {
             OutboxPo event = buildOutboxPo("SOFTWARE_BASELINE", "SoftwareBaselineReleased", "SWB-V1");
             when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
@@ -302,16 +207,69 @@ class OutboxRelaySchedulerTest {
 
             verify(kafkaEventGateway).send(eq("mdm.material.softwareBaseline.event"), eq("SWB-V1"), anyString());
         }
+    }
+
+    @Nested
+    @DisplayName("Provisioning 门禁")
+    class ProvisioningGateTests {
 
         @Test
-        @DisplayName("软件基线删除事件 -> mdm.material.softwareBaseline.event")
-        void relayEvents_softwareBaselineDeleted_routesToSingleTopic() {
-            OutboxPo event = buildOutboxPo("SOFTWARE_BASELINE", "SoftwareBaselineDeleted", "SWB-V1");
+        @DisplayName("NOT_READY 时不查询 outbox、不发送、不增加重试")
+        void relayEvents_notReady_skipsRound() {
+            when(provisioningStatus.state()).thenReturn(KafkaTopicProvisioningStatus.State.NOT_READY);
+
+            scheduler.relayEvents();
+
+            verify(outboxRepository, never()).findPendingEvents(anyInt());
+            verify(kafkaEventGateway, never()).send(anyString(), anyString(), anyString());
+            verify(outboxRepository, never()).incrementRetryCount(anyString());
+        }
+
+        @Test
+        @DisplayName("READY 后恢复扫描与发送")
+        void relayEvents_ready_resumesScanAndSend() {
+            when(provisioningStatus.state()).thenReturn(KafkaTopicProvisioningStatus.State.READY);
+            OutboxPo event = buildOutboxPo("BRAND", "mdm.product.brand.created", "BRAND_001");
             when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
 
             scheduler.relayEvents();
 
-            verify(kafkaEventGateway).send(eq("mdm.material.softwareBaseline.event"), eq("SWB-V1"), anyString());
+            verify(outboxRepository).findPendingEvents(100);
+            verify(kafkaEventGateway).send(eq("mdm.product.brand.created"), eq("BRAND_001"), anyString());
+            verify(outboxRepository).markEventAsSent(anyString());
+        }
+
+        @Test
+        @DisplayName("DISABLED 走既有兼容路径（照常扫描发送）")
+        void relayEvents_disabled_usesLegacyPath() {
+            when(provisioningStatus.state()).thenReturn(KafkaTopicProvisioningStatus.State.DISABLED);
+            OutboxPo event = buildOutboxPo("PART", "PartCreated", "00000001AA");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(outboxRepository).findPendingEvents(100);
+            verify(kafkaEventGateway).send(eq("mdm.material.part.event"), eq("00000001AA"), anyString());
+        }
+
+        @Test
+        @DisplayName("topic 未登记时跳过发送且不增加重试")
+        void relayEvents_unresolvableTopic_skipsSendWithoutRetry() {
+            KafkaTopicCatalog catalog = mock(KafkaTopicCatalog.class);
+            when(catalog.contains(anyString())).thenReturn(false);
+            ObjectProvider<KafkaTopicCatalog> provider = mock(ObjectProvider.class);
+            when(provider.getIfAvailable()).thenReturn(catalog);
+            scheduler = new OutboxRelayScheduler(outboxRepository, kafkaEventGateway,
+                    new KafkaTopicResolver(provider), provisioningStatus);
+            when(provisioningStatus.state()).thenReturn(KafkaTopicProvisioningStatus.State.READY);
+            OutboxPo event = buildOutboxPo("BRAND", "mdm.product.brand.created", "BRAND_001");
+            when(outboxRepository.findPendingEvents(100)).thenReturn(Collections.singletonList(event));
+
+            scheduler.relayEvents();
+
+            verify(kafkaEventGateway, never()).send(anyString(), anyString(), anyString());
+            verify(outboxRepository, never()).markEventAsSent(anyString());
+            verify(outboxRepository, never()).incrementRetryCount(anyString());
         }
     }
 
