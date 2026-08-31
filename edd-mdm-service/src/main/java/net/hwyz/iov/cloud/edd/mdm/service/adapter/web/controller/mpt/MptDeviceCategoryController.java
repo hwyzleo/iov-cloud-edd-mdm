@@ -7,9 +7,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.DeviceCategoryAs
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.DeviceCategoryCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.DeviceCategoryUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.DeviceCategoryQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryCatalogBootstrapResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryCatalogPreviewResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.DeviceCategoryAppService;
+import net.hwyz.iov.cloud.edd.mdm.service.application.service.DeviceCategoryCatalogBootstrap;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +31,23 @@ public class MptDeviceCategoryController {
 
     private final DeviceCategoryAppService deviceCategoryAppService;
     private final DeviceCategoryAssembler deviceCategoryAssembler;
+    private final DeviceCategoryCatalogBootstrap deviceCategoryCatalogBootstrap;
+
+    /**
+     * 标准目录预检（CR-037 §6.1）：返回目录版本、标准设备族数量及冲突
+     */
+    @GetMapping("/catalog/preview")
+    public ApiResponse<DeviceCategoryCatalogPreviewResult> previewCatalog() {
+        return ApiResponse.ok(deviceCategoryCatalogBootstrap.preview());
+    }
+
+    /**
+     * 标准目录 Bootstrap（CR-037 §6.1）：受控幂等初始化 24 个标准设备族，返回统计结果
+     */
+    @PostMapping("/catalog/bootstrap")
+    public ApiResponse<DeviceCategoryCatalogBootstrapResult> bootstrapCatalog() {
+        return ApiResponse.ok(deviceCategoryCatalogBootstrap.bootstrap());
+    }
 
     @PostMapping("/create")
     public ApiResponse<DeviceCategoryResponse> create(@RequestBody DeviceCategoryCreateCmd cmd) {

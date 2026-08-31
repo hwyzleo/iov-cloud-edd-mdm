@@ -10,12 +10,15 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryD
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryDuplicateCodeException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryNameDuplicateException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryHasReferenceException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.DeviceCategoryHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.DeviceCategoryRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.DeviceCategoryCodePolicy;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.DeviceCategoryNamePolicy;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,13 +39,24 @@ public class DeviceCategoryAppService {
     private final DeviceCategoryRepository deviceCategoryRepository;
     private final VehicleNodeRepository vehicleNodeRepository;
     private final OutboxService outboxService;
+    private final DeviceCategoryCodePolicy deviceCategoryCodePolicy;
+    private final DeviceCategoryNamePolicy deviceCategoryNamePolicy;
 
     @Transactional(rollbackFor = Exception.class)
     public DeviceCategoryDto createDeviceCategory(DeviceCategoryCreateCmd cmd) {
         log.info("创建设备类别: {}", cmd.getCode());
+        // CR-037：设备族 code 格式校验（统一格式、长度≤16、禁止节点规格语义）
+        deviceCategoryCodePolicy.validateCodeFormat(cmd.getCode());
         if (deviceCategoryRepository.existsByCode(cmd.getCode())) {
             throw new DeviceCategoryDuplicateCodeException(cmd.getCode(), "ACTIVE");
         }
+        // CR-037：中英文名称标准化后防重（与 DRAFT/ACTIVE/INACTIVE 且 row_valid=1 的现存类别比对）
+        deviceCategoryNamePolicy.findDuplicate(
+                        deviceCategoryRepository.findAllForNameCheck(), cmd.getName(), cmd.getNameLocal())
+                .ifPresent(dup -> {
+                    throw new DeviceCategoryNameDuplicateException(
+                            cmd.getCode(), dup.getCode(), cmd.getName(), cmd.getNameLocal());
+                });
         String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
@@ -106,6 +120,13 @@ public class DeviceCategoryAppService {
         DeviceCategory category = deviceCategoryRepository.findByCode(code)
                 .orElseThrow(() -> new DeviceCategoryNotExistException(code));
         return DeviceCategoryDomainAssembler.toDto(category);
+    }
+
+    /**
+     * 判断设备类别是否存在（row_valid=1，供标准目录 Bootstrap 幂等判断使用）
+     */
+    public boolean existsDeviceCategory(String code) {
+        return deviceCategoryRepository.existsByCode(code);
     }
 
     public List<DeviceCategoryDto> listDeviceCategories(DeviceCategoryQuery query) {

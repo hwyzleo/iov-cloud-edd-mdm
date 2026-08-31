@@ -102,6 +102,15 @@ public class DeviceCategoryRepositoryImpl implements DeviceCategoryRepository {
     }
 
     @Override
+    public List<DeviceCategory> findAllForNameCheck() {
+        LambdaQueryWrapper<DeviceCategoryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DeviceCategoryPo::getRowValid, true);
+        return deviceCategoryMapper.selectList(wrapper).stream()
+                .map(deviceCategoryConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<DeviceCategoryHistory> findHistoryByCode(String code) {
         LambdaQueryWrapper<DeviceCategoryHistoryPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DeviceCategoryHistoryPo::getCode, code);

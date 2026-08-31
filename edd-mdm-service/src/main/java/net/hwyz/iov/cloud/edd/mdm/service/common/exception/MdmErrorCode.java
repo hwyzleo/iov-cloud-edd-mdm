@@ -150,7 +150,11 @@ public enum MdmErrorCode implements ErrorCode {
 
     // EEAD子域 - 补发相关 (812342-812343)
     TA_BASELINE_REPUBLISH_BATCH_LIMIT_EXCEEDED("812342", "TA基线单次批量补发命中数量超过配置上限"),
-    SWIN_DEFINITION_REPUBLISH_BATCH_LIMIT_EXCEEDED("812343", "SWIN定义单次批量补发命中数量超过配置上限");
+    SWIN_DEFINITION_REPUBLISH_BATCH_LIMIT_EXCEEDED("812343", "SWIN定义单次批量补发命中数量超过配置上限"),
+
+    // EEAD子域 - DeviceCategory 标准目录治理 (812344-812345)
+    DEVICE_CATEGORY_CODE_FORMAT_INVALID("812344", "设备类别 code 不符合设备族统一格式或包含节点规格语义"),
+    DEVICE_CATEGORY_NAME_DUPLICATE("812345", "设备类别中英文名称标准化后与现存类别重复");
 
     private final String code;
     private final String message;

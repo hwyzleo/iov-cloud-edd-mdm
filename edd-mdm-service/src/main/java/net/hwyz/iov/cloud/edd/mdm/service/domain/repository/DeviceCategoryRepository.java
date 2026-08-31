@@ -27,5 +27,7 @@ public interface DeviceCategoryRepository {
 
     List<DeviceCategory> listAllActive();
 
+    List<DeviceCategory> findAllForNameCheck();
+
     List<DeviceCategoryHistory> findHistoryByCode(String code);
 }

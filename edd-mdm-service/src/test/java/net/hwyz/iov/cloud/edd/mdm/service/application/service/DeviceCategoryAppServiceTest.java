@@ -4,13 +4,17 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.DeviceCategoryCrea
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.DeviceCategoryUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.DeviceCategoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryCodeFormatInvalidException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryDuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryHasReferenceException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryNameDuplicateException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.DeviceCategoryNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.DeviceCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.DeviceCategoryStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.DeviceCategoryRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VehicleNodeRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.DeviceCategoryCodePolicy;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.DeviceCategoryNamePolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,7 +53,9 @@ class DeviceCategoryAppServiceTest {
         deviceCategoryAppService = new DeviceCategoryAppService(
                 deviceCategoryRepository,
                 vehicleNodeRepository,
-                outboxService
+                outboxService,
+                new DeviceCategoryCodePolicy(),
+                new DeviceCategoryNamePolicy()
         );
     }
 
@@ -202,6 +209,62 @@ class DeviceCategoryAppServiceTest {
             verify(deviceCategoryRepository).findByCode("DC001");
             verify(deviceCategoryRepository).save(any(DeviceCategory.class), eq("DEACTIVATE"));
             verify(outboxService).publishDeviceCategoryUpdatedEvent(any(DeviceCategory.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("CR-037 设备族 code/名称治理测试")
+    class Cr037GovernanceTests {
+
+        @Test
+        @DisplayName("创建失败 - code 非标准格式（小写）抛 DeviceCategoryCodeFormatInvalidException")
+        void create_lowercaseCode_throwsFormatInvalid() {
+            DeviceCategoryCreateCmd cmd = DeviceCategoryCreateCmd.builder()
+                    .code("tbox").name("车载通信终端").nameLocal("Telematics Box").createBy("admin").build();
+
+            assertThrows(DeviceCategoryCodeFormatInvalidException.class, () ->
+                    deviceCategoryAppService.createDeviceCategory(cmd)
+            );
+            verify(deviceCategoryRepository, never()).save(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("创建失败 - code 携带节点规格语义（TBOX_4G）抛 DeviceCategoryCodeFormatInvalidException")
+        void create_specCode_throwsFormatInvalid() {
+            DeviceCategoryCreateCmd cmd = DeviceCategoryCreateCmd.builder()
+                    .code("TBOX_4G").name("车载通信终端").nameLocal("Telematics Box").createBy("admin").build();
+
+            assertThrows(DeviceCategoryCodeFormatInvalidException.class, () ->
+                    deviceCategoryAppService.createDeviceCategory(cmd)
+            );
+            verify(deviceCategoryRepository, never()).save(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("创建失败 - 名称标准化后重复抛 DeviceCategoryNameDuplicateException")
+        void create_nameDuplicate_throwsNameDuplicate() {
+            DeviceCategoryCreateCmd cmd = DeviceCategoryCreateCmd.builder()
+                    .code("TBOX").name("Telematics Control Unit").nameLocal("车载通信终端").createBy("admin").build();
+            DeviceCategory existing = DeviceCategory.create(
+                    "TBOX_LEGACY", "Telematics  Control Unit", "车载通信终端", null, 0,
+                    null, null, "admin");
+
+            when(deviceCategoryRepository.existsByCode("TBOX")).thenReturn(false);
+            when(deviceCategoryRepository.findAllForNameCheck())
+                    .thenReturn(Collections.singletonList(existing));
+
+            assertThrows(DeviceCategoryNameDuplicateException.class, () ->
+                    deviceCategoryAppService.createDeviceCategory(cmd)
+            );
+            verify(deviceCategoryRepository, never()).save(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("existsDeviceCategory 返回 repository 判断结果")
+        void existsDeviceCategory_delegates() {
+            when(deviceCategoryRepository.existsByCode("TBOX")).thenReturn(true);
+            assertTrue(deviceCategoryAppService.existsDeviceCategory("TBOX"));
+            verify(deviceCategoryRepository).existsByCode("TBOX");
         }
     }
 

@@ -1,0 +1,154 @@
+# Device Category 标准目录 v1 (CR-037)
+# 来源：MDM-REQ-CR-037 §4（权威内容，24 个受控精简设备族）
+# 模型：扁平字典，无 Core / Conditional / Extension 层级，无 tier / category / parentCode / nodeType / recommendedNodeTypes
+# 说明：DeviceCategory 只维护稳定设备族；通信制式（4G/5G）、安装方位（FRONT/REAR）、功率（11KW）、
+#       分辨率（8M）、线数（128）、硬件代次（GEN1）等节点级规格仅作为 VehicleNode 限定词，不得编入设备族 code。
+#       aliases 仅用于检索与 legacy 映射同义词，不落库、不生成第二条类别。
+# 目录由 DeviceCategoryCatalogLoader 静态校验（固定 24 条、code/双语名称唯一、无节点规格语义）后经
+#       DeviceCategoryCatalogBootstrap 幂等导入（受开关 iov.mdm.device-category-catalog.bootstrap-enabled 控制）
+version: 1
+deviceCategories:
+  - code: TBOX
+    name: Telematics Control Unit
+    nameLocal: 车载通信终端
+    description: 车载通信终端（Telematics Box），承载蜂窝通信与远程服务
+    aliases: [TCU, Telematics Box, DC_TBOX]
+    sortOrder: 1
+  - code: CCU
+    name: Central Computing Unit
+    nameLocal: 中央计算单元
+    description: 中央计算单元，集中承载座舱/智驾等高性能计算
+    aliases: [Central Computer]
+    sortOrder: 2
+  - code: DCU
+    name: Domain Control Unit
+    nameLocal: 域控制器
+    description: 域控制器，按功能域集中控制（如智驾域、座舱域）
+    aliases: [Domain Controller]
+    sortOrder: 3
+  - code: ZCU
+    name: Zonal Control Unit
+    nameLocal: 区域控制器
+    description: 区域控制器，按整车物理区域就近控制
+    aliases: [Zone Controller]
+    sortOrder: 4
+  - code: CGW
+    name: Central Gateway
+    nameLocal: 中央网关
+    description: 中央网关，负责整车网络路由与跨域转发
+    aliases: [Gateway]
+    sortOrder: 5
+  - code: BCM
+    name: Body Control Module
+    nameLocal: 车身控制模块
+    description: 车身控制模块，控制车身电气功能
+    aliases: [Body Controller]
+    sortOrder: 6
+  - code: VCU
+    name: Vehicle Control Unit
+    nameLocal: 整车控制器
+    description: 整车控制器，协调整车动力与能量管理
+    aliases: [Vehicle Controller]
+    sortOrder: 7
+  - code: BMS
+    name: Battery Management System
+    nameLocal: 电池管理系统
+    description: 电池管理系统，负责电池状态监测与保护
+    aliases: [Battery Management]
+    sortOrder: 8
+  - code: MCU
+    name: Motor Control Unit
+    nameLocal: 电机控制器
+    description: 电机控制器，驱动电机功率变换与转矩控制
+    aliases: [Motor Controller]
+    sortOrder: 9
+  - code: BRAKE_ECU
+    name: Brake Control Unit
+    nameLocal: 制动控制器
+    description: 制动控制器（短组合消歧，区别于 BCU）
+    aliases: []
+    sortOrder: 10
+  - code: EPS
+    name: Electric Power Steering Controller
+    nameLocal: 电动助力转向控制器
+    description: 电动助力转向控制器
+    aliases: [Electric Power Steering]
+    sortOrder: 11
+  - code: AIRBAG_ECU
+    name: Airbag Control Unit
+    nameLocal: 安全气囊控制器
+    description: 安全气囊控制器（短组合消歧，区别于 ACU）
+    aliases: []
+    sortOrder: 12
+  - code: IHU
+    name: Infotainment Head Unit
+    nameLocal: 信息娱乐主机
+    description: 信息娱乐主机
+    aliases: [Head Unit]
+    sortOrder: 13
+  - code: CLUSTER
+    name: Instrument Cluster
+    nameLocal: 组合仪表
+    description: 组合仪表，承载行车信息显示
+    aliases: [IPC]
+    sortOrder: 14
+  - code: HUD
+    name: Head-up Display
+    nameLocal: 抬头显示器
+    description: 抬头显示器
+    aliases: [Head Up Display]
+    sortOrder: 15
+  - code: CAM
+    name: Camera
+    nameLocal: 摄像头
+    description: 摄像头（前/后/角向等位置与分辨率差异由 VehicleNode 表达）
+    aliases: [Camera Module]
+    sortOrder: 16
+  - code: RADAR
+    name: Radar
+    nameLocal: 毫米波雷达
+    description: 毫米波雷达（角向与数量差异由 VehicleNode 表达）
+    aliases: [Radar Sensor]
+    sortOrder: 17
+  - code: LIDAR
+    name: LiDAR
+    nameLocal: 激光雷达
+    description: 激光雷达（线数与类型差异由 VehicleNode 表达）
+    aliases: [LiDAR Sensor]
+    sortOrder: 18
+  - code: USS
+    name: Ultrasonic Sensor
+    nameLocal: 超声波传感器
+    description: 超声波（泊车）传感器
+    aliases: [PDC, Parking Sensor]
+    sortOrder: 19
+  - code: OBC
+    name: On-board Charger
+    nameLocal: 车载充电机
+    description: 车载充电机（交流慢充）
+    aliases: [Charger]
+    sortOrder: 20
+  - code: DCDC
+    name: DC-DC Converter
+    nameLocal: 直流变换器
+    description: 直流变换器（电压平台差异由 VehicleNode 表达）
+    aliases: [DC/DC Converter]
+    sortOrder: 21
+  - code: EVCC
+    name: Electric Vehicle Communication Controller
+    nameLocal: 充电通信控制器
+    description: 充电通信控制器（直流快充通信）
+    aliases: []
+    sortOrder: 22
+  - code: ETH_SW
+    name: Automotive Ethernet Switch
+    nameLocal: 车载以太网交换机
+    description: 车载以太网交换机（端口数与代次差异由 VehicleNode 表达）
+    aliases: [Ethernet Switch]
+    sortOrder: 23
+  - code: V2X_OBU
+    name: V2X On-board Unit
+    nameLocal: V2X 车载单元
+    description: V2X 车载单元（车路/车车通信）
+    aliases: [V2X Box]
+    sortOrder: 24

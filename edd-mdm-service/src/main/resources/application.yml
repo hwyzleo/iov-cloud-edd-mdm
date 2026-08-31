@@ -5,10 +5,13 @@ iov:
   kafka:
     topic-provisioning:
       enabled: true
+  mdm:
+    device-category-catalog:
+      bootstrap-enabled: false
+    option-family-catalog:
+      bootstrap-enabled: false
 
 mdm:
-  option-family-catalog:
-    bootstrap-enabled: false
   material:
     software-baseline:
       republish:
