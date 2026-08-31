@@ -42,45 +42,7 @@ public class SupplierRepositoryImpl implements SupplierRepository {
             supplierMapper.updateById(po);
         }
         if (operationType != null) {
-            SupplierHistoryPo historyPo = SupplierHistoryPo.builder()
-                    .entityId(po.getId())
-                    .code(po.getCode())
-                    .name(po.getName())
-                    .nameLocal(po.getNameLocal())
-                    .shortName(po.getShortName())
-                    .supplierType(po.getSupplierType())
-                    .country(po.getCountry())
-                    .businessLicenseNo(po.getBusinessLicenseNo())
-                    .taxId(po.getTaxId())
-                    .registeredAddress(po.getRegisteredAddress())
-                    .contactName(po.getContactName())
-                    .contactPhone(po.getContactPhone())
-                    .contactEmail(po.getContactEmail())
-                    .bankName(po.getBankName())
-                    .bankAccount(po.getBankAccount())
-                    .cooperationStartDate(po.getCooperationStartDate())
-                    .description(po.getDescription())
-                    .sourceSystem(po.getSourceSystem())
-                    .sourceId(po.getSourceId())
-                    .sourceVersion(po.getSourceVersion())
-                    .ingestionChannel(po.getIngestionChannel())
-                    .ingestionTime(po.getIngestionTime())
-                    .sourcePayloadHash(po.getSourcePayloadHash())
-                    .version(po.getVersion())
-                    .effectiveFrom(po.getEffectiveFrom())
-                    .effectiveTo(po.getEffectiveTo())
-                    .status(po.getStatus())
-                    .operationType(operationType)
-                    .snapshotTime(new Date())
-                    .operator(po.getModifyBy())
-                    .createBy(po.getModifyBy())
-                    .createTime(new Date())
-                    .modifyBy(po.getModifyBy())
-                    .modifyTime(new Date())
-                    .rowVersion(0)
-                    .rowValid(true)
-                    .build();
-            supplierHistoryMapper.insert(historyPo);
+            insertHistory(po, operationType);
         }
         return supplierConverter.toDomain(po);
     }
@@ -165,7 +127,9 @@ public class SupplierRepositoryImpl implements SupplierRepository {
     @Override
     public void delete(Supplier supplier) {
         SupplierPo po = supplierConverter.toPo(supplier);
-        supplierMapper.updateById(po);
+        // 物理删除：先写 DELETE 历史快照（主表记录删除后保留审计），再硬删主表记录
+        insertHistory(po, "DELETE");
+        supplierMapper.deleteById(po.getId());
     }
 
     @Override
@@ -178,5 +142,48 @@ public class SupplierRepositoryImpl implements SupplierRepository {
         return poList.stream()
                 .map(supplierHistoryConverter::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    private void insertHistory(SupplierPo po, String operationType) {
+        Date now = new Date();
+        SupplierHistoryPo historyPo = SupplierHistoryPo.builder()
+                .entityId(po.getId())
+                .code(po.getCode())
+                .name(po.getName())
+                .nameLocal(po.getNameLocal())
+                .shortName(po.getShortName())
+                .supplierType(po.getSupplierType())
+                .country(po.getCountry())
+                .businessLicenseNo(po.getBusinessLicenseNo())
+                .taxId(po.getTaxId())
+                .registeredAddress(po.getRegisteredAddress())
+                .contactName(po.getContactName())
+                .contactPhone(po.getContactPhone())
+                .contactEmail(po.getContactEmail())
+                .bankName(po.getBankName())
+                .bankAccount(po.getBankAccount())
+                .cooperationStartDate(po.getCooperationStartDate())
+                .description(po.getDescription())
+                .sourceSystem(po.getSourceSystem())
+                .sourceId(po.getSourceId())
+                .sourceVersion(po.getSourceVersion())
+                .ingestionChannel(po.getIngestionChannel())
+                .ingestionTime(po.getIngestionTime())
+                .sourcePayloadHash(po.getSourcePayloadHash())
+                .version(po.getVersion())
+                .effectiveFrom(po.getEffectiveFrom())
+                .effectiveTo(po.getEffectiveTo())
+                .status(po.getStatus())
+                .operationType(operationType)
+                .snapshotTime(now)
+                .operator(po.getModifyBy())
+                .createBy(po.getModifyBy())
+                .createTime(now)
+                .modifyBy(po.getModifyBy())
+                .modifyTime(now)
+                .rowVersion(0)
+                .rowValid(true)
+                .build();
+        supplierHistoryMapper.insert(historyPo);
     }
 }

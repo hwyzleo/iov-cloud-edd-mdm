@@ -107,6 +107,9 @@ public enum MdmErrorCode implements ErrorCode {
 
     // ==================== Party 子域 (8127XX) ====================
     SUPPLIER_CODE_EXIST("812701", "供应商 code 已存在"),
+    SUPPLIER_CODE_GENERATION_FAILED("812702", "供应商 code 系统发号碰撞重试后仍失败"),
+    SUPPLIER_CODE_EXHAUSTED("812703", "供应商 code 全局流水序号耗尽"),
+    SUPPLIER_HAS_DOWNSTREAM_REF("812704", "供应商存在下游引用，删除被拒绝"),
 
     // ==================== Material 子域 (8129XX) ====================
     MATERIAL_CATEGORY_NOT_EXIST("812901", "物料品类不存在"),

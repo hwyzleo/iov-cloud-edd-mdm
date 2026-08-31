@@ -115,10 +115,7 @@ public class Supplier {
     }
 
     public void delete(String modifyBy) {
-        if (this.status != SupplierStatus.DRAFT) {
-            throw new IllegalStateException("只有DRAFT状态的供应商才能删除");
-        }
-        this.rowValid = false;
+        // 不限制状态，任何状态的供应商均可物理删除
         this.modifyBy = modifyBy;
         this.modifyTime = new Date();
     }

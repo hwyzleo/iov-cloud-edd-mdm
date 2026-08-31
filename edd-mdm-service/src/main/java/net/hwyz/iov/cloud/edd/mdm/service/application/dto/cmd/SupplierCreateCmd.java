@@ -20,7 +20,11 @@ public class SupplierCreateCmd {
 
     /**
      * 业务主键（code）
+     * <p>
+     * CR-036 起 code 由系统发号（SUP + 8 位全局流水），本字段保留为兼容字段一个版本，
+     * 服务端始终忽略；下一不兼容大版本可删除。Query/Response 中的 code 保留。
      */
+    @Deprecated
     private String code;
 
     /**

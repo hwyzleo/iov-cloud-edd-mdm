@@ -8,9 +8,13 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.SupplierQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SupplierDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.SupplierHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.SupplierHasDownstreamRefException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.SupplierHistory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.SupplierCode;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PartRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SupplierRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.SupplierNumberingDomainService;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,17 +33,25 @@ import java.util.stream.Collectors;
 public class SupplierAppService {
 
     private final SupplierRepository supplierRepository;
+    private final PartRepository partRepository;
     private final OutboxService outboxService;
+    private final SupplierNumberingDomainService supplierNumberingDomainService;
 
     /**
      * 创建供应商
+     * <p>
+     * CR-036：code 由系统发号生成（SUP + 8 位全局流水），忽略调用方传入的 code；
+     * 发号与 Supplier/history/outbox 写入在同一本地事务内。
      *
      * @param cmd 创建命令
      * @return 供应商DTO
      */
     @Transactional(rollbackFor = Exception.class)
     public SupplierDto createSupplier(SupplierCreateCmd cmd) {
-        log.info("创建供应商: {}", cmd.getCode());
+        log.info("创建供应商（系统发号）: name={}", cmd.getName());
+
+        // CR-036：忽略调用方传入 code，由 SupplierNumberingDomainService 统一发号
+        String code = supplierNumberingDomainService.allocate().code();
 
         String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
@@ -47,7 +59,7 @@ public class SupplierAppService {
         }
 
         Supplier supplier = Supplier.create(
-                cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getShortName(),
+                code, cmd.getName(), cmd.getNameLocal(), cmd.getShortName(),
                 cmd.getSupplierType(), cmd.getCountry(), cmd.getBusinessLicenseNo(),
                 cmd.getTaxId(), cmd.getRegisteredAddress(), cmd.getContactName(),
                 cmd.getContactPhone(), cmd.getContactEmail(), cmd.getBankName(),
@@ -139,6 +151,12 @@ public class SupplierAppService {
 
         Supplier supplier = supplierRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException("供应商不存在: " + code));
+
+        // 关联检查：存在零件引用该供应商时拒绝删除
+        long refCount = partRepository.countBySupplier(code);
+        if (refCount > 0) {
+            throw new SupplierHasDownstreamRefException(code, refCount);
+        }
 
         supplier.delete(modifyBy);
 

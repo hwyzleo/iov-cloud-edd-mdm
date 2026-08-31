@@ -181,6 +181,14 @@ public class PartRepositoryImpl implements PartRepository {
     }
 
     @Override
+    public long countBySupplier(String supplierCode) {
+        LambdaQueryWrapper<PartPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PartPo::getRowValid, true);
+        wrapper.eq(PartPo::getSupplierCode, supplierCode);
+        return partMapper.selectCount(wrapper);
+    }
+
+    @Override
     public List<PartHistory> findHistoryByCode(String code) {
         LambdaQueryWrapper<PartHistoryPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PartHistoryPo::getCode, code);

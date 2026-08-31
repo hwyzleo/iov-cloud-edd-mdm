@@ -42,6 +42,14 @@ public interface PartRepository {
 
     List<Part> listBySupplier(String supplierCode);
 
+    /**
+     * 统计引用指定供应商的零件数量（含所有状态的存量记录，用于删除供应商前的关联检查）
+     *
+     * @param supplierCode 供应商code
+     * @return 引用该供应商的零件数量
+     */
+    long countBySupplier(String supplierCode);
+
     List<PartHistory> findHistoryByCode(String code);
 
     /**
