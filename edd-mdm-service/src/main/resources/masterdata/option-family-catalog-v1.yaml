@@ -1,0 +1,325 @@
+# Option Family 标准目录 v1 (CR-035)
+# 来源：MDM-REQ-CR-035 §4（权威内容，Core 22 + Conditional 34）
+# 层级：CORE 核心标准族（受控初始化导入为 ACTIVE） / CONDITIONAL 条件标准族（按需启用，不默认初始化）
+# Extension 企业扩展族不进入本目录，仅作为命名指导（必须使用 OF_<PREFIX>_X_* 命名空间）
+# 说明：具体选项族 code 不固化为 Java enum；本目录由 OptionFamilyCatalogLoader 静态校验后经
+#       OptionFamilyCatalogBootstrap 幂等导入（受开关 iov.mdm.option-family-catalog.bootstrap-enabled 控制）
+version: 1
+optionFamilies:
+  # ==================== Core 核心标准族（22）====================
+  - tier: CORE
+    code: OF_EXT_BODY_COLOR
+    name: Body Color
+    nameLocal: 车身颜色
+    category: EXTERIOR
+  - tier: CORE
+    code: OF_EXT_WHEEL
+    name: Wheel
+    nameLocal: 轮毂
+    category: EXTERIOR
+  - tier: CORE
+    code: OF_EXT_ROOF_SYSTEM
+    name: Roof System
+    nameLocal: 车顶系统
+    category: EXTERIOR
+  - tier: CORE
+    code: OF_INT_COLOR_THEME
+    name: Interior Color Theme
+    nameLocal: 内饰配色主题
+    category: INTERIOR
+  - tier: CORE
+    code: OF_INT_SEAT_UPHOLSTERY
+    name: Seat Upholstery
+    nameLocal: 座椅面料
+    category: INTERIOR
+  - tier: CORE
+    code: OF_INT_SEAT_LAYOUT
+    name: Seat Layout
+    nameLocal: 座椅布局
+    category: INTERIOR
+  - tier: CORE
+    code: OF_INT_TRIM_MATERIAL
+    name: Interior Trim Material
+    nameLocal: 内饰饰板材质
+    category: INTERIOR
+  - tier: CORE
+    code: OF_INT_HEADLINER
+    name: Headliner
+    nameLocal: 顶棚
+    category: INTERIOR
+  - tier: CORE
+    code: OF_INT_AMBIENT_LIGHTING
+    name: Ambient Lighting
+    nameLocal: 氛围灯
+    category: INTERIOR
+  - tier: CORE
+    code: OF_PWR_PROPULSION_TYPE
+    name: Propulsion Type
+    nameLocal: 动力形式
+    category: POWERTRAIN
+  - tier: CORE
+    code: OF_PWR_DRIVE_TYPE
+    name: Drive Type
+    nameLocal: 驱动形式
+    category: POWERTRAIN
+  - tier: CORE
+    code: OF_PWR_MOTOR_CONFIGURATION
+    name: Motor Configuration
+    nameLocal: 电机配置
+    category: POWERTRAIN
+  - tier: CORE
+    code: OF_PWR_BATTERY_CAPACITY
+    name: Traction Battery Capacity
+    nameLocal: 动力电池容量
+    category: POWERTRAIN
+  - tier: CORE
+    code: OF_CHS_SUSPENSION_SYSTEM
+    name: Suspension System
+    nameLocal: 悬架系统
+    category: CHASSIS
+  - tier: CORE
+    code: OF_CHS_BRAKE_SYSTEM
+    name: Brake System
+    nameLocal: 制动系统
+    category: CHASSIS
+  - tier: CORE
+    code: OF_SMART_CENTER_DISPLAY
+    name: Center Display
+    nameLocal: 中控显示屏
+    category: INTELLIGENT
+  - tier: CORE
+    code: OF_SMART_DRIVER_DISPLAY
+    name: Driver Display
+    nameLocal: 驾驶员仪表
+    category: INTELLIGENT
+  - tier: CORE
+    code: OF_SMART_HUD
+    name: Head-up Display
+    nameLocal: 抬头显示系统
+    category: INTELLIGENT
+  - tier: CORE
+    code: OF_COMF_CLIMATE_CONTROL
+    name: Climate Control System
+    nameLocal: 空调系统
+    category: COMFORT
+  - tier: CORE
+    code: OF_COMF_AUDIO_SYSTEM
+    name: Audio System
+    nameLocal: 音响系统
+    category: COMFORT
+  - tier: CORE
+    code: OF_SAFE_AIRBAG_SYSTEM
+    name: Airbag System
+    nameLocal: 安全气囊系统
+    category: SAFETY
+  - tier: CORE
+    code: OF_SAFE_ANTI_THEFT_SYSTEM
+    name: Anti-theft System
+    nameLocal: 防盗系统
+    category: SAFETY
+
+  # ==================== Conditional 条件标准族（34）====================
+  - tier: CONDITIONAL
+    code: OF_EXT_TWO_TONE_BODY
+    name: Two-tone Body
+    nameLocal: 双色车身
+    category: EXTERIOR
+    activationCondition: 双色方案不能由 Body Color 单值表达
+  - tier: CONDITIONAL
+    code: OF_EXT_TIRE
+    name: Tire
+    nameLocal: 轮胎
+    category: EXTERIOR
+    activationCondition: 轮胎可脱离 Wheel 独立变化
+  - tier: CONDITIONAL
+    code: OF_EXT_STYLE_PACKAGE
+    name: Exterior Styling Package
+    nameLocal: 外观风格套件
+    category: EXTERIOR
+    activationCondition: 存在不可拆外观套件
+  - tier: CONDITIONAL
+    code: OF_EXT_CALIPER_COLOR
+    name: Brake Caliper Color
+    nameLocal: 制动卡钳颜色
+    category: EXTERIOR
+    activationCondition: 性能或个性化车型
+  - tier: CONDITIONAL
+    code: OF_EXT_LIGHTING
+    name: Exterior Lighting
+    nameLocal: 外部照明
+    category: EXTERIOR
+    activationCondition: 灯具规格形成配置差异
+  - tier: CONDITIONAL
+    code: OF_INT_STEERING_WHEEL
+    name: Steering Wheel
+    nameLocal: 方向盘
+    category: INTERIOR
+    activationCondition: 样式或功能可独立配置
+  - tier: CONDITIONAL
+    code: OF_PWR_POWER_LEVEL
+    name: Power Level
+    nameLocal: 动力规格
+    category: POWERTRAIN
+    activationCondition: 未由 Variant 唯一表达
+  - tier: CONDITIONAL
+    code: OF_PWR_BATTERY_CHEMISTRY
+    name: Traction Battery Chemistry
+    nameLocal: 动力电池化学体系
+    category: POWERTRAIN
+    activationCondition: 化学体系构成产品配置差异
+  - tier: CONDITIONAL
+    code: OF_PWR_VOLTAGE_PLATFORM
+    name: High-voltage Platform
+    nameLocal: 高压平台
+    category: POWERTRAIN
+    activationCondition: 400V/800V 等形成配置差异
+  - tier: CONDITIONAL
+    code: OF_PWR_ONBOARD_CHARGER
+    name: On-board Charger
+    nameLocal: 车载充电机规格
+    category: POWERTRAIN
+    activationCondition: OBC 规格可选
+  - tier: CONDITIONAL
+    code: OF_SMART_ADAS_SENSOR
+    name: ADAS Sensor Package
+    nameLocal: 智驾传感器套件
+    category: INTELLIGENT
+    activationCondition: 不与 EEAD/Part/BOM 重复表达
+  - tier: CONDITIONAL
+    code: OF_SMART_ADAS_FUNCTION
+    name: ADAS Function Package
+    nameLocal: 智驾功能包
+    category: INTELLIGENT
+    activationCondition: 功能确实作为不可拆产品组合
+  - tier: CONDITIONAL
+    code: OF_SMART_ACTIVE_SAFETY
+    name: Active Safety Package
+    nameLocal: 主动安全包
+    category: INTELLIGENT
+    activationCondition: 表示 AEB/LKA/BSD 等 ADAS 功能组合
+  - tier: CONDITIONAL
+    code: OF_SMART_PARKING_ASSIST
+    name: Parking Assist System
+    nameLocal: 泊车辅助系统
+    category: INTELLIGENT
+    activationCondition: 依赖摄像头/雷达/算法形成泊车能力
+  - tier: CONDITIONAL
+    code: OF_SMART_ADAS_COMPUTE
+    name: ADAS Computing Platform
+    nameLocal: 智驾计算平台
+    category: INTELLIGENT
+    activationCondition: 不与 EEAD/Part 重复表达
+  - tier: CONDITIONAL
+    code: OF_SMART_COCKPIT_COMPUTE
+    name: Cockpit Computing Platform
+    nameLocal: 座舱计算平台
+    category: INTELLIGENT
+    activationCondition: 不与 EEAD/Part 重复表达
+  - tier: CONDITIONAL
+    code: OF_SMART_DIGITAL_KEY
+    name: Digital Key
+    nameLocal: 数字钥匙
+    category: INTELLIGENT
+    activationCondition: 作为永久车辆能力而非订阅权益
+  - tier: CONDITIONAL
+    code: OF_SMART_CONNECTIVITY
+    name: Connectivity Hardware
+    nameLocal: 车联网硬件
+    category: INTELLIGENT
+    activationCondition: 仅硬件规格，不含订阅权益
+  - tier: CONDITIONAL
+    code: OF_COMF_SEAT_ADJUSTMENT
+    name: Seat Adjustment
+    nameLocal: 座椅调节
+    category: COMFORT
+    activationCondition: 调节方式作为统一组合值管理
+  - tier: CONDITIONAL
+    code: OF_COMF_SIDE_DOOR_SYSTEM
+    name: Side Door System
+    nameLocal: 侧门系统
+    category: COMFORT
+    activationCondition: 平开/滑移/电动等侧门能力形成差异
+  - tier: CONDITIONAL
+    code: OF_COMF_TAILGATE_SYSTEM
+    name: Tailgate System
+    nameLocal: 尾门系统
+    category: COMFORT
+    activationCondition: 手动/电动/感应/天地门形成差异
+  - tier: CONDITIONAL
+    code: OF_COMF_GLASS_PACKAGE
+    name: Glass Package
+    nameLocal: 玻璃配置包
+    category: COMFORT
+    activationCondition: 玻璃能力确实不可拆组合
+  - tier: CONDITIONAL
+    code: OF_COMF_SEAT_COMFORT
+    name: Seat Comfort Package
+    nameLocal: 座椅舒适功能包
+    category: COMFORT
+    activationCondition: 加热/通风/按摩不可拆组合
+  - tier: CONDITIONAL
+    code: OF_COMF_HEAT_PUMP
+    name: Heat Pump
+    nameLocal: 热泵系统
+    category: COMFORT
+    activationCondition: 新能源车型且形成配置差异
+  - tier: CONDITIONAL
+    code: OF_COMF_REAR_COMFORT
+    name: Rear Comfort Package
+    nameLocal: 后排舒适包
+    category: COMFORT
+    activationCondition: 行政或高端车型
+  - tier: CONDITIONAL
+    code: OF_SAFE_CHILD_SAFETY
+    name: Child Safety Package
+    nameLocal: 儿童安全包
+    category: SAFETY
+    activationCondition: 形成独立且不可拆的安全配置
+  - tier: CONDITIONAL
+    code: OF_ACC_CHARGING_EQUIPMENT
+    name: Charging Equipment
+    nameLocal: 充电附件
+    category: ACCESSORY
+    activationCondition: 新能源充电附件
+  - tier: CONDITIONAL
+    code: OF_ACC_TOWING_EQUIPMENT
+    name: Towing Equipment
+    nameLocal: 拖挂装备
+    category: ACCESSORY
+    activationCondition: 具备拖挂能力车型
+  - tier: CONDITIONAL
+    code: OF_ACC_ROOF_CARRIER
+    name: Roof Carrier
+    nameLocal: 车顶载物系统
+    category: ACCESSORY
+    activationCondition: SUV/旅行车型
+  - tier: CONDITIONAL
+    code: OF_ACC_CARGO_PACKAGE
+    name: Cargo Package
+    nameLocal: 行李厢附件包
+    category: ACCESSORY
+    activationCondition: 存在成套附件
+  - tier: CONDITIONAL
+    code: OF_ACC_CAMPING_PACKAGE
+    name: Camping Package
+    nameLocal: 露营套件
+    category: ACCESSORY
+    activationCondition: 户外场景车型
+  - tier: CONDITIONAL
+    code: OF_OTH_STEERING_POSITION
+    name: Steering Position
+    nameLocal: 驾驶位方向
+    category: OTHER
+    activationCondition: 左/右舵未由 Variant 表达
+  - tier: CONDITIONAL
+    code: OF_OTH_CLIMATE_ADAPTATION
+    name: Climate Adaptation Package
+    nameLocal: 环境适应包
+    category: OTHER
+    activationCondition: 寒区、高温或高原适配
+  - tier: CONDITIONAL
+    code: OF_OTH_HOMOLOGATION_PACKAGE
+    name: Homologation Package
+    nameLocal: 法规适配包
+    category: OTHER
+    activationCondition: 车辆本体存在法规差异

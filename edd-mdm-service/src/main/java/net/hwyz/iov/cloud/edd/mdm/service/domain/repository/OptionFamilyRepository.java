@@ -25,6 +25,13 @@ public interface OptionFamilyRepository {
 
     long count(boolean includeInactive, String category);
 
+    /**
+     * 查询全部未删除（row_valid=1）的选项族，用于 CR-035 名称标准化防重比对
+     *
+     * @return row_valid=1 的选项族列表
+     */
+    List<OptionFamily> findAllForNameCheck();
+
     void delete(OptionFamily optionFamily);
 
     List<OptionFamilyHistory> findHistoryByCode(String code);

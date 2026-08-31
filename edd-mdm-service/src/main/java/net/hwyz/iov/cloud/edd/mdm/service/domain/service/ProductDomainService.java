@@ -4,7 +4,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.common.exception.BrandHasActiveChildre
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.CarLineHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.ConfigurationSeqOverflowException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.ModelHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyCategoryPrefixMismatchException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyCodeFormatInvalidException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyHasActiveChildrenException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyHasChildrenReferenceException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyNotFoundException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyNameDuplicateException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.PlatformHasActiveChildrenException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VariantCodeTooLongException;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.VariantHasActiveChildrenException;
@@ -36,6 +41,8 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionFamilyReposito
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PlatformRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.OptionFamilyCodePolicy;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.OptionFamilyNamePolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,6 +72,8 @@ public class ProductDomainService {
     private final ConfigurationRepository configurationRepository;
     private final ConfigurationSeqRepository configurationSeqRepository;
     private final ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
+    private final OptionFamilyCodePolicy optionFamilyCodePolicy;
+    private final OptionFamilyNamePolicy optionFamilyNamePolicy;
 
     /**
      * 创建品牌
@@ -561,13 +570,25 @@ public class ProductDomainService {
 
     /**
      * 创建选项族
+     * <p>
+     * CR-035：创建前执行 code 格式（标准/扩展）、前缀/category 一致性、名称标准化防重校验；
+     * 校验在 Repository 写入前完成，非法即拒绝。
      */
     public OptionFamily createOptionFamily(String code, String name, String nameLocal, String description,
                                            net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory category,
                                            Date effectiveFrom, Date effectiveTo, String createBy) {
+        // CR-035：code 格式校验（标准/扩展格式，全大写，禁止连续/首尾下划线、非 ASCII，长度 ≤ 64）
+        optionFamilyCodePolicy.validateCodeFormat(code);
+        // CR-035：code 前缀与 category 一致性校验
+        optionFamilyCodePolicy.validateCategoryConsistency(code, category);
         if (optionFamilyRepository.existsByCode(code)) {
             throw new DuplicateCodeException("选项族code已存在: " + code);
         }
+        // CR-035：中英文名称标准化后防重（与 DRAFT/ACTIVE/INACTIVE 且 row_valid=1 的现存族比对）
+        optionFamilyNamePolicy.findDuplicate(optionFamilyRepository.findAllForNameCheck(), name, nameLocal)
+                .ifPresent(dup -> {
+                    throw new OptionFamilyNameDuplicateException(code, dup.getCode(), name, nameLocal);
+                });
         OptionFamily optionFamily = OptionFamily.create(code, name, nameLocal, description,
                 category, effectiveFrom, effectiveTo, createBy);
         return optionFamilyRepository.save(optionFamily, "CREATE");
@@ -575,14 +596,34 @@ public class ProductDomainService {
 
     /**
      * 更新选项族
+     * <p>
+     * CR-035：标准格式 code 继续执行前缀/category 一致性校验；
+     * legacy code 允许名称、描述、状态、生效期等非 code 更新，不因历史格式被阻断；code 不可变。
      */
     public OptionFamily updateOptionFamily(String code, String name, String nameLocal, String description,
                                            net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory category,
                                            Date effectiveFrom, Date effectiveTo, String modifyBy) {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
-                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+                .orElseThrow(() -> new OptionFamilyNotFoundException("选项族不存在: " + code));
+        if (optionFamilyCodePolicy.isValidFormat(code)) {
+            // 标准/扩展格式 code：继续执行前缀/category 一致性校验
+            optionFamilyCodePolicy.validateCategoryConsistency(code, category);
+        } else {
+            // legacy code：不阻断非 code 更新；category 变更需走映射迁移或 MDM-Admin 受审计兼容路径（此处仅告警）
+            if (optionFamily.getCategory() != category) {
+                log.warn("legacy 选项族 code[{}] 变更 category（{} -> {}），请确认已通过映射迁移或 MDM-Admin 受审计路径",
+                        code, optionFamily.getCategory(), category);
+            }
+        }
         optionFamily.update(name, nameLocal, description, category, effectiveFrom, effectiveTo, modifyBy);
         return optionFamilyRepository.save(optionFamily, "UPDATE");
+    }
+
+    /**
+     * 判断选项族是否存在（row_valid=1）
+     */
+    public boolean existsOptionFamily(String code) {
+        return optionFamilyRepository.existsByCode(code);
     }
 
     /**
@@ -590,7 +631,7 @@ public class ProductDomainService {
      */
     public OptionFamily deactivateOptionFamily(String code, String modifyBy) {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
-                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+                .orElseThrow(() -> new OptionFamilyNotFoundException("选项族不存在: " + code));
 
         // 检查是否存在活跃的子级选项码
         if (optionCodeRepository.existsByOptionFamilyCodeAndStatusActive(code)) {
@@ -603,12 +644,22 @@ public class ProductDomainService {
 
     /**
      * 删除选项族
+     *
+     * <p>删除前置依赖检查：仅 DRAFT 状态可删（由聚合 enforce）；若存在子级选项码（选项值），
+     * 即使 DRAFT 也拒绝删除（812108 存在下层实体引用，不允许删除），避免悬空引用。</p>
      */
     public void deleteOptionFamily(String code, String modifyBy) {
         OptionFamily optionFamily = optionFamilyRepository.findByCode(code)
-                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+                .orElseThrow(() -> new OptionFamilyNotFoundException("选项族不存在: " + code));
+
+        // 检查是否存在子级选项码，存在则拒绝删除
+        if (optionCodeRepository.existsByOptionFamilyCode(code)) {
+            throw new OptionFamilyHasChildrenReferenceException(code, 1);
+        }
+
         optionFamily.delete(modifyBy);
-        optionFamilyRepository.save(optionFamily, null);
+        // 物理删除（写 DELETE 历史快照 + 硬删主表）
+        optionFamilyRepository.delete(optionFamily);
     }
 
     /**
@@ -616,7 +667,7 @@ public class ProductDomainService {
      */
     public OptionFamily getOptionFamilyByCode(String code) {
         return optionFamilyRepository.findByCode(code)
-                .orElseThrow(() -> new BrandNotFoundException("选项族不存在: " + code));
+                .orElseThrow(() -> new OptionFamilyNotFoundException("选项族不存在: " + code));
     }
 
     /**
@@ -638,7 +689,7 @@ public class ProductDomainService {
      */
     public List<OptionFamilyHistory> listOptionFamilyHistory(String code) {
         if (!optionFamilyRepository.existsByCode(code)) {
-            throw new BrandNotFoundException("选项族不存在: " + code);
+            throw new OptionFamilyNotFoundException("选项族不存在: " + code);
         }
         return optionFamilyRepository.findHistoryByCode(code);
     }

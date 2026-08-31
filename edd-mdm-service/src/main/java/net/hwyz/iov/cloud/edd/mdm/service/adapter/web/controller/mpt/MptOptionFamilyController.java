@@ -9,9 +9,11 @@ import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.OptionFamilyAsse
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.OptionFamilyCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.OptionFamilyUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.OptionFamilyQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionFamilyCatalogBootstrapResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionFamilyDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionFamilyHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.OptionFamilyAppService;
+import net.hwyz.iov.cloud.edd.mdm.service.application.service.OptionFamilyCatalogBootstrap;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,11 +32,20 @@ public class MptOptionFamilyController {
 
     private final OptionFamilyAppService optionFamilyAppService;
     private final OptionFamilyAssembler optionFamilyAssembler;
+    private final OptionFamilyCatalogBootstrap optionFamilyCatalogBootstrap;
 
     @PostMapping("/create")
     public ApiResponse<OptionFamilyResponse> create(@RequestBody OptionFamilyCreateCmd cmd) {
         OptionFamilyDto dto = optionFamilyAppService.createOptionFamily(cmd);
         return ApiResponse.ok(optionFamilyAssembler.toResponse(dto));
+    }
+
+    /**
+     * 标准目录 Bootstrap（CR-035 §5.3）：受控幂等导入，仅导入 CORE 条目，返回统计结果
+     */
+    @PostMapping("/bootstrap")
+    public ApiResponse<OptionFamilyCatalogBootstrapResult> bootstrap() {
+        return ApiResponse.ok(optionFamilyCatalogBootstrap.bootstrap());
     }
 
     @PutMapping("/{code}")

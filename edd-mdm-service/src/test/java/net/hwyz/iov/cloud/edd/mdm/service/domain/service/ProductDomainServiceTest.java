@@ -1,8 +1,19 @@
 package net.hwyz.iov.cloud.edd.mdm.service.domain.service;
 
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyCategory;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.VariantStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyCategoryPrefixMismatchException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyCodeFormatInvalidException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyHasChildrenReferenceException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyNameDuplicateException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.*;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.OptionFamilyNotFoundException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeException;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.OptionFamilyCodePolicy;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.OptionFamilyNamePolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -67,7 +78,9 @@ class ProductDomainServiceTest {
                 variantOptionCodeBindingRepository,
                 configurationRepository,
                 configurationSeqRepository,
-                configurationOptionCodeBindingRepository
+                configurationOptionCodeBindingRepository,
+                new OptionFamilyCodePolicy(),
+                new OptionFamilyNamePolicy()
         );
     }
 
@@ -199,6 +212,213 @@ class ProductDomainServiceTest {
 
             // Then
             assertEquals("VAR0010000001", result);
+        }
+    }
+
+    @Nested
+    @DisplayName("createOptionFamily 校验测试（CR-035）")
+    class CreateOptionFamilyValidationTests {
+
+        @Test
+        @DisplayName("合法标准 code + 无重名 -> 创建成功")
+        void createOptionFamily_validCode_succeeds() {
+            when(optionFamilyRepository.existsByCode("OF_EXT_BODY_COLOR")).thenReturn(false);
+            when(optionFamilyRepository.findAllForNameCheck()).thenReturn(Collections.emptyList());
+            when(optionFamilyRepository.save(any(), eq("CREATE"))).thenAnswer(inv -> inv.getArgument(0));
+
+            OptionFamily result = productDomainService.createOptionFamily(
+                    "OF_EXT_BODY_COLOR", "Body Color", "车身颜色", null,
+                    OptionFamilyCategory.EXTERIOR, null, null, "admin");
+
+            assertEquals("OF_EXT_BODY_COLOR", result.getCode());
+            verify(optionFamilyRepository).save(any(), eq("CREATE"));
+        }
+
+        @Test
+        @DisplayName("合法扩展 code + 无重名 -> 创建成功")
+        void createOptionFamily_validExtensionCode_succeeds() {
+            when(optionFamilyRepository.existsByCode("OF_EXT_X_OFFROAD_APPEARANCE")).thenReturn(false);
+            when(optionFamilyRepository.findAllForNameCheck()).thenReturn(Collections.emptyList());
+            when(optionFamilyRepository.save(any(), eq("CREATE"))).thenAnswer(inv -> inv.getArgument(0));
+
+            OptionFamily result = productDomainService.createOptionFamily(
+                    "OF_EXT_X_OFFROAD_APPEARANCE", "Off-road Appearance Package", "越野外观套件", null,
+                    OptionFamilyCategory.EXTERIOR, null, null, "admin");
+
+            assertEquals("OF_EXT_X_OFFROAD_APPEARANCE", result.getCode());
+        }
+
+        @Test
+        @DisplayName("code 格式非法 -> 抛 812125，不查重/不保存")
+        void createOptionFamily_invalidFormat_throws() {
+            assertThrows(OptionFamilyCodeFormatInvalidException.class, () ->
+                    productDomainService.createOptionFamily(
+                            "of_ext_body_color", "Body Color", "车身颜色", null,
+                            OptionFamilyCategory.EXTERIOR, null, null, "admin"));
+            verify(optionFamilyRepository, never()).existsByCode(any());
+            verify(optionFamilyRepository, never()).save(any(), any());
+        }
+
+        @Test
+        @DisplayName("code 前缀与 category 不一致 -> 抛 812126")
+        void createOptionFamily_prefixCategoryMismatch_throws() {
+            assertThrows(OptionFamilyCategoryPrefixMismatchException.class, () ->
+                    productDomainService.createOptionFamily(
+                            "OF_EXT_BODY_COLOR", "Body Color", "车身颜色", null,
+                            OptionFamilyCategory.INTERIOR, null, null, "admin"));
+            verify(optionFamilyRepository, never()).save(any(), any());
+        }
+
+        @Test
+        @DisplayName("英文名标准化后重复 -> 抛 812127")
+        void createOptionFamily_duplicateName_throws() {
+            when(optionFamilyRepository.existsByCode("OF_EXT_BODY_COLOR")).thenReturn(false);
+            OptionFamily existing = OptionFamily.builder()
+                    .code("OF_EXT_BODY_COLOR")
+                    .name("Body Color")
+                    .nameLocal("车身颜色")
+                    .category(OptionFamilyCategory.EXTERIOR)
+                    .status(OptionFamilyStatus.ACTIVE)
+                    .rowValid(true)
+                    .build();
+            when(optionFamilyRepository.findAllForNameCheck()).thenReturn(Collections.singletonList(existing));
+
+            assertThrows(OptionFamilyNameDuplicateException.class, () ->
+                    productDomainService.createOptionFamily(
+                            "OF_EXT_BODY_COLOR", "  body   color ", "车身颜色", null,
+                            OptionFamilyCategory.EXTERIOR, null, null, "admin"));
+            verify(optionFamilyRepository, never()).save(any(), any());
+        }
+
+        @Test
+        @DisplayName("中文名全半角空格差异重复 -> 抛 812127")
+        void createOptionFamily_duplicateChineseName_throws() {
+            when(optionFamilyRepository.existsByCode(any())).thenReturn(false);
+            OptionFamily existing = OptionFamily.builder()
+                    .code("OF_EXT_BODY_COLOR")
+                    .name("Body Color")
+                    .nameLocal("车身颜色")
+                    .category(OptionFamilyCategory.EXTERIOR)
+                    .status(OptionFamilyStatus.ACTIVE)
+                    .rowValid(true)
+                    .build();
+            when(optionFamilyRepository.findAllForNameCheck()).thenReturn(Collections.singletonList(existing));
+
+            assertThrows(OptionFamilyNameDuplicateException.class, () ->
+                    productDomainService.createOptionFamily(
+                            "OF_EXT_WHEEL", "Wheel", "车身 颜色", null,
+                            OptionFamilyCategory.EXTERIOR, null, null, "admin"));
+        }
+
+        @Test
+        @DisplayName("code 已存在 -> 抛 DuplicateCodeException")
+        void createOptionFamily_codeExists_throws() {
+            when(optionFamilyRepository.existsByCode("OF_EXT_BODY_COLOR")).thenReturn(true);
+
+            assertThrows(DuplicateCodeException.class, () ->
+                    productDomainService.createOptionFamily(
+                            "OF_EXT_BODY_COLOR", "Body Color", "车身颜色", null,
+                            OptionFamilyCategory.EXTERIOR, null, null, "admin"));
+            verify(optionFamilyRepository, never()).save(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteOptionFamily 删除测试（下游选项码依赖检查）")
+    class DeleteOptionFamilyTests {
+
+        private OptionFamily draftFamily() {
+            return OptionFamily.builder()
+                    .code("OF_EXT_TRIM")
+                    .name("Trim")
+                    .category(OptionFamilyCategory.EXTERIOR)
+                    .status(OptionFamilyStatus.DRAFT)
+                    .rowValid(true)
+                    .build();
+        }
+
+        @Test
+        @DisplayName("存在子级选项码 -> 拒绝删除并抛 812108")
+        void deleteOptionFamily_withChildren_rejects() {
+            String code = "OF_EXT_TRIM";
+            OptionFamily family = draftFamily();
+            when(optionFamilyRepository.findByCode(code)).thenReturn(Optional.of(family));
+            when(optionCodeRepository.existsByOptionFamilyCode(code)).thenReturn(true);
+
+            OptionFamilyHasChildrenReferenceException ex = assertThrows(
+                    OptionFamilyHasChildrenReferenceException.class,
+                    () -> productDomainService.deleteOptionFamily(code, "admin"));
+
+            assertEquals(code, ex.getOptionFamilyCode());
+            assertTrue(family.getRowValid());
+            verify(optionFamilyRepository, never()).save(any(), any());
+            verify(optionFamilyRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("无子级选项码且 DRAFT -> 删除成功")
+        void deleteOptionFamily_withoutChildren_succeeds() {
+            String code = "OF_EXT_TRIM";
+            OptionFamily family = draftFamily();
+            when(optionFamilyRepository.findByCode(code)).thenReturn(Optional.of(family));
+            when(optionCodeRepository.existsByOptionFamilyCode(code)).thenReturn(false);
+
+            productDomainService.deleteOptionFamily(code, "admin");
+
+            assertFalse(family.getRowValid());
+            verify(optionFamilyRepository).delete(family);
+        }
+
+        @Test
+        @DisplayName("ACTIVE 无子级选项码 -> 删除成功（删除不限状态）")
+        void deleteOptionFamily_activeWithoutChildren_succeeds() {
+            String code = "OF_EXT_TRIM";
+            OptionFamily family = OptionFamily.builder()
+                    .code(code)
+                    .name("Trim")
+                    .category(OptionFamilyCategory.EXTERIOR)
+                    .status(OptionFamilyStatus.ACTIVE)
+                    .rowValid(true)
+                    .build();
+            when(optionFamilyRepository.findByCode(code)).thenReturn(Optional.of(family));
+            when(optionCodeRepository.existsByOptionFamilyCode(code)).thenReturn(false);
+
+            productDomainService.deleteOptionFamily(code, "admin");
+
+            assertFalse(family.getRowValid());
+            verify(optionFamilyRepository).delete(family);
+        }
+
+        @Test
+        @DisplayName("ACTIVE 存在子级选项码 -> 拒绝删除并抛 812108")
+        void deleteOptionFamily_activeWithChildren_rejects() {
+            String code = "OF_EXT_TRIM";
+            OptionFamily family = OptionFamily.builder()
+                    .code(code)
+                    .name("Trim")
+                    .category(OptionFamilyCategory.EXTERIOR)
+                    .status(OptionFamilyStatus.ACTIVE)
+                    .rowValid(true)
+                    .build();
+            when(optionFamilyRepository.findByCode(code)).thenReturn(Optional.of(family));
+            when(optionCodeRepository.existsByOptionFamilyCode(code)).thenReturn(true);
+
+            OptionFamilyHasChildrenReferenceException ex = assertThrows(
+                    OptionFamilyHasChildrenReferenceException.class,
+                    () -> productDomainService.deleteOptionFamily(code, "admin"));
+
+            assertEquals(code, ex.getOptionFamilyCode());
+            verify(optionFamilyRepository, never()).save(any(), any());
+            verify(optionFamilyRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("选项族不存在 -> 抛 OptionFamilyNotFoundException")
+        void deleteOptionFamily_notExist_throws() {
+            String code = "OF_EXT_TRIM";
+            when(optionFamilyRepository.findByCode(code)).thenReturn(Optional.empty());
+            assertThrows(OptionFamilyNotFoundException.class,
+                    () -> productDomainService.deleteOptionFamily(code, "admin"));
         }
     }
 

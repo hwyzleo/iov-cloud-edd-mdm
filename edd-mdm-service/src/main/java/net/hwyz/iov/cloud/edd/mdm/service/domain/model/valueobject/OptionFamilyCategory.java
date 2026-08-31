@@ -26,6 +26,11 @@ public enum OptionFamilyCategory {
     POWERTRAIN,
 
     /**
+     * 底盘
+     */
+    CHASSIS,
+
+    /**
      * 智能化
      */
     INTELLIGENT,

@@ -258,12 +258,9 @@ public class OptionFamily {
     }
 
     /**
-     * 删除选项族（仅DRAFT状态可删除）
+     * 删除选项族（允许任意状态直接删除；是否可删由删除前置依赖检查决定）
      */
     public void delete(String modifyBy) {
-        if (this.status != OptionFamilyStatus.DRAFT) {
-            throw new IllegalStateException("只有DRAFT状态的选项族才能删除");
-        }
         this.rowValid = false;
         this.modifyBy = modifyBy;
         this.modifyTime = new Date();

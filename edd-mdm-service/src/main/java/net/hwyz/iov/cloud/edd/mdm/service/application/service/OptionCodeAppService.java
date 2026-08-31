@@ -13,8 +13,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionCodeSta
 import net.hwyz.iov.cloud.edd.mdm.service.domain.exception.DuplicateCodeException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionFamilyRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmBaseException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmErrorCode;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,8 @@ public class OptionCodeAppService {
 
     private final OptionCodeRepository optionCodeRepository;
     private final OptionFamilyRepository optionFamilyRepository;
+    private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
+    private final ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public OptionCodeDto createOptionCode(OptionCodeCreateCmd cmd) {
@@ -110,8 +116,17 @@ public class OptionCodeAppService {
         OptionCode optionCode = optionCodeRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException("选项码不存在: " + code));
 
+        // 删除前置依赖检查：被 Variant / Configuration 绑定则拒绝删除（812108），避免悬空引用
+        boolean variantBound = variantOptionCodeBindingRepository.existsByOptionCodeCode(code);
+        boolean configurationBound = configurationOptionCodeBindingRepository.existsByOptionCodeCode(code);
+        if (variantBound || configurationBound) {
+            throw new MdmBaseException(MdmErrorCode.HAS_CHILDREN_REFERENCE,
+                    String.format("选项码 %s 已被 Variant 或 Configuration 绑定，删除被拒绝", code));
+        }
+
         optionCode.delete(modifyBy);
-        optionCodeRepository.save(optionCode, null);
+        // 物理删除（写 DELETE 历史快照 + 硬删主表）
+        optionCodeRepository.delete(optionCode);
     }
 
     public OptionCodeDto getOptionCodeByCode(String code) {

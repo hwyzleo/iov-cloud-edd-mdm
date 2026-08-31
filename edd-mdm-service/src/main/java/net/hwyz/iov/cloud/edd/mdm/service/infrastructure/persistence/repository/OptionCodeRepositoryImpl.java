@@ -42,37 +42,45 @@ public class OptionCodeRepositoryImpl implements OptionCodeRepository {
         } else {
             optionCodeMapper.updateById(po);
         }
-        if (operationType != null) {
-            OptionCodeHistoryPo historyPo = OptionCodeHistoryPo.builder()
-                    .entityId(po.getId())
-                    .code(po.getCode())
-                    .name(po.getName())
-                    .nameLocal(po.getNameLocal())
-                    .optionFamilyCode(po.getOptionFamilyCode())
-                    .description(po.getDescription())
-                    .sourceSystem(po.getSourceSystem())
-                    .sourceId(po.getSourceId())
-                    .sourceVersion(po.getSourceVersion())
-                    .ingestionChannel(po.getIngestionChannel())
-                    .ingestionTime(po.getIngestionTime())
-                    .sourcePayloadHash(po.getSourcePayloadHash())
-                    .version(po.getVersion())
-                    .effectiveFrom(po.getEffectiveFrom())
-                    .effectiveTo(po.getEffectiveTo())
-                    .status(po.getStatus())
-                    .operationType(operationType)
-                    .snapshotTime(new Date())
-                    .operator(po.getModifyBy())
-                    .createBy(po.getModifyBy())
-                    .createTime(new Date())
-                    .modifyBy(po.getModifyBy())
-                    .modifyTime(new Date())
-                    .rowVersion(0)
-                    .rowValid(true)
-                    .build();
-            optionCodeHistoryMapper.insert(historyPo);
-        }
+        insertHistory(po, operationType);
         return optionCodeConverter.toDomain(po);
+    }
+
+    /**
+     * 写入选项码历史快照
+     */
+    private void insertHistory(OptionCodePo po, String operationType) {
+        if (operationType == null) {
+            return;
+        }
+        OptionCodeHistoryPo historyPo = OptionCodeHistoryPo.builder()
+                .entityId(po.getId())
+                .code(po.getCode())
+                .name(po.getName())
+                .nameLocal(po.getNameLocal())
+                .optionFamilyCode(po.getOptionFamilyCode())
+                .description(po.getDescription())
+                .sourceSystem(po.getSourceSystem())
+                .sourceId(po.getSourceId())
+                .sourceVersion(po.getSourceVersion())
+                .ingestionChannel(po.getIngestionChannel())
+                .ingestionTime(po.getIngestionTime())
+                .sourcePayloadHash(po.getSourcePayloadHash())
+                .version(po.getVersion())
+                .effectiveFrom(po.getEffectiveFrom())
+                .effectiveTo(po.getEffectiveTo())
+                .status(po.getStatus())
+                .operationType(operationType)
+                .snapshotTime(new Date())
+                .operator(po.getModifyBy())
+                .createBy(po.getModifyBy())
+                .createTime(new Date())
+                .modifyBy(po.getModifyBy())
+                .modifyTime(new Date())
+                .rowVersion(0)
+                .rowValid(true)
+                .build();
+        optionCodeHistoryMapper.insert(historyPo);
     }
 
     @Override
@@ -163,7 +171,9 @@ public class OptionCodeRepositoryImpl implements OptionCodeRepository {
     @Override
     public void delete(OptionCode optionCode) {
         OptionCodePo po = optionCodeConverter.toPo(optionCode);
-        optionCodeMapper.updateById(po);
+        // 物理删除：先写 DELETE 历史快照（主表记录删除后保留审计），再硬删主表记录
+        insertHistory(po, "DELETE");
+        optionCodeMapper.deleteById(po.getId());
     }
 
     @Override

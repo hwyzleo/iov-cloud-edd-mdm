@@ -19,7 +19,7 @@ public class OptionFamilyCategoryInvalidException extends MdmBaseException {
 
     public OptionFamilyCategoryInvalidException(String category) {
         super(MdmErrorCode.OPTION_FAMILY_CATEGORY_INVALID,
-                String.format("选项族商品分类（category）无效: %s，取值范围: EXTERIOR/INTERIOR/POWERTRAIN/INTELLIGENT/COMFORT/SAFETY/ACCESSORY/OTHER", category));
+                String.format("选项族商品分类（category）无效: %s，取值范围: EXTERIOR/INTERIOR/POWERTRAIN/CHASSIS/INTELLIGENT/COMFORT/SAFETY/ACCESSORY/OTHER", category));
         this.category = category;
         log.warn("选项族商品分类校验失败: category={}", category);
     }

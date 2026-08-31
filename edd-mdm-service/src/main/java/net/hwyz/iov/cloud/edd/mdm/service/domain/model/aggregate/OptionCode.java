@@ -81,10 +81,10 @@ public class OptionCode {
         this.modifyTime = new Date();
     }
 
+    /**
+     * 删除选项码（允许任意状态直接删除；是否可删由应用层绑定依赖检查决定）
+     */
     public void delete(String modifyBy) {
-        if (this.status != OptionCodeStatus.DRAFT) {
-            throw new IllegalStateException("只有DRAFT状态的选项码才能删除");
-        }
         this.rowValid = false;
         this.modifyBy = modifyBy;
         this.modifyTime = new Date();

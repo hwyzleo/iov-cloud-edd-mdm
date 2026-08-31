@@ -41,37 +41,45 @@ public class OptionFamilyRepositoryImpl implements OptionFamilyRepository {
         } else {
             optionFamilyMapper.updateById(po);
         }
-        if (operationType != null) {
-            OptionFamilyHistoryPo historyPo = OptionFamilyHistoryPo.builder()
-                    .entityId(po.getId())
-                    .code(po.getCode())
-                    .name(po.getName())
-                    .nameLocal(po.getNameLocal())
-                    .description(po.getDescription())
-                    .category(po.getCategory())
-                    .sourceSystem(po.getSourceSystem())
-                    .sourceId(po.getSourceId())
-                    .sourceVersion(po.getSourceVersion())
-                    .ingestionChannel(po.getIngestionChannel())
-                    .ingestionTime(po.getIngestionTime())
-                    .sourcePayloadHash(po.getSourcePayloadHash())
-                    .version(po.getVersion())
-                    .effectiveFrom(po.getEffectiveFrom())
-                    .effectiveTo(po.getEffectiveTo())
-                    .status(po.getStatus())
-                    .operationType(operationType)
-                    .snapshotTime(new Date())
-                    .operator(po.getModifyBy())
-                    .createBy(po.getModifyBy())
-                    .createTime(new Date())
-                    .modifyBy(po.getModifyBy())
-                    .modifyTime(new Date())
-                    .rowVersion(0)
-                    .rowValid(true)
-                    .build();
-            optionFamilyHistoryMapper.insert(historyPo);
-        }
+        insertHistory(po, operationType);
         return optionFamilyConverter.toDomain(po);
+    }
+
+    /**
+     * 写入选项族历史快照
+     */
+    private void insertHistory(OptionFamilyPo po, String operationType) {
+        if (operationType == null) {
+            return;
+        }
+        OptionFamilyHistoryPo historyPo = OptionFamilyHistoryPo.builder()
+                .entityId(po.getId())
+                .code(po.getCode())
+                .name(po.getName())
+                .nameLocal(po.getNameLocal())
+                .description(po.getDescription())
+                .category(po.getCategory())
+                .sourceSystem(po.getSourceSystem())
+                .sourceId(po.getSourceId())
+                .sourceVersion(po.getSourceVersion())
+                .ingestionChannel(po.getIngestionChannel())
+                .ingestionTime(po.getIngestionTime())
+                .sourcePayloadHash(po.getSourcePayloadHash())
+                .version(po.getVersion())
+                .effectiveFrom(po.getEffectiveFrom())
+                .effectiveTo(po.getEffectiveTo())
+                .status(po.getStatus())
+                .operationType(operationType)
+                .snapshotTime(new Date())
+                .operator(po.getModifyBy())
+                .createBy(po.getModifyBy())
+                .createTime(new Date())
+                .modifyBy(po.getModifyBy())
+                .modifyTime(new Date())
+                .rowVersion(0)
+                .rowValid(true)
+                .build();
+        optionFamilyHistoryMapper.insert(historyPo);
     }
 
     @Override
@@ -129,9 +137,20 @@ public class OptionFamilyRepositoryImpl implements OptionFamilyRepository {
     }
 
     @Override
+    public List<OptionFamily> findAllForNameCheck() {
+        LambdaQueryWrapper<OptionFamilyPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OptionFamilyPo::getRowValid, true);
+        return optionFamilyMapper.selectList(wrapper).stream()
+                .map(optionFamilyConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void delete(OptionFamily optionFamily) {
         OptionFamilyPo po = optionFamilyConverter.toPo(optionFamily);
-        optionFamilyMapper.updateById(po);
+        // 物理删除：先写 DELETE 历史快照（主表记录删除后保留审计），再硬删主表记录
+        insertHistory(po, "DELETE");
+        optionFamilyMapper.deleteById(po.getId());
     }
 
     @Override

@@ -88,6 +88,13 @@ public class OptionFamilyAppService {
         return convertToDto(optionFamily);
     }
 
+    /**
+     * 判断选项族是否存在（供标准目录 Bootstrap 幂等判断使用）
+     */
+    public boolean existsOptionFamily(String code) {
+        return productDomainService.existsOptionFamily(code);
+    }
+
     public List<OptionFamilyDto> listOptionFamily(OptionFamilyQuery query) {
         List<OptionFamily> list = productDomainService.listOptionFamilies(
                 query.getPage(), query.getSize(), query.isIncludeInactive(), query.getCategory());
