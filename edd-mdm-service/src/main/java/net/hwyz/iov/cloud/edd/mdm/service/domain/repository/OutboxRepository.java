@@ -15,6 +15,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ModelDeactivatedEve
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
@@ -150,6 +153,27 @@ public interface OutboxRepository {
      * @param event 选项族失效事件
      */
     void saveOptionFamilyDeactivatedEvent(OptionFamilyDeactivatedEvent event);
+
+    /**
+     * 保存选项码创建事件
+     *
+     * @param event 选项码创建事件
+     */
+    void saveOptionCodeCreatedEvent(OptionCodeCreatedEvent event);
+
+    /**
+     * 保存选项码更新事件
+     *
+     * @param event 选项码更新事件
+     */
+    void saveOptionCodeUpdatedEvent(OptionCodeUpdatedEvent event);
+
+    /**
+     * 保存选项码失效事件
+     *
+     * @param event 选项码失效事件
+     */
+    void saveOptionCodeDeactivatedEvent(OptionCodeDeactivatedEvent event);
 
     /**
      * 保存车型创建事件

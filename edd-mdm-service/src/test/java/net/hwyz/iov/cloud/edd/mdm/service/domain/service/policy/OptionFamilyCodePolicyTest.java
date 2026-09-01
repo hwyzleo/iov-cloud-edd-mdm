@@ -124,7 +124,7 @@ class OptionFamilyCodePolicyTest {
     }
 
     @Nested
-    @DisplayName("validateCodeFormat 校验（812125）")
+    @DisplayName("validateCodeFormat 校验（812124）")
     class ValidateCodeFormatTests {
 
         @Test
@@ -157,7 +157,7 @@ class OptionFamilyCodePolicyTest {
     }
 
     @Nested
-    @DisplayName("validateCategoryConsistency 校验（812126）")
+    @DisplayName("validateCategoryConsistency 校验（812125）")
     class ValidateCategoryConsistencyTests {
 
         @Test

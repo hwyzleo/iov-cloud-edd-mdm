@@ -249,7 +249,7 @@ class ProductDomainServiceTest {
         }
 
         @Test
-        @DisplayName("code 格式非法 -> 抛 812125，不查重/不保存")
+        @DisplayName("code 格式非法 -> 抛 812124，不查重/不保存")
         void createOptionFamily_invalidFormat_throws() {
             assertThrows(OptionFamilyCodeFormatInvalidException.class, () ->
                     productDomainService.createOptionFamily(
@@ -260,7 +260,7 @@ class ProductDomainServiceTest {
         }
 
         @Test
-        @DisplayName("code 前缀与 category 不一致 -> 抛 812126")
+        @DisplayName("code 前缀与 category 不一致 -> 抛 812125")
         void createOptionFamily_prefixCategoryMismatch_throws() {
             assertThrows(OptionFamilyCategoryPrefixMismatchException.class, () ->
                     productDomainService.createOptionFamily(
@@ -270,7 +270,7 @@ class ProductDomainServiceTest {
         }
 
         @Test
-        @DisplayName("英文名标准化后重复 -> 抛 812127")
+        @DisplayName("英文名标准化后重复 -> 抛 812126")
         void createOptionFamily_duplicateName_throws() {
             when(optionFamilyRepository.existsByCode("OF_EXT_BODY_COLOR")).thenReturn(false);
             OptionFamily existing = OptionFamily.builder()
@@ -291,7 +291,7 @@ class ProductDomainServiceTest {
         }
 
         @Test
-        @DisplayName("中文名全半角空格差异重复 -> 抛 812127")
+        @DisplayName("中文名全半角空格差异重复 -> 抛 812126")
         void createOptionFamily_duplicateChineseName_throws() {
             when(optionFamilyRepository.existsByCode(any())).thenReturn(false);
             OptionFamily existing = OptionFamily.builder()

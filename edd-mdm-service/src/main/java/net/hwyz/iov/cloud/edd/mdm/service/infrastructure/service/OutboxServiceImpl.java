@@ -8,6 +8,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
@@ -36,6 +37,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ModelDeactivatedEve
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
@@ -274,6 +278,51 @@ public class OutboxServiceImpl implements OutboxService {
 
         outboxRepository.saveOptionFamilyDeactivatedEvent(event);
         log.info("发布选项族失效事件: {}", optionFamily.getCode());
+    }
+
+    @Override
+    public void publishOptionCodeCreatedEvent(OptionCode optionCode) {
+        OptionCodeCreatedEvent event = OptionCodeCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.optionCode.created")
+                .occurredAt(new Date())
+                .entityId(optionCode.getCode())
+                .version(optionCode.getVersion())
+                .payload(optionCode)
+                .build();
+
+        outboxRepository.saveOptionCodeCreatedEvent(event);
+        log.info("发布选项码创建事件: {}", optionCode.getCode());
+    }
+
+    @Override
+    public void publishOptionCodeUpdatedEvent(OptionCode optionCode) {
+        OptionCodeUpdatedEvent event = OptionCodeUpdatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.optionCode.updated")
+                .occurredAt(new Date())
+                .entityId(optionCode.getCode())
+                .version(optionCode.getVersion())
+                .payload(optionCode)
+                .build();
+
+        outboxRepository.saveOptionCodeUpdatedEvent(event);
+        log.info("发布选项码更新事件: {}", optionCode.getCode());
+    }
+
+    @Override
+    public void publishOptionCodeDeactivatedEvent(OptionCode optionCode) {
+        OptionCodeDeactivatedEvent event = OptionCodeDeactivatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("mdm.product.optionCode.deactivated")
+                .occurredAt(new Date())
+                .entityId(optionCode.getCode())
+                .version(optionCode.getVersion())
+                .payload(optionCode)
+                .build();
+
+        outboxRepository.saveOptionCodeDeactivatedEvent(event);
+        log.info("发布选项码失效事件: {}", optionCode.getCode());
     }
 
     @Override

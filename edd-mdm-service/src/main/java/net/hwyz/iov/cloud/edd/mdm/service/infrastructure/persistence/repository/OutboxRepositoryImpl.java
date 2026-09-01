@@ -20,6 +20,9 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.ModelDeactivatedEve
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionFamilyDeactivatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeCreatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeUpdatedEvent;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.OptionCodeDeactivatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformCreatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformUpdatedEvent;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.event.PlatformDeactivatedEvent;
@@ -381,6 +384,81 @@ public class OutboxRepositoryImpl implements OutboxRepository {
         } catch (Exception e) {
             log.error("保存选项族失效事件失败", e);
             throw new RuntimeException("保存选项族失效事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveOptionCodeCreatedEvent(OptionCodeCreatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("OPTION_CODE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存选项码创建事件失败", e);
+            throw new RuntimeException("保存选项码创建事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveOptionCodeUpdatedEvent(OptionCodeUpdatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("OPTION_CODE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存选项码更新事件失败", e);
+            throw new RuntimeException("保存选项码更新事件失败", e);
+        }
+    }
+
+    @Override
+    public void saveOptionCodeDeactivatedEvent(OptionCodeDeactivatedEvent event) {
+        try {
+            OutboxPo po = OutboxPo.builder()
+                    .aggregateType("OPTION_CODE")
+                    .aggregateId(event.getEntityId())
+                    .eventType(event.getEventType())
+                    .payload(objectMapper.writeValueAsString(event.getPayload()))
+                    .occurredAt(event.getOccurredAt())
+                    .sent(false)
+                    .retryCount(0)
+                    .createBy("system")
+                    .createTime(new Date())
+                    .modifyBy("system")
+                    .modifyTime(new Date())
+                    .rowVersion(0)
+                    .rowValid(true)
+                    .build();
+            outboxMapper.insert(po);
+        } catch (Exception e) {
+            log.error("保存选项码失效事件失败", e);
+            throw new RuntimeException("保存选项码失效事件失败", e);
         }
     }
 

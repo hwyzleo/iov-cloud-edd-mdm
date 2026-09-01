@@ -5,6 +5,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.CarLine;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Configuration;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Model;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Platform;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Supplier;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.Variant;
@@ -109,6 +110,27 @@ public interface OutboxService {
      * @param optionFamily 选项族聚合根
      */
     void publishOptionFamilyDeactivatedEvent(OptionFamily optionFamily);
+
+    /**
+     * 发布选项码创建事件
+     *
+     * @param optionCode 选项码聚合根
+     */
+    void publishOptionCodeCreatedEvent(OptionCode optionCode);
+
+    /**
+     * 发布选项码更新事件
+     *
+     * @param optionCode 选项码聚合根
+     */
+    void publishOptionCodeUpdatedEvent(OptionCode optionCode);
+
+    /**
+     * 发布选项码失效事件
+     *
+     * @param optionCode 选项码聚合根
+     */
+    void publishOptionCodeDeactivatedEvent(OptionCode optionCode);
 
     /**
      * 发布车型创建事件

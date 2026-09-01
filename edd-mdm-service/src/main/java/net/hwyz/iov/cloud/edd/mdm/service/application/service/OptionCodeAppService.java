@@ -7,6 +7,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.OptionCodeUpdateCm
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.OptionCodeQuery;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionCodeDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.OptionCodeHistoryDto;
+import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.OptionCodeHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionCodeStatus;
@@ -15,6 +16,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionCodeRepository
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OptionFamilyRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.VariantOptionCodeBindingRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.ConfigurationOptionCodeBindingRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.OptionCodeCodePolicy;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.OptionFamily;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.OptionFamilyStatus;
 import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MdmBaseException;
@@ -40,6 +42,8 @@ public class OptionCodeAppService {
     private final OptionFamilyRepository optionFamilyRepository;
     private final VariantOptionCodeBindingRepository variantOptionCodeBindingRepository;
     private final ConfigurationOptionCodeBindingRepository configurationOptionCodeBindingRepository;
+    private final OptionCodeCodePolicy optionCodeCodePolicy;
+    private final OutboxService outboxService;
 
     @Transactional(rollbackFor = Exception.class)
     public OptionCodeDto createOptionCode(OptionCodeCreateCmd cmd) {
@@ -50,16 +54,21 @@ public class OptionCodeAppService {
             createBy = SecurityUtils.getUsername();
         }
 
-        // 检查code唯一性
-        if (optionCodeRepository.existsByCode(cmd.getCode())) {
-            throw new DuplicateCodeException("选项码code已存在: " + cmd.getCode());
-        }
-
-        // 检查OptionFamily是否存在且ACTIVE
+        // CR-040：处理顺序遵循设计 §5：
+        // 1. Option Family 不存在或非 ACTIVE → 沿用既有引用完整性错误
         OptionFamily optionFamily = optionFamilyRepository.findByCode(cmd.getOptionFamilyCode())
                 .orElseThrow(() -> new IllegalArgumentException("选项族不存在: " + cmd.getOptionFamilyCode()));
         if (optionFamily.getStatus() != OptionFamilyStatus.ACTIVE) {
             throw new IllegalArgumentException("选项族状态不是ACTIVE: " + cmd.getOptionFamilyCode());
+        }
+
+        // 2. Option Code 基础格式非法（正则/字符集/VALUE/长度）→ 812127
+        // 3. 格式合法但所属族派生主干不一致 → 812128
+        optionCodeCodePolicy.validateCreate(cmd.getCode(), cmd.getOptionFamilyCode());
+
+        // 4. 主干一致但 code 已存在 → 沿用 812101
+        if (optionCodeRepository.existsByCode(cmd.getCode())) {
+            throw new DuplicateCodeException("选项码code已存在: " + cmd.getCode());
         }
 
         OptionCode optionCode = OptionCode.create(cmd.getCode(), cmd.getName(), cmd.getNameLocal(),
@@ -67,6 +76,8 @@ public class OptionCodeAppService {
                 cmd.getEffectiveFrom(), cmd.getEffectiveTo(), createBy);
 
         optionCode = optionCodeRepository.save(optionCode, "CREATE");
+        // CR-040：新建同步写主表、history 与 outbox（事件与快照保留完整新 code）
+        outboxService.publishOptionCodeCreatedEvent(optionCode);
         return convertToDto(optionCode);
     }
 
@@ -74,6 +85,8 @@ public class OptionCodeAppService {
     public OptionCodeDto updateOptionCode(OptionCodeUpdateCmd cmd) {
         log.info("更新选项码: {}", cmd.getCode());
 
+        // CR-040：code 创建后不可变；optionFamilyCode 不允许跨族迁移（update 不触碰这两个字段）。
+        // legacy code 仅执行名称/描述/状态/生效期等非 code 字段更新，不追溯执行新格式拦截。
         String modifyBy = cmd.getModifyBy();
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
@@ -86,6 +99,7 @@ public class OptionCodeAppService {
                 cmd.getEffectiveFrom(), cmd.getEffectiveTo(), modifyBy);
 
         optionCode = optionCodeRepository.save(optionCode, "UPDATE");
+        outboxService.publishOptionCodeUpdatedEvent(optionCode);
         return convertToDto(optionCode);
     }
 
@@ -102,6 +116,7 @@ public class OptionCodeAppService {
 
         optionCode.deactivate(modifyBy);
         optionCode = optionCodeRepository.save(optionCode, "DEACTIVATE");
+        outboxService.publishOptionCodeDeactivatedEvent(optionCode);
         return convertToDto(optionCode);
     }
 

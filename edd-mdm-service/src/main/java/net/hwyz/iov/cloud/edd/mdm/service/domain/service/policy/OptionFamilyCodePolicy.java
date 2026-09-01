@@ -78,7 +78,7 @@ public class OptionFamilyCodePolicy {
     }
 
     /**
-     * 校验 code 格式，非法时抛出 OptionFamilyCodeFormatInvalidException（812125）
+     * 校验 code 格式，非法时抛出 OptionFamilyCodeFormatInvalidException（812124）
      */
     public void validateCodeFormat(String code) {
         if (code == null || code.isBlank() || code.length() > CODE_MAX_LENGTH || !isValidFormat(code)) {
@@ -106,7 +106,7 @@ public class OptionFamilyCodePolicy {
     }
 
     /**
-     * 校验 code 前缀与 category 一致性，不一致时抛出 OptionFamilyCategoryPrefixMismatchException（812126）
+     * 校验 code 前缀与 category 一致性，不一致时抛出 OptionFamilyCategoryPrefixMismatchException（812125）
      */
     public void validateCategoryConsistency(String code, OptionFamilyCategory category) {
         OptionFamilyCategory expected = categoryForCode(code);

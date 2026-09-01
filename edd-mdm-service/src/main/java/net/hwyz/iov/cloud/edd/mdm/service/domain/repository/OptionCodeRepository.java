@@ -35,6 +35,13 @@ public interface OptionCodeRepository {
 
     List<OptionCode> findAll(int page, int size, String optionFamilyCode, boolean includeInactive);
 
+    /**
+     * 查询全部有效选项码（row_valid=1，不分页），供存量治理审计扫描使用
+     *
+     * @return 全部有效选项码
+     */
+    List<OptionCode> findAllForAudit();
+
     long count(String optionFamilyCode, boolean includeInactive);
 
     void delete(OptionCode optionCode);

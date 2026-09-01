@@ -156,6 +156,16 @@ public class OptionCodeRepositoryImpl implements OptionCodeRepository {
     }
 
     @Override
+    public List<OptionCode> findAllForAudit() {
+        LambdaQueryWrapper<OptionCodePo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OptionCodePo::getRowValid, true);
+        List<OptionCodePo> poList = optionCodeMapper.selectList(wrapper);
+        return poList.stream()
+                .map(optionCodeConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public long count(String optionFamilyCode, boolean includeInactive) {
         LambdaQueryWrapper<OptionCodePo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(OptionCodePo::getRowValid, true);
