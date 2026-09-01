@@ -9,9 +9,12 @@ import net.hwyz.iov.cloud.edd.mdm.service.adapter.web.assembler.MaterialCategory
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.MaterialCategoryCreateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.cmd.MaterialCategoryUpdateCmd;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.MaterialCategoryQuery;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.MaterialCategoryCatalogBootstrapResult;
+import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.MaterialCategoryCatalogPreviewResult;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.MaterialCategoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.MaterialCategoryHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.MaterialCategoryAppService;
+import net.hwyz.iov.cloud.edd.mdm.service.application.service.MaterialCategoryCatalogBootstrap;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +41,25 @@ public class MptMaterialCategoryController {
 
     private final MaterialCategoryAppService materialCategoryAppService;
     private final MaterialCategoryAssembler materialCategoryAssembler;
+    private final MaterialCategoryCatalogBootstrap materialCategoryCatalogBootstrap;
+
+    /**
+     * 标准目录预检（CR-039 §6）：返回目录版本、total=101、level1/2/3Count、catalogStatus 及每项初始化状态。
+     * 权限点：mdm:material:category:catalog:preview
+     */
+    @GetMapping("/catalog/preview")
+    public ApiResponse<MaterialCategoryCatalogPreviewResult> previewCatalog() {
+        return ApiResponse.ok(materialCategoryCatalogBootstrap.preview());
+    }
+
+    /**
+     * 标准目录 Bootstrap（CR-039 §6）：按 L1→L2→L3 拓扑幂等初始化 101 项，返回统计结果。
+     * 权限点：mdm:material:category:catalog:bootstrap
+     */
+    @PostMapping("/catalog/bootstrap")
+    public ApiResponse<MaterialCategoryCatalogBootstrapResult> bootstrapCatalog() {
+        return ApiResponse.ok(materialCategoryCatalogBootstrap.bootstrap());
+    }
 
     /**
      * 创建物料分类

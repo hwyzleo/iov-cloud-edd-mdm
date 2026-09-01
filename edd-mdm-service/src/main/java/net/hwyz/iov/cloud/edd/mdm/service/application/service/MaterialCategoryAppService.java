@@ -8,14 +8,23 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.query.MaterialCategory
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.MaterialCategoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.MaterialCategoryHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.service.OutboxService;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MaterialCategoryDuplicateCodeException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MaterialCategoryNameDuplicateException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MaterialCategoryNotExistException;
+import net.hwyz.iov.cloud.edd.mdm.service.common.exception.MaterialCategoryParentNotExistException;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.aggregate.MaterialCategory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.model.entity.MaterialCategoryHistory;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.MaterialCategoryRepository;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.MaterialCategoryCodePolicy;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.MaterialCategoryHierarchyPolicy;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.MaterialCategoryNamePolicy;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -30,9 +39,12 @@ public class MaterialCategoryAppService {
 
     private final MaterialCategoryRepository materialCategoryRepository;
     private final OutboxService outboxService;
+    private final MaterialCategoryCodePolicy materialCategoryCodePolicy;
+    private final MaterialCategoryHierarchyPolicy materialCategoryHierarchyPolicy;
+    private final MaterialCategoryNamePolicy materialCategoryNamePolicy;
 
     /**
-     * 创建物料分类
+     * 创建物料分类（CR-039 治理：层级语义 code 格式、父级存在/最大深度、双语名称防重）
      *
      * @param cmd 创建命令
      * @return 物料分类DTO
@@ -40,6 +52,22 @@ public class MaterialCategoryAppService {
     @Transactional(rollbackFor = Exception.class)
     public MaterialCategoryDto createMaterialCategory(MaterialCategoryCreateCmd cmd) {
         log.info("创建物料分类: {}", cmd.getCode());
+
+        // CR-039 §5.1：层级语义 code 格式校验（格式/总长≤32/父子前缀/受控缩写）
+        materialCategoryCodePolicy.validateCodeFormat(cmd.getCode(), cmd.getParentCode());
+        if (materialCategoryRepository.existsByCode(cmd.getCode())) {
+            throw new MaterialCategoryDuplicateCodeException(cmd.getCode(), "ACTIVE");
+        }
+        List<MaterialCategory> all = materialCategoryRepository.findAll();
+        Map<String, MaterialCategory> byCode = indexByCode(all);
+        // CR-039 §2：父级存在性 + 最大深度（禁止第四层）
+        validateParentForCreate(byCode, cmd.getParentCode());
+        // CR-039 §5.2：双语名称标准化后防重
+        materialCategoryNamePolicy.findDuplicate(all, cmd.getName(), cmd.getNameLocal())
+                .ifPresent(dup -> {
+                    throw new MaterialCategoryNameDuplicateException(
+                            cmd.getCode(), dup.getCode(), cmd.getName(), cmd.getNameLocal());
+                });
 
         String createBy = cmd.getCreateBy();
         if (createBy == null || createBy.isBlank()) {
@@ -59,7 +87,7 @@ public class MaterialCategoryAppService {
     }
 
     /**
-     * 更新物料分类
+     * 更新物料分类（CR-039 治理：父级变更时校验格式/存在/最大深度/环路，名称变化时防重）
      *
      * @param cmd 更新命令
      * @return 物料分类DTO
@@ -68,13 +96,41 @@ public class MaterialCategoryAppService {
     public MaterialCategoryDto updateMaterialCategory(MaterialCategoryUpdateCmd cmd) {
         log.info("更新物料分类: {}", cmd.getCode());
 
+        MaterialCategory category = materialCategoryRepository.findByCode(cmd.getCode())
+                .orElseThrow(() -> new MaterialCategoryNotExistException(cmd.getCode()));
+
+        List<MaterialCategory> all = materialCategoryRepository.findAll();
+        Map<String, MaterialCategory> byCode = indexByCode(all);
+        String newParentCode = normalizeBlank(cmd.getParentCode());
+        boolean parentChanged = !Objects.equals(normalizeBlank(category.getParentCode()), newParentCode);
+        if (parentChanged) {
+            // CR-039 §5.1：父级变更后 code 必须仍满足父子前缀/受控缩写
+            materialCategoryCodePolicy.validateCodeFormat(cmd.getCode(), newParentCode);
+            // CR-039 §2：父级存在性 + 不超深 + 不环路
+            if (newParentCode != null && !byCode.containsKey(newParentCode)) {
+                throw new MaterialCategoryParentNotExistException(newParentCode);
+            }
+            materialCategoryHierarchyPolicy.assertNotExceedingDepth(byCode, newParentCode);
+            materialCategoryHierarchyPolicy.assertNoLoop(byCode, cmd.getCode(), newParentCode);
+        }
+        // CR-039 §5.2：名称变化时防重（排除自身）
+        boolean nameChanged = !Objects.equals(category.getName(), cmd.getName())
+                || !Objects.equals(category.getNameLocal(), cmd.getNameLocal());
+        if (nameChanged) {
+            List<MaterialCategory> others = all.stream()
+                    .filter(c -> !c.getCode().equals(cmd.getCode()))
+                    .collect(Collectors.toList());
+            materialCategoryNamePolicy.findDuplicate(others, cmd.getName(), cmd.getNameLocal())
+                    .ifPresent(dup -> {
+                        throw new MaterialCategoryNameDuplicateException(
+                                cmd.getCode(), dup.getCode(), cmd.getName(), cmd.getNameLocal());
+                    });
+        }
+
         String modifyBy = cmd.getModifyBy();
         if (modifyBy == null || modifyBy.isBlank()) {
             modifyBy = SecurityUtils.getUsername();
         }
-
-        MaterialCategory category = materialCategoryRepository.findByCode(cmd.getCode())
-                .orElseThrow(() -> new IllegalArgumentException("物料分类不存在: " + cmd.getCode()));
 
         category.update(
                 cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
@@ -86,6 +142,28 @@ public class MaterialCategoryAppService {
         outboxService.publishMaterialCategoryUpdatedEvent(category);
 
         return toDto(category);
+    }
+
+    /**
+     * 校验创建时父级存在且不超最大深度（L1 无父跳过）
+     */
+    private void validateParentForCreate(Map<String, MaterialCategory> byCode, String parentCode) {
+        String parent = normalizeBlank(parentCode);
+        if (parent == null) {
+            return;
+        }
+        if (!byCode.containsKey(parent)) {
+            throw new MaterialCategoryParentNotExistException(parent);
+        }
+        materialCategoryHierarchyPolicy.assertNotExceedingDepth(byCode, parent);
+    }
+
+    private Map<String, MaterialCategory> indexByCode(List<MaterialCategory> all) {
+        return all.stream().collect(Collectors.toMap(MaterialCategory::getCode, c -> c, (a, b) -> a));
+    }
+
+    private String normalizeBlank(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     /**
@@ -155,6 +233,16 @@ public class MaterialCategoryAppService {
         MaterialCategory category = materialCategoryRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException("物料分类不存在: " + code));
         return toDto(category);
+    }
+
+    /**
+     * 判断物料分类是否存在（row_valid=1，供标准目录 Bootstrap 幂等判断使用）
+     *
+     * @param code 物料分类code
+     * @return 是否存在
+     */
+    public boolean existsMaterialCategory(String code) {
+        return materialCategoryRepository.existsByCode(code);
     }
 
     /**

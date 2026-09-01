@@ -131,6 +131,12 @@ public enum MdmErrorCode implements ErrorCode {
     PART_MANUAL_CODE_FORBIDDEN("812920", "无权限手动指定code"),
     PART_NUMBERING_SOURCE_INVALID("812922", "发号来源为空或取值不在枚举范围"),
 
+    // Material子域 - MaterialCategory 三级标准目录治理 (812923-812926)
+    MATERIAL_CATEGORY_NOT_LEAF("812923", "Part.categoryCode 指向 L1/L2 或其他非叶子物料分类"),
+    MATERIAL_CATEGORY_CODE_FORMAT_INVALID("812924", "物料分类 code 格式非法或未使用受控缩写、父子前缀不匹配"),
+    MATERIAL_CATEGORY_NAME_DUPLICATE("812925", "物料分类中英文名称标准化后与现存分类重复"),
+    MATERIAL_CATEGORY_DEPTH_EXCEEDED("812926", "物料分类层级超过最大深度（禁止创建第四层）"),
+
     // Material子域 - 软件基线相关 (812930-812940)
     SW_BASELINE_NOT_EXIST("812930", "软件基线不存在"),
     SW_BASELINE_DUPLICATE("812931", "软件基线 code 或 (锚点+版本) 已存在"),

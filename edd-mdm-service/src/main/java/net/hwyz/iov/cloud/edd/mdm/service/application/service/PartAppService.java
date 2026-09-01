@@ -22,11 +22,13 @@ import net.hwyz.iov.cloud.edd.mdm.service.domain.model.valueobject.PartCode;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.PartRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.SoftwareBaselineRepository;
 import net.hwyz.iov.cloud.edd.mdm.service.domain.service.PartNumberingDomainService;
+import net.hwyz.iov.cloud.edd.mdm.service.domain.service.policy.MaterialCategoryLeafPolicy;
 import net.hwyz.iov.cloud.framework.security.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +45,7 @@ public class PartAppService {
     private final PartNumberingDomainService partNumberingDomainService;
     private final OutboxService outboxService;
     private final SoftwareBaselineRepository softwareBaselineRepository;
+    private final MaterialCategoryLeafPolicy materialCategoryLeafPolicy;
 
     /**
      * 创建零件
@@ -58,6 +61,9 @@ public class PartAppService {
         if (createBy == null || createBy.isBlank()) {
             createBy = SecurityUtils.getUsername();
         }
+
+        // CR-039 §7：Part.categoryCode 必须指向 ACTIVE 且无 ACTIVE 子节点的 L3 叶子
+        materialCategoryLeafPolicy.assertAssignable(cmd.getCategoryCode());
 
         // 系统发号
         boolean isSoftware = cmd.getIsSoftware() != null && cmd.getIsSoftware();
@@ -105,6 +111,11 @@ public class PartAppService {
 
         Part part = partRepository.findByCode(cmd.getCode())
                 .orElseThrow(() -> new IllegalArgumentException("零件不存在: " + cmd.getCode()));
+
+        // CR-039 §7：仅当 categoryCode 实际变化时执行叶子校验（避免追溯阻断 legacy 普通更新）
+        if (!Objects.equals(part.getCategoryCode(), cmd.getCategoryCode())) {
+            materialCategoryLeafPolicy.assertAssignable(cmd.getCategoryCode());
+        }
 
         part.update(
                 cmd.getName(), cmd.getNameLocal(), cmd.getDescription(),
@@ -421,6 +432,9 @@ public class PartAppService {
         if (partRepository.existsByCode(cmd.getCode())) {
             throw new IllegalArgumentException("零件code已存在: " + cmd.getCode());
         }
+
+        // CR-039 §7：导入同样要求归类到 ACTIVE 且无 ACTIVE 子节点的 L3 叶子
+        materialCategoryLeafPolicy.assertAssignable(cmd.getCategoryCode());
 
         // 反解code
         PartCode partCode = partNumberingDomainService.parseCode(cmd.getCode());

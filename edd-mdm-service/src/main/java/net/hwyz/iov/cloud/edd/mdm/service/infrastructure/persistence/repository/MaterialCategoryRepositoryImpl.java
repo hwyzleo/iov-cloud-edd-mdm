@@ -84,6 +84,33 @@ public class MaterialCategoryRepositoryImpl implements MaterialCategoryRepositor
     }
 
     @Override
+    public List<MaterialCategory> findAll() {
+        LambdaQueryWrapper<MaterialCategoryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MaterialCategoryPo::getRowValid, true);
+        wrapper.orderByAsc(MaterialCategoryPo::getCode);
+        return materialCategoryMapper.selectList(wrapper).stream()
+                .map(materialCategoryConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long countActiveChildren(String parentCode) {
+        LambdaQueryWrapper<MaterialCategoryPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MaterialCategoryPo::getParentCode, parentCode);
+        wrapper.eq(MaterialCategoryPo::getStatus, "ACTIVE");
+        wrapper.eq(MaterialCategoryPo::getRowValid, true);
+        return materialCategoryMapper.selectCount(wrapper);
+    }
+
+    @Override
+    public long countParts(String categoryCode) {
+        LambdaQueryWrapper<PartPo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PartPo::getCategoryCode, categoryCode);
+        wrapper.eq(PartPo::getRowValid, true);
+        return partMapper.selectCount(wrapper);
+    }
+
+    @Override
     public void delete(MaterialCategory category, String operator) {
         MaterialCategoryPo po = materialCategoryConverter.toPo(category);
         insertHistory(po, "DELETE");

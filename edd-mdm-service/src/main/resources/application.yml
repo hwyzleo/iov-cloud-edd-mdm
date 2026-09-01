@@ -10,6 +10,8 @@ iov:
       bootstrap-enabled: false
     option-family-catalog:
       bootstrap-enabled: false
+    material-category-catalog:
+      bootstrap-enabled: false
 
 mdm:
   material:

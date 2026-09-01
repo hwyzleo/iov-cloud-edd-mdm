@@ -1,0 +1,857 @@
+# Material Category 标准目录 v1 (CR-039)
+# 来源：MDM-REQ-CR-039 §4（权威内容，4 L1 + 19 L2 + 78 L3 共 101 项）
+# 模型：三级标准树。L1 物料大类（parentCode 为空），L2 工程系统/专业域，L3 可归类叶子。
+#       Part 仅引用无 ACTIVE 子节点的 L3 叶子；禁止第四层。
+# 编码：code 采用层级语义 + 受控缩写（Scope/Domain 缩写由 MaterialCategoryAbbreviationRegistry 维护），
+#       新 code 总长度不超过 32 字符。完整语义由 name/nameLocal/description 承载。
+#       aliases 仅用于检索与 legacy 映射同义词，不落库、不生成第二条类别。
+# 校验：目录由 MaterialCategoryCatalogLoader 静态校验（固定 101 项、4/19/78 分层、code/双语名称唯一、
+#       父子前缀、无 _X_/四层/环路/孤儿/跨 scope 挂接、声明 level 与父链深度一致）后经
+#       MaterialCategoryCatalogBootstrap 按 L1→L2→L3 拓扑幂等导入
+#       （受开关 iov.mdm.material-category-catalog.bootstrap-enabled 控制）。
+version: 1
+materialCategories:
+  # ==================== L1 物料大类（4） ====================
+  - code: MC_CMP
+    level: 1
+    name: Component / Part
+    nameLocal: 零部件
+    description: 零部件大类，覆盖车身、外饰、内饰、底盘、动力、能源、热管理、电气电子、智能驾驶与通用件
+    aliases: [Component, Part]
+    sortOrder: 1
+  - code: MC_RAW
+    level: 1
+    name: Raw Material
+    nameLocal: 原材料
+    description: 原材料大类，覆盖金属、高分子与化学材料
+    aliases: [Raw Material]
+    sortOrder: 2
+  - code: MC_SW
+    level: 1
+    name: Software & Digital Asset
+    nameLocal: 软件与数字资产
+    description: 软件与数字资产大类，覆盖嵌入式软件、软件数据与数字模型
+    aliases: [Software, Digital Asset]
+    sortOrder: 3
+  - code: MC_IND
+    level: 1
+    name: Indirect & Manufacturing Supply
+    nameLocal: 间接物料与制造辅料
+    description: 间接物料与制造辅料大类，覆盖工装设备、包装标识与制造耗材
+    aliases: [Indirect Material, Manufacturing Supply]
+    sortOrder: 4
+
+  # ==================== L2 工程系统/专业域 + L3 叶子（19 + 78） ====================
+  # ---- MC_CMP_BODY 车身结构与闭合（4） ----
+  - code: MC_CMP_BODY
+    level: 2
+    parentCode: MC_CMP
+    name: Body Structure & Closures
+    nameLocal: 车身结构与闭合
+    description: 车身结构与闭合系统，覆盖白车身、闭合件、玻璃与车身五金
+    aliases: [Body]
+    sortOrder: 1
+  - code: MC_CMP_BODY_BIW
+    level: 3
+    parentCode: MC_CMP_BODY
+    name: Body-in-White
+    nameLocal: 白车身
+    description: 白车身（BIW），包含地板、侧围、顶盖与结构件
+    aliases: [BIW]
+    sortOrder: 1
+  - code: MC_CMP_BODY_CLOSURE
+    level: 3
+    parentCode: MC_CMP_BODY
+    name: Closure System
+    nameLocal: 闭合系统
+    description: 闭合系统，包含车门、引擎盖、尾门及其铰链锁机构
+    aliases: [Closure]
+    sortOrder: 2
+  - code: MC_CMP_BODY_GLASS
+    level: 3
+    parentCode: MC_CMP_BODY
+    name: Vehicle Glass
+    nameLocal: 汽车玻璃
+    description: 汽车玻璃，包含风挡、侧窗、后窗与天窗玻璃
+    aliases: [Glass]
+    sortOrder: 3
+  - code: MC_CMP_BODY_HARDWARE
+    level: 3
+    parentCode: MC_CMP_BODY
+    name: Body Hardware
+    nameLocal: 车身五金
+    description: 车身五金，包含门锁、限位器、铰链与密封辅助五金
+    aliases: [Hardware]
+    sortOrder: 4
+
+  # ---- MC_CMP_EXT 外饰（5） ----
+  - code: MC_CMP_EXT
+    level: 2
+    parentCode: MC_CMP
+    name: Exterior
+    nameLocal: 外饰
+    description: 外饰系统，覆盖保险杠、外部照明、外后视镜、雨刮洗涤与外饰件
+    aliases: [Exterior Trim]
+    sortOrder: 2
+  - code: MC_CMP_EXT_BUMPER
+    level: 3
+    parentCode: MC_CMP_EXT
+    name: Bumper System
+    nameLocal: 保险杠系统
+    description: 保险杠系统，包含保险杠蒙皮、骨架与吸能件
+    aliases: [Bumper]
+    sortOrder: 1
+  - code: MC_CMP_EXT_LIGHTING
+    level: 3
+    parentCode: MC_CMP_EXT
+    name: Exterior Lighting
+    nameLocal: 外部照明
+    description: 外部照明，包含前大灯、尾灯、雾灯与信号灯
+    aliases: [Headlamp, Rear Lamp]
+    sortOrder: 2
+  - code: MC_CMP_EXT_MIRROR
+    level: 3
+    parentCode: MC_CMP_EXT
+    name: Exterior Mirror
+    nameLocal: 外后视镜
+    description: 外后视镜，包含镜壳、镜片与调节机构
+    aliases: [Mirror]
+    sortOrder: 3
+  - code: MC_CMP_EXT_WIPER
+    level: 3
+    parentCode: MC_CMP_EXT
+    name: Wiper & Washer
+    nameLocal: 雨刮洗涤
+    description: 雨刮洗涤系统，包含刮臂、刮片、电机与洗涤泵
+    aliases: [Wiper]
+    sortOrder: 4
+  - code: MC_CMP_EXT_TRIM
+    level: 3
+    parentCode: MC_CMP_EXT
+    name: Exterior Trim
+    nameLocal: 外饰件
+    description: 外饰件，包含格栅、饰条、扰流板与轮眉
+    aliases: [Trim]
+    sortOrder: 5
+
+  # ---- MC_CMP_INT 内饰（5） ----
+  - code: MC_CMP_INT
+    level: 2
+    parentCode: MC_CMP
+    name: Interior
+    nameLocal: 内饰
+    description: 内饰系统，覆盖座椅、仪表板、控制台、内饰件与乘员约束
+    aliases: [Cabin]
+    sortOrder: 3
+  - code: MC_CMP_INT_SEAT
+    level: 3
+    parentCode: MC_CMP_INT
+    name: Seat System
+    nameLocal: 座椅系统
+    description: 座椅系统，包含座椅骨架、发泡、面套与调节机构
+    aliases: [Seat]
+    sortOrder: 1
+  - code: MC_CMP_INT_IP
+    level: 3
+    parentCode: MC_CMP_INT
+    name: Instrument Panel
+    nameLocal: 仪表板
+    description: 仪表板（IP）总成，包含仪表板骨架、蒙皮与出风口
+    aliases: [IP, Dashboard]
+    sortOrder: 2
+  - code: MC_CMP_INT_CONSOLE
+    level: 3
+    parentCode: MC_CMP_INT
+    name: Console System
+    nameLocal: 控制台系统
+    description: 控制台系统，包含中控台与中央储物
+    aliases: [Console]
+    sortOrder: 3
+  - code: MC_CMP_INT_TRIM
+    level: 3
+    parentCode: MC_CMP_INT
+    name: Interior Trim
+    nameLocal: 内饰件
+    description: 内饰件，包含门板、立柱饰板与顶棚
+    aliases: [Trim]
+    sortOrder: 4
+  - code: MC_CMP_INT_RESTRAINT
+    level: 3
+    parentCode: MC_CMP_INT
+    name: Occupant Restraint
+    nameLocal: 乘员约束
+    description: 乘员约束系统，包含安全带、气囊与被动安全装置
+    aliases: [Airbag, Seat Belt]
+    sortOrder: 5
+
+  # ---- MC_CMP_CHS 底盘（6） ----
+  - code: MC_CMP_CHS
+    level: 2
+    parentCode: MC_CMP
+    name: Chassis
+    nameLocal: 底盘
+    description: 底盘系统，覆盖悬架、转向、制动、车轮轮胎、车轴轮毂与车架
+    aliases: [Chassis System]
+    sortOrder: 4
+  - code: MC_CMP_CHS_SUSPENSION
+    level: 3
+    parentCode: MC_CMP_CHS
+    name: Suspension System
+    nameLocal: 悬架系统
+    description: 悬架系统，包含弹簧、减振器、控制臂与稳定杆
+    aliases: [Suspension]
+    sortOrder: 1
+  - code: MC_CMP_CHS_STEERING
+    level: 3
+    parentCode: MC_CMP_CHS
+    name: Steering System
+    nameLocal: 转向系统
+    description: 转向系统，包含转向机、转向柱与转向节
+    aliases: [Steering]
+    sortOrder: 2
+  - code: MC_CMP_CHS_BRAKE
+    level: 3
+    parentCode: MC_CMP_CHS
+    name: Brake System
+    nameLocal: 制动系统
+    description: 制动系统，包含制动卡钳、制动盘、制动器与制动管路
+    aliases: [Brake]
+    sortOrder: 3
+  - code: MC_CMP_CHS_WHEEL_TIRE
+    level: 3
+    parentCode: MC_CMP_CHS
+    name: Wheel & Tire
+    nameLocal: 车轮与轮胎
+    description: 车轮与轮胎，包含轮毂、轮辋与轮胎总成
+    aliases: [Wheel, Tire]
+    sortOrder: 4
+  - code: MC_CMP_CHS_AXLE_HUB
+    level: 3
+    parentCode: MC_CMP_CHS
+    name: Axle & Hub
+    nameLocal: 车轴与轮毂轴承
+    description: 车轴与轮毂轴承，包含驱动轴、半轴与轮毂单元
+    aliases: [Axle, Hub]
+    sortOrder: 5
+  - code: MC_CMP_CHS_FRAME
+    level: 3
+    parentCode: MC_CMP_CHS
+    name: Frame & Subframe
+    nameLocal: 车架与副车架
+    description: 车架与副车架，包含承载式车架与前后副车架
+    aliases: [Frame, Subframe]
+    sortOrder: 6
+
+  # ---- MC_CMP_PWR 动力驱动（6） ----
+  - code: MC_CMP_PWR
+    level: 2
+    parentCode: MC_CMP
+    name: Propulsion
+    nameLocal: 动力驱动
+    description: 动力驱动系统，覆盖电驱动、发动机、变速器、传动、燃油与排气
+    aliases: [Powertrain]
+    sortOrder: 5
+  - code: MC_CMP_PWR_EDRIVE
+    level: 3
+    parentCode: MC_CMP_PWR
+    name: Electric Drive
+    nameLocal: 电驱动
+    description: 电驱动，包含驱动电机、逆变器与减速器
+    aliases: [E-Drive, EDM]
+    sortOrder: 1
+  - code: MC_CMP_PWR_ENGINE
+    level: 3
+    parentCode: MC_CMP_PWR
+    name: Engine
+    nameLocal: 发动机
+    description: 发动机，包含缸体、缸盖、活塞连杆与进排气机构
+    aliases: [ICE]
+    sortOrder: 2
+  - code: MC_CMP_PWR_TRANSMISSION
+    level: 3
+    parentCode: MC_CMP_PWR
+    name: Transmission
+    nameLocal: 变速器
+    description: 变速器，包含自动/手动变速器与离合器
+    aliases: [Gearbox]
+    sortOrder: 3
+  - code: MC_CMP_PWR_DRIVELINE
+    level: 3
+    parentCode: MC_CMP_PWR
+    name: Driveline
+    nameLocal: 传动系统
+    description: 传动系统，包含传动轴、差速器与主减速器
+    aliases: [Driveshaft]
+    sortOrder: 4
+  - code: MC_CMP_PWR_FUEL
+    level: 3
+    parentCode: MC_CMP_PWR
+    name: Fuel System
+    nameLocal: 燃油系统
+    description: 燃油系统，包含油箱、油泵、油轨与喷油器
+    aliases: [Fuel]
+    sortOrder: 5
+  - code: MC_CMP_PWR_EXHAUST
+    level: 3
+    parentCode: MC_CMP_PWR
+    name: Exhaust & Aftertreatment
+    nameLocal: 排气与后处理
+    description: 排气与后处理，包含排气歧管、消声器与催化器
+    aliases: [Exhaust]
+    sortOrder: 6
+
+  # ---- MC_CMP_EGY 能源存储与充电（7） ----
+  - code: MC_CMP_EGY
+    level: 2
+    parentCode: MC_CMP
+    name: Energy Storage & Charging
+    nameLocal: 能源存储与充电
+    description: 能源存储与充电系统，覆盖动力电池、低压电池、高压配电、充电、电能转换与换电
+    aliases: [Energy, Charging]
+    sortOrder: 6
+  - code: MC_CMP_EGY_TRACTION_BATTERY
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: Traction Battery
+    nameLocal: 动力电池
+    description: 动力电池，包含电芯、模组、电池包与 BMS
+    aliases: [HV Battery, Traction Battery Pack]
+    sortOrder: 1
+  - code: MC_CMP_EGY_LV_BATTERY
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: Low-voltage Battery
+    nameLocal: 低压蓄电池
+    description: 低压蓄电池，包含 12V 铅酸或锂电池
+    aliases: [LV Battery, 12V Battery]
+    sortOrder: 2
+  - code: MC_CMP_EGY_HV_DISTRIBUTION
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: High-voltage Distribution
+    nameLocal: 高压配电
+    description: 高压配电，包含高压配电单元（PDU）与高压线束连接
+    aliases: [PDU, HV Distribution]
+    sortOrder: 3
+  - code: MC_CMP_EGY_CHARGING
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: Charging System
+    nameLocal: 充电系统
+    description: 充电系统，包含车载充电机、直流快充通信与充电控制
+    aliases: [OBC, Charging]
+    sortOrder: 4
+  - code: MC_CMP_EGY_POWER_CONVERSION
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: On-board Power Conversion
+    nameLocal: 车载电能转换
+    description: 车载电能转换，包含 DCDC 变换器与高压配电转换
+    aliases: [DCDC]
+    sortOrder: 5
+  - code: MC_CMP_EGY_CHARGE_PORT
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: Charge Port
+    nameLocal: 充电口
+    description: 充电口总成，包含交直流充电口与盖板机构
+    aliases: [Charge Inlet]
+    sortOrder: 6
+  - code: MC_CMP_EGY_BATTERY_SWAP
+    level: 3
+    parentCode: MC_CMP_EGY
+    name: Battery Swap System
+    nameLocal: 换电系统
+    description: 换电系统，包含换电机构与换电接口
+    aliases: [Swap]
+    sortOrder: 7
+
+  # ---- MC_CMP_THM 热管理（5） ----
+  - code: MC_CMP_THM
+    level: 2
+    parentCode: MC_CMP
+    name: Thermal Management
+    nameLocal: 热管理
+    description: 热管理系统，覆盖座舱空调、电池热管理、动力热管理、冷却系统与制冷剂回路
+    aliases: [HVAC, Thermal]
+    sortOrder: 7
+  - code: MC_CMP_THM_HVAC
+    level: 3
+    parentCode: MC_CMP_THM
+    name: Cabin HVAC
+    nameLocal: 座舱空调
+    description: 座舱空调，包含空调箱、压缩机与鼓风机
+    aliases: [AC, Air Conditioning]
+    sortOrder: 1
+  - code: MC_CMP_THM_BATTERY
+    level: 3
+    parentCode: MC_CMP_THM
+    name: Battery Thermal Management
+    nameLocal: 电池热管理
+    description: 电池热管理，包含电池冷却板与加热组件
+    aliases: [BTMS]
+    sortOrder: 2
+  - code: MC_CMP_THM_PROPULSION
+    level: 3
+    parentCode: MC_CMP_THM
+    name: Propulsion Thermal Management
+    nameLocal: 动力热管理
+    description: 动力热管理，包含电机油冷与电驱冷却组件
+    aliases: [Propulsion Cooling]
+    sortOrder: 3
+  - code: MC_CMP_THM_COOLING
+    level: 3
+    parentCode: MC_CMP_THM
+    name: Cooling System
+    nameLocal: 冷却系统
+    description: 冷却系统，包含散热器、水泵、风扇与冷却管路
+    aliases: [Radiator]
+    sortOrder: 4
+  - code: MC_CMP_THM_REFRIGERANT
+    level: 3
+    parentCode: MC_CMP_THM
+    name: Refrigerant Circuit
+    nameLocal: 制冷剂回路
+    description: 制冷剂回路，包含膨胀阀、蒸发器、冷凝器与管路
+    aliases: [Refrigerant]
+    sortOrder: 5
+
+  # ---- MC_CMP_ELEC 电气电子（7） ----
+  - code: MC_CMP_ELEC
+    level: 2
+    parentCode: MC_CMP
+    name: Electrical & Electronic
+    nameLocal: 电气电子
+    description: 电气电子系统，覆盖控制器、线束、连接器、传感器、执行器、低压配电与车载网络
+    aliases: [E/E, Electrical]
+    sortOrder: 8
+  - code: MC_CMP_ELEC_CONTROLLER
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: Electronic Controller
+    nameLocal: 电子控制器
+    description: 电子控制器，包含 ECU 与各类控制单元
+    aliases: [ECU, Controller]
+    sortOrder: 1
+  - code: MC_CMP_ELEC_HARNESS
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: Wiring Harness
+    nameLocal: 线束
+    description: 线束，包含整车线束、分支线束与高压线束
+    aliases: [Harness]
+    sortOrder: 2
+  - code: MC_CMP_ELEC_CONNECTOR
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: Connector & Terminal
+    nameLocal: 连接器与端子
+    description: 连接器与端子，包含接插件、端子与护套
+    aliases: [Connector]
+    sortOrder: 3
+  - code: MC_CMP_ELEC_SENSOR
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: General Sensor
+    nameLocal: 通用传感器
+    description: 通用传感器，包含温度、压力、位置与加速度等通用传感
+    aliases: [Sensor]
+    sortOrder: 4
+  - code: MC_CMP_ELEC_ACTUATOR
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: General Actuator
+    nameLocal: 通用执行器
+    description: 通用执行器，包含电机、电磁阀与推杆等通用执行
+    aliases: [Actuator]
+    sortOrder: 5
+  - code: MC_CMP_ELEC_POWER_DIST
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: Low-voltage Power Distribution
+    nameLocal: 低压配电
+    description: 低压配电，包含保险丝盒、继电器盒与电源管理
+    aliases: [Power Distribution, Fuse Box]
+    sortOrder: 6
+  - code: MC_CMP_ELEC_NETWORK
+    level: 3
+    parentCode: MC_CMP_ELEC
+    name: In-vehicle Network
+    nameLocal: 车载网络
+    description: 车载网络，包含网关、总线节点与网络通信设备
+    aliases: [Network, Gateway]
+    sortOrder: 7
+
+  # ---- MC_CMP_ADAS 智能驾驶（5） ----
+  - code: MC_CMP_ADAS
+    level: 2
+    parentCode: MC_CMP
+    name: ADAS & Intelligent Driving
+    nameLocal: 智能驾驶
+    description: 智能驾驶系统，覆盖智驾摄像头、雷达、激光雷达、超声波与计算平台
+    aliases: [ADAS, Intelligent Driving]
+    sortOrder: 9
+  - code: MC_CMP_ADAS_CAMERA
+    level: 3
+    parentCode: MC_CMP_ADAS
+    name: ADAS Camera
+    nameLocal: 智驾摄像头
+    description: 智驾摄像头，包含前视、环视与舱内感知摄像头
+    aliases: [Camera]
+    sortOrder: 1
+  - code: MC_CMP_ADAS_RADAR
+    level: 3
+    parentCode: MC_CMP_ADAS
+    name: Radar
+    nameLocal: 毫米波雷达
+    description: 毫米波雷达，包含前向与角向毫米波雷达
+    aliases: [Radar]
+    sortOrder: 2
+  - code: MC_CMP_ADAS_LIDAR
+    level: 3
+    parentCode: MC_CMP_ADAS
+    name: LiDAR
+    nameLocal: 激光雷达
+    description: 激光雷达，包含主激光雷达与补盲激光雷达
+    aliases: [LiDAR]
+    sortOrder: 3
+  - code: MC_CMP_ADAS_ULTRASONIC
+    level: 3
+    parentCode: MC_CMP_ADAS
+    name: Ultrasonic Sensor
+    nameLocal: 超声波传感器
+    description: 超声波传感器，用于泊车与近距离感知
+    aliases: [USS, PDC]
+    sortOrder: 4
+  - code: MC_CMP_ADAS_COMPUTE
+    level: 3
+    parentCode: MC_CMP_ADAS
+    name: ADAS Computing Platform
+    nameLocal: 智驾计算平台
+    description: 智驾计算平台，包含智驾域控制器与计算单元
+    aliases: [ADAS Controller, DCU]
+    sortOrder: 5
+
+  # ---- MC_CMP_GEN 通用件（3） ----
+  - code: MC_CMP_GEN
+    level: 2
+    parentCode: MC_CMP
+    name: General Component
+    nameLocal: 通用件
+    description: 通用件，覆盖紧固件、轴承与密封件
+    aliases: [General]
+    sortOrder: 10
+  - code: MC_CMP_GEN_FASTENER
+    level: 3
+    parentCode: MC_CMP_GEN
+    name: Fastener
+    nameLocal: 紧固件
+    description: 紧固件，包含螺栓、螺钉、螺母与卡扣
+    aliases: [Bolt, Screw]
+    sortOrder: 1
+  - code: MC_CMP_GEN_BEARING
+    level: 3
+    parentCode: MC_CMP_GEN
+    name: Bearing
+    nameLocal: 轴承
+    description: 轴承，包含滚动轴承与滑动轴承
+    aliases: [Bearing]
+    sortOrder: 2
+  - code: MC_CMP_GEN_SEAL
+    level: 3
+    parentCode: MC_CMP_GEN
+    name: Seal & Gasket
+    nameLocal: 密封件
+    description: 密封件，包含油封、垫片与密封圈
+    aliases: [Seal, Gasket]
+    sortOrder: 3
+
+  # ---- MC_RAW_MET 金属材料（4） ----
+  - code: MC_RAW_MET
+    level: 2
+    parentCode: MC_RAW
+    name: Metal Material
+    nameLocal: 金属材料
+    description: 金属材料，覆盖钢材、铝材、铜材与其他金属
+    aliases: [Metal]
+    sortOrder: 1
+  - code: MC_RAW_MET_STEEL
+    level: 3
+    parentCode: MC_RAW_MET
+    name: Steel
+    nameLocal: 钢材
+    description: 钢材，包含钢板、型钢与特殊钢
+    aliases: [Steel]
+    sortOrder: 1
+  - code: MC_RAW_MET_ALUMINUM
+    level: 3
+    parentCode: MC_RAW_MET
+    name: Aluminum
+    nameLocal: 铝材
+    description: 铝材，包含铝合金板材、型材与铸件
+    aliases: [Aluminium]
+    sortOrder: 2
+  - code: MC_RAW_MET_COPPER
+    level: 3
+    parentCode: MC_RAW_MET
+    name: Copper
+    nameLocal: 铜材
+    description: 铜材，包含铜排、铜线与铜合金
+    aliases: [Copper]
+    sortOrder: 3
+  - code: MC_RAW_MET_OTHER
+    level: 3
+    parentCode: MC_RAW_MET
+    name: Other Metal
+    nameLocal: 其他金属
+    description: 其他金属，包含镁、锌、钛及稀有金属
+    aliases: [Other Metal]
+    sortOrder: 4
+
+  # ---- MC_RAW_POLY 高分子材料（3） ----
+  - code: MC_RAW_POLY
+    level: 2
+    parentCode: MC_RAW
+    name: Polymer Material
+    nameLocal: 高分子材料
+    description: 高分子材料，覆盖塑料、橡胶与复合材料
+    aliases: [Polymer]
+    sortOrder: 2
+  - code: MC_RAW_POLY_PLASTIC
+    level: 3
+    parentCode: MC_RAW_POLY
+    name: Plastic
+    nameLocal: 塑料
+    description: 塑料，包含热塑性与热固性塑料原料
+    aliases: [Plastic]
+    sortOrder: 1
+  - code: MC_RAW_POLY_RUBBER
+    level: 3
+    parentCode: MC_RAW_POLY
+    name: Rubber
+    nameLocal: 橡胶
+    description: 橡胶，包含天然与合成橡胶原料
+    aliases: [Rubber]
+    sortOrder: 2
+  - code: MC_RAW_POLY_COMPOSITE
+    level: 3
+    parentCode: MC_RAW_POLY
+    name: Composite
+    nameLocal: 复合材料
+    description: 复合材料，包含碳纤维与玻璃纤维复合材料
+    aliases: [Composite]
+    sortOrder: 3
+
+  # ---- MC_RAW_CHEM 化学材料（3） ----
+  - code: MC_RAW_CHEM
+    level: 2
+    parentCode: MC_RAW
+    name: Chemical Material
+    nameLocal: 化学材料
+    description: 化学材料，覆盖胶黏剂、涂料与工作液
+    aliases: [Chemical]
+    sortOrder: 3
+  - code: MC_RAW_CHEM_ADHESIVE
+    level: 3
+    parentCode: MC_RAW_CHEM
+    name: Adhesive & Sealant
+    nameLocal: 胶黏剂与密封胶
+    description: 胶黏剂与密封胶，包含结构胶与密封胶
+    aliases: [Adhesive]
+    sortOrder: 1
+  - code: MC_RAW_CHEM_COATING
+    level: 3
+    parentCode: MC_RAW_CHEM
+    name: Coating & Paint
+    nameLocal: 涂料与油漆
+    description: 涂料与油漆，包含底漆、面漆与清漆
+    aliases: [Paint]
+    sortOrder: 2
+  - code: MC_RAW_CHEM_FLUID
+    level: 3
+    parentCode: MC_RAW_CHEM
+    name: Fluid & Lubricant
+    nameLocal: 工作液与润滑剂
+    description: 工作液与润滑剂，包含冷却液、制动液与润滑油
+    aliases: [Fluid, Lubricant]
+    sortOrder: 3
+
+  # ---- MC_SW_EMB 嵌入式软件（3） ----
+  - code: MC_SW_EMB
+    level: 2
+    parentCode: MC_SW
+    name: Embedded Software
+    nameLocal: 嵌入式软件
+    description: 嵌入式软件，覆盖基础软件、应用软件与诊断软件
+    aliases: [Embedded]
+    sortOrder: 1
+  - code: MC_SW_EMB_BASIC
+    level: 3
+    parentCode: MC_SW_EMB
+    name: Basic Software
+    nameLocal: 基础软件
+    description: 基础软件，包含 BSW、OS 与中间件
+    aliases: [BSW, OS]
+    sortOrder: 1
+  - code: MC_SW_EMB_APPLICATION
+    level: 3
+    parentCode: MC_SW_EMB
+    name: Application Software
+    nameLocal: 应用软件
+    description: 应用软件，包含域内与整车应用功能软件
+    aliases: [App SW]
+    sortOrder: 2
+  - code: MC_SW_EMB_DIAGNOSTIC
+    level: 3
+    parentCode: MC_SW_EMB
+    name: Diagnostic Software
+    nameLocal: 诊断软件
+    description: 诊断软件，包含诊断服务与刷写软件
+    aliases: [Diag]
+    sortOrder: 3
+
+  # ---- MC_SW_DATA 软件数据（3） ----
+  - code: MC_SW_DATA
+    level: 2
+    parentCode: MC_SW
+    name: Software Data
+    nameLocal: 软件数据
+    description: 软件数据，覆盖标定数据、地图数据与配置数据
+    aliases: [Data]
+    sortOrder: 2
+  - code: MC_SW_DATA_CALIBRATION
+    level: 3
+    parentCode: MC_SW_DATA
+    name: Calibration Data
+    nameLocal: 标定数据
+    description: 标定数据，包含参数标定与特性曲线数据
+    aliases: [Calibration, Cal]
+    sortOrder: 1
+  - code: MC_SW_DATA_MAP
+    level: 3
+    parentCode: MC_SW_DATA
+    name: Map Data
+    nameLocal: 地图数据
+    description: 地图数据，包含导航地图与高精地图
+    aliases: [Map]
+    sortOrder: 2
+  - code: MC_SW_DATA_CONFIGURATION
+    level: 3
+    parentCode: MC_SW_DATA
+    name: Configuration Data
+    nameLocal: 配置数据
+    description: 配置数据，包含车辆配置与功能配置数据
+    aliases: [Config Data]
+    sortOrder: 3
+
+  # ---- MC_SW_MODEL 数字模型（2） ----
+  - code: MC_SW_MODEL
+    level: 2
+    parentCode: MC_SW
+    name: Digital Model
+    nameLocal: 数字模型
+    description: 数字模型，覆盖 AI 模型与控制模型
+    aliases: [Model]
+    sortOrder: 3
+  - code: MC_SW_MODEL_AI
+    level: 3
+    parentCode: MC_SW_MODEL
+    name: AI Model
+    nameLocal: AI 模型
+    description: AI 模型，包含感知与决策 AI 模型
+    aliases: [AI]
+    sortOrder: 1
+  - code: MC_SW_MODEL_CONTROL
+    level: 3
+    parentCode: MC_SW_MODEL
+    name: Control Model
+    nameLocal: 控制模型
+    description: 控制模型，包含整车与域控制算法模型
+    aliases: [Control]
+    sortOrder: 2
+
+  # ---- MC_IND_TOOL 工装与设备（2） ----
+  - code: MC_IND_TOOL
+    level: 2
+    parentCode: MC_IND
+    name: Tooling & Equipment
+    nameLocal: 工装与设备
+    description: 工装与设备，覆盖生产工装与维修工具
+    aliases: [Tooling]
+    sortOrder: 1
+  - code: MC_IND_TOOL_PRODUCTION
+    level: 3
+    parentCode: MC_IND_TOOL
+    name: Production Tooling
+    nameLocal: 生产工装
+    description: 生产工装，包含夹具、检具与模具
+    aliases: [Fixture, Tooling]
+    sortOrder: 1
+  - code: MC_IND_TOOL_SERVICE
+    level: 3
+    parentCode: MC_IND_TOOL
+    name: Service Tool
+    nameLocal: 维修工具
+    description: 维修工具，包含售后专用工具与设备
+    aliases: [Service Tool]
+    sortOrder: 2
+
+  # ---- MC_IND_PKG 包装与标识（3） ----
+  - code: MC_IND_PKG
+    level: 2
+    parentCode: MC_IND
+    name: Packaging & Identification
+    nameLocal: 包装与标识
+    description: 包装与标识，覆盖单件包装、运输包装与标签标识
+    aliases: [Packaging]
+    sortOrder: 2
+  - code: MC_IND_PKG_PRIMARY
+    level: 3
+    parentCode: MC_IND_PKG
+    name: Primary Packaging
+    nameLocal: 单件包装
+    description: 单件包装，包含内包装与防护材料
+    aliases: [Primary Pack]
+    sortOrder: 1
+  - code: MC_IND_PKG_TRANSPORT
+    level: 3
+    parentCode: MC_IND_PKG
+    name: Transport Packaging
+    nameLocal: 运输包装
+    description: 运输包装，包含周转箱、托盘与集装箱具
+    aliases: [Transport Pack]
+    sortOrder: 2
+  - code: MC_IND_PKG_LABEL
+    level: 3
+    parentCode: MC_IND_PKG
+    name: Label & Identification
+    nameLocal: 标签标识
+    description: 标签标识，包含标签、铭牌与条码标识
+    aliases: [Label]
+    sortOrder: 3
+
+  # ---- MC_IND_CONS 制造耗材（2） ----
+  - code: MC_IND_CONS
+    level: 2
+    parentCode: MC_IND
+    name: Manufacturing Consumable
+    nameLocal: 制造耗材
+    description: 制造耗材，覆盖工艺耗材与维修维护耗材
+    aliases: [Consumable]
+    sortOrder: 3
+  - code: MC_IND_CONS_PROCESS
+    level: 3
+    parentCode: MC_IND_CONS
+    name: Process Consumable
+    nameLocal: 工艺耗材
+    description: 工艺耗材，包含焊接、装配与涂装工艺耗材
+    aliases: [Process]
+    sortOrder: 1
+  - code: MC_IND_CONS_MRO
+    level: 3
+    parentCode: MC_IND_CONS
+    name: MRO Consumable
+    nameLocal: 维修维护耗材
+    description: 维修维护耗材，包含设备维护与清洁耗材
+    aliases: [MRO]
+    sortOrder: 2
