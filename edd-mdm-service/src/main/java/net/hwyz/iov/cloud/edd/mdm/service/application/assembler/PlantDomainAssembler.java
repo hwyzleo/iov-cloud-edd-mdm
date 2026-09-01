@@ -24,7 +24,7 @@ public class PlantDomainAssembler {
      */
     public static Plant toDomain(PlantCreateCmd cmd, String createBy) {
         return Plant.create(
-                cmd.getCode(), cmd.getName(), cmd.getNameEn(), cmd.getShortName(), cmd.getDescription(),
+                cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getShortName(), cmd.getDescription(),
                 PlantType.valueOf(cmd.getPlantType()), cmd.getLegalEntityCode(), cmd.getCostCenterCode(),
                 cmd.getCountry(), cmd.getProvince(), cmd.getCity(), cmd.getAddress(),
                 cmd.getLongitude(), cmd.getLatitude(), cmd.getTimezone(),
@@ -44,7 +44,7 @@ public class PlantDomainAssembler {
                 .id(plant.getId())
                 .code(plant.getCode())
                 .name(plant.getName())
-                .nameEn(plant.getNameEn())
+                .nameLocal(plant.getNameLocal())
                 .shortName(plant.getShortName())
                 .description(plant.getDescription())
                 .plantType(plant.getPlantType() != null ? plant.getPlantType().name() : null)

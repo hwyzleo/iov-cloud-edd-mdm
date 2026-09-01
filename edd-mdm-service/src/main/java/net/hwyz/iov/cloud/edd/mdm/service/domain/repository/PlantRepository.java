@@ -23,9 +23,9 @@ public interface PlantRepository {
 
     void delete(Plant plant, String operator, boolean forceDelete);
 
-    List<Plant> list(String plantType, String country, String status, int page, int size);
+    List<Plant> list(String plantType, String country, String status, String nameKeyword, int page, int size);
 
-    long count(String plantType, String country, String status);
+    long count(String plantType, String country, String status, String nameKeyword);
 
     List<Plant> listAllActive();
 

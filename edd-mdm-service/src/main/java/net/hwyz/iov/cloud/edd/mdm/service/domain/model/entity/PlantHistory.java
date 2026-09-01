@@ -28,7 +28,7 @@ public class PlantHistory {
 
     private String code;
     private String name;
-    private String nameEn;
+    private String nameLocal;
     private String shortName;
     private String description;
     private PlantType plantType;

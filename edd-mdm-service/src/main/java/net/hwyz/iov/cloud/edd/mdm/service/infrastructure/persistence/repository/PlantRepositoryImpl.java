@@ -78,9 +78,9 @@ public class PlantRepositoryImpl implements PlantRepository {
     }
 
     @Override
-    public List<Plant> list(String plantType, String country, String status, int page, int size) {
+    public List<Plant> list(String plantType, String country, String status, String nameKeyword, int page, int size) {
         Page<PlantPo> pageParam = new Page<>(page, size);
-        LambdaQueryWrapper<PlantPo> wrapper = buildListWrapper(plantType, country, status);
+        LambdaQueryWrapper<PlantPo> wrapper = buildListWrapper(plantType, country, status, nameKeyword);
         wrapper.orderByDesc(PlantPo::getCreateTime);
         Page<PlantPo> result = plantMapper.selectPage(pageParam, wrapper);
         return result.getRecords().stream()
@@ -89,8 +89,8 @@ public class PlantRepositoryImpl implements PlantRepository {
     }
 
     @Override
-    public long count(String plantType, String country, String status) {
-        LambdaQueryWrapper<PlantPo> wrapper = buildListWrapper(plantType, country, status);
+    public long count(String plantType, String country, String status, String nameKeyword) {
+        LambdaQueryWrapper<PlantPo> wrapper = buildListWrapper(plantType, country, status, nameKeyword);
         return plantMapper.selectCount(wrapper);
     }
 
@@ -152,7 +152,7 @@ public class PlantRepositoryImpl implements PlantRepository {
                 .collect(Collectors.toList());
     }
 
-    private LambdaQueryWrapper<PlantPo> buildListWrapper(String plantType, String country, String status) {
+    private LambdaQueryWrapper<PlantPo> buildListWrapper(String plantType, String country, String status, String nameKeyword) {
         LambdaQueryWrapper<PlantPo> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PlantPo::getRowValid, true);
         if (plantType != null && !plantType.isBlank()) {
@@ -166,6 +166,11 @@ public class PlantRepositoryImpl implements PlantRepository {
         } else {
             wrapper.eq(PlantPo::getStatus, "ACTIVE");
         }
+        // CR-038：列表检索同时支持英文标准名称 name 与本地化名称 name_local
+        if (nameKeyword != null && !nameKeyword.isBlank()) {
+            String keyword = nameKeyword.trim();
+            wrapper.and(w -> w.like(PlantPo::getName, keyword).or().like(PlantPo::getNameLocal, keyword));
+        }
         return wrapper;
     }
 
@@ -178,7 +183,7 @@ public class PlantRepositoryImpl implements PlantRepository {
                 .operator(po.getModifyBy())
                 .code(po.getCode())
                 .name(po.getName())
-                .nameEn(po.getNameEn())
+                .nameLocal(po.getNameLocal())
                 .shortName(po.getShortName())
                 .description(po.getDescription())
                 .plantType(po.getPlantType())

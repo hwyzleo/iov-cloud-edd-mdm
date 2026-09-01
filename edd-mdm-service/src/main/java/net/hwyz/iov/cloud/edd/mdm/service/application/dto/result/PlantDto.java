@@ -30,14 +30,14 @@ public class PlantDto {
     private String code;
 
     /**
-     * 工厂名称
+     * 英文标准名称
      */
     private String name;
 
     /**
-     * 英文名称
+     * 本地化名称
      */
-    private String nameEn;
+    private String nameLocal;
 
     /**
      * 简称

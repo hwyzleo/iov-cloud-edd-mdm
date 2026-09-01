@@ -22,13 +22,20 @@ import java.util.Date;
 @AllArgsConstructor
 public class Plant {
 
+    /**
+     * CR-038：双语名称最大长度（name 英文标准名称 / nameLocal 本地化名称）
+     */
+    public static final int NAME_MAX_LENGTH = 128;
+
     private Long id;
 
     // === 身份属性 ===
 
     private String code;
+    /** 英文标准名称 */
     private String name;
-    private String nameEn;
+    /** 本地化名称 */
+    private String nameLocal;
     private String shortName;
     private String description;
 
@@ -82,16 +89,17 @@ public class Plant {
      * <p>
      * 默认 status=ACTIVE、source_system=LOCAL、ingestion_channel=LOCAL
      */
-    public static Plant create(String code, String name, String nameEn, String shortName, String description,
+    public static Plant create(String code, String name, String nameLocal, String shortName, String description,
                                PlantType plantType, String legalEntityCode, String costCenterCode,
                                String country, String province, String city, String address,
                                java.math.BigDecimal longitude, java.math.BigDecimal latitude, String timezone,
                                Long annualCapacity, Integer productionLines, Date operationalStartDate, String mesInstance,
                                Date effectiveFrom, Date effectiveTo, String createBy) {
         validateEffectiveDate(effectiveFrom, effectiveTo);
+        validateName(name, nameLocal);
         Date now = new Date();
         return Plant.builder()
-                .code(code).name(name).nameEn(nameEn).shortName(shortName).description(description)
+                .code(code).name(name).nameLocal(nameLocal).shortName(shortName).description(description)
                 .plantType(plantType).legalEntityCode(legalEntityCode).costCenterCode(costCenterCode)
                 .country(country).province(province).city(city).address(address)
                 .longitude(longitude).latitude(latitude).timezone(timezone)
@@ -109,15 +117,16 @@ public class Plant {
     /**
      * 更新工厂（code 不可变）
      */
-    public void update(String name, String nameEn, String shortName, String description,
+    public void update(String name, String nameLocal, String shortName, String description,
                        PlantType plantType, String legalEntityCode, String costCenterCode,
                        String country, String province, String city, String address,
                        java.math.BigDecimal longitude, java.math.BigDecimal latitude, String timezone,
                        Long annualCapacity, Integer productionLines, Date operationalStartDate, String mesInstance,
                        Date effectiveFrom, Date effectiveTo, String modifyBy) {
         validateEffectiveDate(effectiveFrom, effectiveTo);
+        validateName(name, nameLocal);
         this.name = name;
-        this.nameEn = nameEn;
+        this.nameLocal = nameLocal;
         this.shortName = shortName;
         this.description = description;
         this.plantType = plantType;
@@ -161,6 +170,23 @@ public class Plant {
     public void markAsDeleting(String modifyBy) {
         this.modifyBy = modifyBy;
         this.modifyTime = new Date();
+    }
+
+    /**
+     * 校验双语名称（CR-038：name 必填且 ≤128，nameLocal 可空且 ≤128）
+     */
+    private static void validateName(String name, String nameLocal) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("工厂英文标准名称（name）不能为空");
+        }
+        if (name.length() > NAME_MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                    String.format("工厂英文标准名称超过 %d 字符上限（当前 %d）", NAME_MAX_LENGTH, name.length()));
+        }
+        if (nameLocal != null && nameLocal.length() > NAME_MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                    String.format("工厂本地化名称超过 %d 字符上限（当前 %d）", NAME_MAX_LENGTH, nameLocal.length()));
+        }
     }
 
     /**

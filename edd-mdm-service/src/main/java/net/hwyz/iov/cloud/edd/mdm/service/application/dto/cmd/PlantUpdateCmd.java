@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -25,14 +28,17 @@ public class PlantUpdateCmd {
     private String code;
 
     /**
-     * 工厂名称
+     * 英文标准名称
      */
+    @NotBlank(message = "工厂英文标准名称不能为空")
+    @Size(max = 128, message = "工厂英文标准名称不能超过128字符")
     private String name;
 
     /**
-     * 英文名称
+     * 本地化名称
      */
-    private String nameEn;
+    @Size(max = 128, message = "工厂本地化名称不能超过128字符")
+    private String nameLocal;
 
     /**
      * 简称

@@ -51,7 +51,7 @@ public class PlantAppService {
         }
 
         Plant plant = Plant.create(
-                cmd.getCode(), cmd.getName(), cmd.getNameEn(), cmd.getShortName(), cmd.getDescription(),
+                cmd.getCode(), cmd.getName(), cmd.getNameLocal(), cmd.getShortName(), cmd.getDescription(),
                 PlantType.valueOf(cmd.getPlantType()), cmd.getLegalEntityCode(), cmd.getCostCenterCode(),
                 cmd.getCountry(), cmd.getProvince(), cmd.getCity(), cmd.getAddress(),
                 cmd.getLongitude(), cmd.getLatitude(), cmd.getTimezone(),
@@ -85,7 +85,7 @@ public class PlantAppService {
                 .orElseThrow(() -> new IllegalArgumentException("工厂不存在: " + cmd.getCode()));
 
         plant.update(
-                cmd.getName(), cmd.getNameEn(), cmd.getShortName(), cmd.getDescription(),
+                cmd.getName(), cmd.getNameLocal(), cmd.getShortName(), cmd.getDescription(),
                 PlantType.valueOf(cmd.getPlantType()), cmd.getLegalEntityCode(), cmd.getCostCenterCode(),
                 cmd.getCountry(), cmd.getProvince(), cmd.getCity(), cmd.getAddress(),
                 cmd.getLongitude(), cmd.getLatitude(), cmd.getTimezone(),
@@ -170,7 +170,7 @@ public class PlantAppService {
      */
     public List<PlantDto> listPlants(PlantQuery query) {
         List<Plant> plants = plantRepository.list(
-                query.getPlantType(), query.getCountry(), null, query.getPage(), query.getSize()
+                query.getPlantType(), query.getCountry(), null, query.getName(), query.getPage(), query.getSize()
         );
         return plants.stream()
                 .map(PlantDomainAssembler::toDto)
@@ -183,11 +183,12 @@ public class PlantAppService {
      * @param plantType       工厂类型
      * @param country         国家
      * @param includeInactive 是否包含失效记录
+     * @param name           名称关键字（CR-038：按英文标准名称或本地化名称模糊匹配）
      * @return 总数
      */
-    public long countPlants(String plantType, String country, boolean includeInactive) {
+    public long countPlants(String plantType, String country, boolean includeInactive, String name) {
         String status = includeInactive ? null : "ACTIVE";
-        return plantRepository.count(plantType, country, status);
+        return plantRepository.count(plantType, country, status, name);
     }
 
     /**
@@ -265,7 +266,7 @@ public class PlantAppService {
                 .entityId(history.getEntityId())
                 .code(history.getCode())
                 .name(history.getName())
-                .nameEn(history.getNameEn())
+                .nameLocal(history.getNameLocal())
                 .shortName(history.getShortName())
                 .description(history.getDescription())
                 .plantType(history.getPlantType() != null ? history.getPlantType().name() : null)

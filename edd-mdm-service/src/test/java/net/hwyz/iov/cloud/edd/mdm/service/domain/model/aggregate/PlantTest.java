@@ -28,7 +28,7 @@ class PlantTest {
         @DisplayName("创建成功 - 所有字段正确填充")
         void create_success() {
             Plant plant = Plant.create(
-                    "PLT_CN_CD_01", "成都工厂", "Chengdu Plant", "成都", "整车总装工厂",
+                    "PLT_CN_CD_01", "Chengdu Plant", "成都工厂", "成都", "整车总装工厂",
                     PlantType.VEHICLE_ASSEMBLY, "LE001", "CC001",
                     "中国", "四川省", "成都市", "高新区天府大道",
                     new BigDecimal("104.065735"), new BigDecimal("30.659462"), "Asia/Shanghai",
@@ -37,8 +37,8 @@ class PlantTest {
             );
 
             assertEquals("PLT_CN_CD_01", plant.getCode());
-            assertEquals("成都工厂", plant.getName());
-            assertEquals("Chengdu Plant", plant.getNameEn());
+            assertEquals("Chengdu Plant", plant.getName());
+            assertEquals("成都工厂", plant.getNameLocal());
             assertEquals("成都", plant.getShortName());
             assertEquals("整车总装工厂", plant.getDescription());
             assertEquals(PlantType.VEHICLE_ASSEMBLY, plant.getPlantType());
@@ -67,6 +67,112 @@ class PlantTest {
         }
 
         @Test
+        @DisplayName("创建成功 - nameLocal 可空")
+        void create_nameLocalNull_success() {
+            Plant plant = Plant.create(
+                    "PLT_CN_CD_01", "Chengdu Plant", null, null, null,
+                    PlantType.VEHICLE_ASSEMBLY, null, null,
+                    null, null, null, null,
+                    null, null, null,
+                    null, null, null, null,
+                    null, null, "admin"
+            );
+
+            assertNotNull(plant);
+            assertEquals("Chengdu Plant", plant.getName());
+            assertNull(plant.getNameLocal());
+        }
+
+        @Test
+        @DisplayName("创建失败 - name 为空")
+        void create_nameBlank_throwsException() {
+            assertThrows(IllegalArgumentException.class, () ->
+                    Plant.create(
+                            "PLT_CN_CD_01", null, "成都工厂", null, null,
+                            PlantType.VEHICLE_ASSEMBLY, null, null,
+                            null, null, null, null,
+                            null, null, null,
+                            null, null, null, null,
+                            null, null, "admin"
+                    )
+            );
+            assertThrows(IllegalArgumentException.class, () ->
+                    Plant.create(
+                            "PLT_CN_CD_01", " ", "成都工厂", null, null,
+                            PlantType.VEHICLE_ASSEMBLY, null, null,
+                            null, null, null, null,
+                            null, null, null,
+                            null, null, null, null,
+                            null, null, "admin"
+                    )
+            );
+        }
+
+        @Test
+        @DisplayName("创建成功 - name 128 字符边界")
+        void create_name128Boundary_success() {
+            String name128 = "A".repeat(128);
+            Plant plant = Plant.create(
+                    "PLT_CN_CD_01", name128, "成都工厂", null, null,
+                    PlantType.VEHICLE_ASSEMBLY, null, null,
+                    null, null, null, null,
+                    null, null, null,
+                    null, null, null, null,
+                    null, null, "admin"
+            );
+
+            assertEquals(name128, plant.getName());
+        }
+
+        @Test
+        @DisplayName("创建失败 - name 超过 128 字符")
+        void create_nameOver128_throwsException() {
+            String name129 = "A".repeat(129);
+            assertThrows(IllegalArgumentException.class, () ->
+                    Plant.create(
+                            "PLT_CN_CD_01", name129, "成都工厂", null, null,
+                            PlantType.VEHICLE_ASSEMBLY, null, null,
+                            null, null, null, null,
+                            null, null, null,
+                            null, null, null, null,
+                            null, null, "admin"
+                    )
+            );
+        }
+
+        @Test
+        @DisplayName("创建成功 - nameLocal 128 字符边界")
+        void create_nameLocal128Boundary_success() {
+            String nameLocal128 = "本".repeat(128);
+            Plant plant = Plant.create(
+                    "PLT_CN_CD_01", "Chengdu Plant", nameLocal128, null, null,
+                    PlantType.VEHICLE_ASSEMBLY, null, null,
+                    null, null, null, null,
+                    null, null, null,
+                    null, null, null, null,
+                    null, null, "admin"
+            );
+
+            assertEquals(nameLocal128, plant.getNameLocal());
+        }
+
+        @Test
+        @DisplayName("创建失败 - nameLocal 超过 128 字符")
+        void create_nameLocalOver128_throwsException() {
+            String nameLocal129 = "本".repeat(129);
+            assertThrows(IllegalArgumentException.class, () ->
+                    Plant.create(
+                            "PLT_CN_CD_01", "Chengdu Plant", nameLocal129, null, null,
+                            PlantType.VEHICLE_ASSEMBLY, null, null,
+                            null, null, null, null,
+                            null, null, null,
+                            null, null, null, null,
+                            null, null, "admin"
+                    )
+            );
+        }
+
+        @Test
         @DisplayName("创建失败 - effectiveFrom 晚于 effectiveTo")
         void create_effectiveFromAfterTo_throwsException() {
             Calendar cal = Calendar.getInstance();
@@ -77,7 +183,7 @@ class PlantTest {
 
             assertThrows(IllegalArgumentException.class, () ->
                     Plant.create(
-                            "PLT_CN_CD_01", "成都工厂", null, null, null,
+                            "PLT_CN_CD_01", "Chengdu Plant", null, null, null,
                             PlantType.VEHICLE_ASSEMBLY, null, null,
                             null, null, null, null,
                             null, null, null,
@@ -91,7 +197,7 @@ class PlantTest {
         @DisplayName("创建成功 - effectiveFrom 和 effectiveTo 都为 null")
         void create_bothDatesNull_success() {
             Plant plant = Plant.create(
-                    "PLT_CN_CD_01", "成都工厂", null, null, null,
+                    "PLT_CN_CD_01", "Chengdu Plant", null, null, null,
                     PlantType.VEHICLE_ASSEMBLY, null, null,
                     null, null, null, null,
                     null, null, null,
@@ -110,12 +216,12 @@ class PlantTest {
     class UpdateTests {
 
         @Test
-        @DisplayName("更新成功 - version 自增")
+        @DisplayName("更新成功 - version 自增且双语名称映射正确")
         void update_success_versionIncremented() {
             Plant plant = createTestPlant();
             int originalVersion = plant.getVersion();
 
-            plant.update("新名称", null, null, null,
+            plant.update("New Name", "新名称", null, null,
                     PlantType.POWERTRAIN, null, null,
                     null, null, null, null,
                     null, null, null,
@@ -123,7 +229,8 @@ class PlantTest {
                     null, null, "modifier");
 
             assertEquals(originalVersion + 1, plant.getVersion());
-            assertEquals("新名称", plant.getName());
+            assertEquals("New Name", plant.getName());
+            assertEquals("新名称", plant.getNameLocal());
             assertEquals(PlantType.POWERTRAIN, plant.getPlantType());
             assertEquals("modifier", plant.getModifyBy());
         }
@@ -134,7 +241,7 @@ class PlantTest {
             Plant plant = createTestPlant();
             String originalCode = plant.getCode();
 
-            plant.update("新名称", null, null, null,
+            plant.update("New Name", "新名称", null, null,
                     PlantType.POWERTRAIN, null, null,
                     null, null, null, null,
                     null, null, null,
@@ -142,6 +249,37 @@ class PlantTest {
                     null, null, "modifier");
 
             assertEquals(originalCode, plant.getCode());
+        }
+
+        @Test
+        @DisplayName("更新失败 - name 为空")
+        void update_nameBlank_throwsException() {
+            Plant plant = createTestPlant();
+
+            assertThrows(IllegalArgumentException.class, () ->
+                    plant.update(null, "新名称", null, null,
+                            PlantType.POWERTRAIN, null, null,
+                            null, null, null, null,
+                            null, null, null,
+                            null, null, null, null,
+                            null, null, "modifier")
+            );
+        }
+
+        @Test
+        @DisplayName("更新失败 - nameLocal 超过 128 字符")
+        void update_nameLocalOver128_throwsException() {
+            Plant plant = createTestPlant();
+            String nameLocal129 = "本".repeat(129);
+
+            assertThrows(IllegalArgumentException.class, () ->
+                    plant.update("New Name", nameLocal129, null, null,
+                            PlantType.POWERTRAIN, null, null,
+                            null, null, null, null,
+                            null, null, null,
+                            null, null, null, null,
+                            null, null, "modifier")
+            );
         }
 
         @Test
@@ -156,7 +294,7 @@ class PlantTest {
             Date to = cal.getTime();
 
             assertThrows(IllegalArgumentException.class, () ->
-                    plant.update("新名称", null, null, null,
+                    plant.update("New Name", "新名称", null, null,
                             PlantType.POWERTRAIN, null, null,
                             null, null, null, null,
                             null, null, null,
@@ -226,7 +364,7 @@ class PlantTest {
 
     private Plant createTestPlant() {
         return Plant.create(
-                "PLT_CN_CD_01", "成都工厂", "Chengdu Plant", "成都", "整车总装工厂",
+                "PLT_CN_CD_01", "Chengdu Plant", "成都工厂", "成都", "整车总装工厂",
                 PlantType.VEHICLE_ASSEMBLY, "LE001", "CC001",
                 "中国", "四川省", "成都市", "高新区天府大道",
                 new BigDecimal("104.065735"), new BigDecimal("30.659462"), "Asia/Shanghai",

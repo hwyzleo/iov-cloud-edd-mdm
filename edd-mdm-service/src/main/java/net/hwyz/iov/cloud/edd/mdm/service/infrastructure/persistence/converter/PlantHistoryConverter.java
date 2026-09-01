@@ -26,7 +26,7 @@ public class PlantHistoryConverter {
                 .operator(po.getOperator())
                 .code(po.getCode())
                 .name(po.getName())
-                .nameEn(po.getNameEn())
+                .nameLocal(po.getNameLocal())
                 .shortName(po.getShortName())
                 .description(po.getDescription())
                 .plantType(po.getPlantType() != null ? PlantType.valueOf(po.getPlantType()) : null)

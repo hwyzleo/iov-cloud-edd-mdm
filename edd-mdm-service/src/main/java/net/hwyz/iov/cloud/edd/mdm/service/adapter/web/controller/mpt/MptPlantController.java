@@ -14,6 +14,7 @@ import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlantDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.dto.result.PlantHistoryDto;
 import net.hwyz.iov.cloud.edd.mdm.service.application.service.PlantAppService;
 import net.hwyz.iov.cloud.framework.common.bean.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,7 @@ public class MptPlantController {
      * @return 工厂响应
      */
     @PostMapping("/create")
-    public ApiResponse<PlantResponse> create(@RequestBody PlantCreateCmd cmd) {
+    public ApiResponse<PlantResponse> create(@Valid @RequestBody PlantCreateCmd cmd) {
         PlantDto dto = plantAppService.createPlant(cmd);
         return ApiResponse.ok(plantAssembler.toResponse(dto));
     }
@@ -60,7 +61,7 @@ public class MptPlantController {
      * @return 工厂响应
      */
     @PutMapping("/{code}")
-    public ApiResponse<PlantResponse> update(@PathVariable String code, @RequestBody PlantUpdateCmd cmd) {
+    public ApiResponse<PlantResponse> update(@PathVariable String code, @Valid @RequestBody PlantUpdateCmd cmd) {
         cmd.setCode(code);
         PlantDto dto = plantAppService.updatePlant(cmd);
         return ApiResponse.ok(plantAssembler.toResponse(dto));
@@ -130,6 +131,7 @@ public class MptPlantController {
                                                @RequestParam(defaultValue = "10") Integer size,
                                                @RequestParam(required = false) String plantType,
                                                @RequestParam(required = false) String country,
+                                               @RequestParam(required = false) String name,
                                                @RequestParam(required = false) Boolean includeInactive) {
         boolean includeInactiveFlag = Boolean.TRUE.equals(includeInactive);
 
@@ -139,11 +141,12 @@ public class MptPlantController {
                         .size(size)
                         .plantType(plantType)
                         .country(country)
+                        .name(name)
                         .includeInactive(includeInactiveFlag)
                         .build()
         );
 
-        long total = plantAppService.countPlants(plantType, country, includeInactiveFlag);
+        long total = plantAppService.countPlants(plantType, country, includeInactiveFlag, name);
 
         List<PlantResponse> rows = plants.stream()
                 .map(plantAssembler::toResponse)

@@ -22,9 +22,14 @@ public class PlantBriefResponse {
     private String code;
 
     /**
-     * 工厂名称
+     * 工厂英文标准名称
      */
     private String name;
+
+    /**
+     * 工厂本地化名称
+     */
+    private String nameLocal;
 
     /**
      * 工厂类型

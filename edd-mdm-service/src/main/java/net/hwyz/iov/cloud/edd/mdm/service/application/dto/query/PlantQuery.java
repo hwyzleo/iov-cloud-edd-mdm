@@ -37,6 +37,11 @@ public class PlantQuery {
     private String country;
 
     /**
+     * 名称关键字（CR-038：按英文标准名称或本地化名称模糊匹配）
+     */
+    private String name;
+
+    /**
      * 是否包含失效记录
      */
     private boolean includeInactive;
