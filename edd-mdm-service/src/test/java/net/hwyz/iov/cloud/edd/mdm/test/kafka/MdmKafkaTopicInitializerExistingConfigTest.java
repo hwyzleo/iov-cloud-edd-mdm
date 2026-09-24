@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.test.kafka;
 
 import net.hwyz.iov.cloud.edd.mdm.service.domain.repository.OutboxRepository;
-import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicProvisioningStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.messaging.kafka.MdmKafkaTopicReadiness;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,28 +19,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 已存在 Topic 配置不被修改集成测试（MDM-DSN-CR-034）
+ * 已存在 Topic 配置不被修改集成测试（MDM-DSN-CR-041 §4.2 / §9.2）
  * <p>
- * 环境中已预建 Topic（分区数与声明不同），FW-KAFKA Provisioning 仅做存在性检查，
+ * 环境中已预建 Topic（分区数与声明不同），MdmKafkaTopicInitializer 仅对差集创建，
  * 不修改已有 Topic 的分区数、副本数或配置。
  *
  * @author hwyz_leo
  */
 @SpringBootTest(
-        classes = KafkaProvisioningTestConfig.class,
+        classes = KafkaTopicInitializationTestConfig.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "iov.kafka.topic-provisioning.enabled=true",
-                "iov.kafka.topic-provisioning.initial-delay=0s",
-                "iov.kafka.topic-provisioning.retry.initial-interval=1s",
-                "iov.kafka.topic-provisioning.retry.max-interval=2s",
-                "iov.kafka.topic-provisioning.retry.multiplier=2.0",
-                "mdm.kafka.topic-provisioning.partitions=1",
-                "mdm.kafka.topic-provisioning.replication-factor=1"
+                "edd.mdm.kafka.topic-initialization.enabled=true",
+                "edd.mdm.kafka.topic-initialization.create-missing-producer-topics=true",
+                "edd.mdm.kafka.topic-initialization.fail-fast=true",
+                "edd.mdm.kafka.topic-initialization.partitions=1",
+                "edd.mdm.kafka.topic-initialization.replicas=1"
         })
 @Testcontainers
 @DisplayName("已存在 Topic 配置不被修改集成测试")
-class KafkaTopicProvisioningExistingConfigTest {
+class MdmKafkaTopicInitializerExistingConfigTest {
 
     @Container
     static final MdmKafkaContainer KAFKA = KafkaTestSupport.newKafkaContainer();
@@ -51,15 +49,15 @@ class KafkaTopicProvisioningExistingConfigTest {
     }
 
     @Autowired
-    private KafkaTopicProvisioningStatus provisioningStatus;
+    private MdmKafkaTopicReadiness readiness;
 
     @MockBean
     private OutboxRepository outboxRepository;
 
     /**
-     * 预建 Topic：分区数为 5（与 MDM 声明分区数 1 不同）
+     * 预建 Topic：分区数为 5（与声明分区数 1 不同）
      */
-    private static final String PRE_BUILT_TOPIC = "mdm.product.brand.created";
+    private static final String PRE_BUILT_TOPIC = "mdm.brand";
 
     @BeforeAll
     static void preCreateTopicWithDifferentConfig() throws Exception {
@@ -67,24 +65,26 @@ class KafkaTopicProvisioningExistingConfigTest {
     }
 
     @Test
-    @DisplayName("Provisioning 只检查存在性，已存在 Topic 分区数保持不变")
+    @DisplayName("预检只创建差集，已存在 Topic 分区数保持不变")
     void existingTopicConfigurationNotModified() throws Exception {
-        KafkaTestSupport.awaitReady(provisioningStatus, Duration.ofSeconds(60));
+        KafkaTestSupport.awaitReady(readiness, Duration.ofSeconds(60));
 
+        assertEquals(MdmKafkaTopicReadiness.State.READY, readiness.state());
         assertEquals(5, KafkaTestSupport.partitionsOf(KAFKA.getBootstrapServers(), PRE_BUILT_TOPIC),
                 "已存在 Topic 的分区数不应被修改");
     }
 
     @Test
-    @DisplayName("其余 MDM Topic 仍被正常创建")
+    @DisplayName("其余目录生产 Topic 仍被正常创建")
     void otherTopicsStillCreated() throws Exception {
-        KafkaTestSupport.awaitReady(provisioningStatus, Duration.ofSeconds(60));
+        KafkaTestSupport.awaitReady(readiness, Duration.ofSeconds(60));
 
         assertTrue(KafkaTestSupport.listNonInternalTopics(KAFKA.getBootstrapServers())
                         .containsAll(java.util.Set.of(
-                                "mdm.product.model.created",
-                                "mdm.eead.vehicleNode.event",
-                                "mdm.material.part.event")),
-                "其余 MDM Topic 应被正常创建");
+                                "mdm.model",
+                                "mdm.vehicle-node",
+                                "mdm.part",
+                                "mdm.supplier")),
+                "其余目录生产 Topic 应被正常创建");
     }
 }

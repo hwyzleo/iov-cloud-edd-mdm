@@ -1,78 +1,68 @@
 package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.messaging.kafka;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicCatalog;
-import org.springframework.beans.factory.ObjectProvider;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.config.MdmKafkaTopicProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
- * MDM Kafka Topic 路由解析器
+ * MDM Kafka Topic 路由解析器（MDM-DSN-CR-041 §5）
  * <p>
- * 基于 FW-KAFKA KafkaTopicCatalog 解析或校验事件目标 Topic（MDM-DSN-CR-034）：
- * - 单 topic 子域（EEAD / Org / Material）：aggregateType → 固定 topic
- * - 多 topic 子域（Product / Party）：eventType 即 topic
- * - 未登记事件被拒绝并告警，禁止无约束地产生 Topic
- * <p>
- * 框架 Provisioning 停用（DISABLED）时 Catalog 不存在，走既有兼容解析路径，不校验。
+ * 将 Outbox 记录中的聚合类型映射到 Kafka Topic 目录名称，映射为显式 SSOT：
+ * - 19 条 aggregateType → 语义键 → Topic 名称（来自 {@link MdmKafkaTopicProperties}）
+ * - 未登记聚合类型禁止回退到类名 / eventType 自动推导，抛出配置错误并阻止事件发送
  *
  * @author hwyz_leo
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class KafkaTopicResolver {
 
-    private final ObjectProvider<KafkaTopicCatalog> catalogProvider;
-
-    public KafkaTopicResolver(ObjectProvider<KafkaTopicCatalog> catalogProvider) {
-        this.catalogProvider = catalogProvider;
-    }
+    private final MdmKafkaTopicProperties topicProperties;
 
     /**
-     * 单 topic 子域映射：aggregateType → 固定 topic
+     * 聚合类型 → Topic 语义键（与 mdm_outbox.aggregate_type 落库值一致，19 条全覆盖）。
      */
-    private static final Map<String, String> SINGLE_TOPIC_MAPPING = new HashMap<>();
-
-    static {
-        // EEAD 子域
-        SINGLE_TOPIC_MAPPING.put("VEHICLE_NODE", "mdm.eead.vehicleNode.event");
-        SINGLE_TOPIC_MAPPING.put("DEVICE_CATEGORY", "mdm.eead.deviceCategory.event");
-        SINGLE_TOPIC_MAPPING.put("SWIN_DEFINITION", "mdm.eead.swin.event");
-        SINGLE_TOPIC_MAPPING.put("SWIN_SCHEME", "mdm.eead.swinScheme.event");
-        SINGLE_TOPIC_MAPPING.put("RXSWIN_REGISTRY", "mdm.eead.rxswin.event");
-        SINGLE_TOPIC_MAPPING.put("TYPE_APPROVAL_BASELINE", "mdm.eead.typeApprovalBaseline.event");
-        // Org 子域
-        SINGLE_TOPIC_MAPPING.put("PLANT", "mdm.org.plant.event");
-        // Material 子域
-        SINGLE_TOPIC_MAPPING.put("MATERIAL_CATEGORY", "mdm.material.category.event");
-        SINGLE_TOPIC_MAPPING.put("PART", "mdm.material.part.event");
-        SINGLE_TOPIC_MAPPING.put("SOFTWARE_BASELINE", "mdm.material.softwareBaseline.event");
-    }
+    private static final Map<String, String> AGGREGATE_TYPE_TO_KEY = Map.ofEntries(
+            Map.entry("BRAND", "brand"),
+            Map.entry("CAR_LINE", "car-line"),
+            Map.entry("PLATFORM", "platform"),
+            Map.entry("MODEL", "model"),
+            Map.entry("VARIANT", "variant"),
+            Map.entry("CONFIGURATION", "configuration"),
+            Map.entry("OPTION_FAMILY", "option-family"),
+            Map.entry("OPTION_CODE", "option-code"),
+            Map.entry("SUPPLIER", "supplier"),
+            Map.entry("VEHICLE_NODE", "vehicle-node"),
+            Map.entry("DEVICE_CATEGORY", "device-category"),
+            Map.entry("SWIN_SCHEME", "swin-scheme"),
+            Map.entry("SWIN_DEFINITION", "swin-definition"),
+            Map.entry("RXSWIN_REGISTRY", "rxswin"),
+            Map.entry("TYPE_APPROVAL_BASELINE", "type-approval-baseline"),
+            Map.entry("PLANT", "plant"),
+            Map.entry("MATERIAL_CATEGORY", "material-category"),
+            Map.entry("PART", "part"),
+            Map.entry("SOFTWARE_BASELINE", "software-baseline"));
 
     /**
-     * 解析事件目标 Topic
+     * 解析事件目标 Topic。
      *
-     * @param aggregateType 聚合类型
-     * @param eventType     事件类型
-     * @return 目标 topic；未登记或 Catalog 缺失时返回 empty
+     * @param aggregateType 聚合类型（mdm_outbox.aggregate_type）
+     * @param eventType     事件类型（仅作日志上下文，不参与路由推导）
+     * @return 目录 Topic 名称
+     * @throws MdmKafkaTopicConfigException 聚合类型未登记映射或配置缺失
      */
-    public Optional<String> resolve(String aggregateType, String eventType) {
-        String fixed = SINGLE_TOPIC_MAPPING.get(aggregateType);
-        if (fixed != null) {
-            return resolveAndValidate(fixed, aggregateType, eventType);
+    public String resolve(String aggregateType, String eventType) {
+        String key = aggregateType == null ? null : AGGREGATE_TYPE_TO_KEY.get(aggregateType);
+        if (key == null) {
+            throw new MdmKafkaTopicConfigException(
+                    "未知聚合类型，无法映射 Kafka topic（禁止回退推导）: aggregateType=" + aggregateType + ", eventType=" + eventType);
         }
-        return resolveAndValidate(eventType, aggregateType, eventType);
-    }
-
-    private Optional<String> resolveAndValidate(String topic, String aggregateType, String eventType) {
-        KafkaTopicCatalog catalog = catalogProvider.getIfAvailable();
-        if (catalog != null && !catalog.contains(topic)) {
-            log.warn("未登记的 Kafka topic 被拒绝: topic={}, aggregateType={}, eventType={}", topic, aggregateType, eventType);
-            return Optional.empty();
-        }
-        return Optional.of(topic);
+        String topic = topicProperties.producerTopic(key);
+        log.debug("解析 Kafka topic: aggregateType={}, eventType={}, key={}, topic={}", aggregateType, eventType, key, topic);
+        return topic;
     }
 }

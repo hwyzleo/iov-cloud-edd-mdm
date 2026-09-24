@@ -217,7 +217,7 @@ public interface OutboxService {
     void publishSupplierDeactivatedEvent(Supplier supplier);
 
     /**
-     * 发布车载节点创建事件（EEAD 子域，topic: mdm.eead.vehicleNode.event）
+     * 发布车载节点创建事件（EEAD 子域，topic: mdm.vehicle-node）
      *
      * @param vehicleNode 车载节点聚合根
      */
@@ -381,7 +381,7 @@ public interface OutboxService {
     void publishRxswinRegistryCreatedEvent(RxswinRegistry rxswinRegistry);
 
     /**
-     * 发布SWIN定义创建事件（EEAD 子域，topic: mdm.eead.swin.event）
+     * 发布SWIN定义创建事件（EEAD 子域，topic: mdm.swin-definition）
      *
      * @param swinDefinition SWIN定义聚合根
      */
@@ -402,7 +402,7 @@ public interface OutboxService {
     void publishSwinDefinitionDeletedEvent(SwinDefinition swinDefinition);
 
     /**
-     * 发布SWIN编码方案创建事件（EEAD 子域，topic: mdm.eead.swin.event）
+     * 发布SWIN编码方案创建事件（EEAD 子域，topic: mdm.swin-scheme）
      *
      * @param swinScheme SWIN编码方案聚合根
      */

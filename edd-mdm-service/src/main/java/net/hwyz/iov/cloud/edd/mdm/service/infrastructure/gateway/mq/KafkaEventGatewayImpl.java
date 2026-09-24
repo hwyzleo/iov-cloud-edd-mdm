@@ -3,17 +3,15 @@ package net.hwyz.iov.cloud.edd.mdm.service.infrastructure.gateway.mq;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.edd.mdm.service.application.port.gateway.KafkaEventGateway;
-import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicCatalog;
-import org.springframework.beans.factory.ObjectProvider;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.config.MdmKafkaTopicProperties;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 /**
  * Kafka 事件发送网关实现
  * <p>
- * 发送前基于 FW-KAFKA KafkaTopicCatalog 校验目标 Topic（MDM-DSN-CR-034），
- * 未登记 topic 直接拒绝并告警，禁止未知 eventType 无约束地产生 Topic。
- * 框架 Provisioning 停用（DISABLED）时 Catalog 不存在，跳过校验走兼容路径。
+ * 发送前校验目标 Topic 属于集中配置的生产 Topic 清单（MDM-DSN-CR-041），
+ * 非目录 Topic 直接拒绝并告警；Topic 名称来源统一为 {@link MdmKafkaTopicProperties}。
  *
  * @author hwyz_leo
  */
@@ -23,13 +21,12 @@ import org.springframework.stereotype.Component;
 public class KafkaEventGatewayImpl implements KafkaEventGateway {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectProvider<KafkaTopicCatalog> catalogProvider;
+    private final MdmKafkaTopicProperties topicProperties;
 
     @Override
     public void send(String topic, String key, String payload) {
-        KafkaTopicCatalog catalog = catalogProvider.getIfAvailable();
-        if (catalog != null && !catalog.contains(topic)) {
-            log.warn("未登记的 Kafka topic，拒绝发送: topic={}, key={}", topic, key);
+        if (!topicProperties.producerTopics().contains(topic)) {
+            log.warn("非 MDM 生产 Topic，拒绝发送: topic={}, key={}", topic, key);
             return;
         }
         try {

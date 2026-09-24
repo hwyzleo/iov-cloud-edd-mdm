@@ -1,8 +1,7 @@
 package net.hwyz.iov.cloud.edd.mdm.test.kafka;
 
-import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.messaging.kafka.MdmKafkaTopicDefinitionProvider;
-import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicDefinition;
-import net.hwyz.iov.cloud.framework.kafka.topic.KafkaTopicProvisioningStatus;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.config.MdmKafkaTopicProperties;
+import net.hwyz.iov.cloud.edd.mdm.service.infrastructure.messaging.kafka.MdmKafkaTopicReadiness;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
@@ -39,10 +38,8 @@ public final class KafkaTestSupport {
         return new MdmKafkaContainer();
     }
 
-    public static Set<String> declaredTopicNames(MdmKafkaTopicDefinitionProvider provider) {
-        return provider.topicDefinitions().stream()
-                .map(KafkaTopicDefinition::name)
-                .collect(Collectors.toSet());
+    public static Set<String> producerTopicNames(MdmKafkaTopicProperties topicProperties) {
+        return Set.copyOf(topicProperties.producerTopics());
     }
 
     public static AdminClient newAdminClient(String bootstrapServers) {
@@ -67,23 +64,23 @@ public final class KafkaTestSupport {
         }
     }
 
-    public static void awaitReady(KafkaTopicProvisioningStatus status, Duration timeout) {
+    public static void awaitReady(MdmKafkaTopicReadiness readiness, Duration timeout) {
         long deadline = System.currentTimeMillis() + timeout.toMillis();
         while (System.currentTimeMillis() < deadline) {
-            if (status.state() == KafkaTopicProvisioningStatus.State.READY) {
+            if (readiness.state() == MdmKafkaTopicReadiness.State.READY) {
                 return;
             }
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new IllegalStateException("等待 provisioning READY 被中断", e);
+                throw new IllegalStateException("等待 Kafka Topic READY 被中断", e);
             }
         }
-        assertEquals(KafkaTopicProvisioningStatus.State.READY, status.state(),
-                "等待 Kafka Topic Provisioning READY 超时，当前状态=" + status.state()
-                        + "，缺失 topic=" + status.missingTopics()
-                        + "，最近失败=" + status.lastFailure().orElse(null));
+        assertEquals(MdmKafkaTopicReadiness.State.READY, readiness.state(),
+                "等待 Kafka Topic READY 超时，当前状态=" + readiness.state()
+                        + "，缺失生产 Topic=" + readiness.snapshot().missingProducerTopics()
+                        + "，最近失败=" + readiness.snapshot().lastFailure().orElse(null));
     }
 
     public static List<String> readRecords(String bootstrapServers, String topic, Duration timeout) {

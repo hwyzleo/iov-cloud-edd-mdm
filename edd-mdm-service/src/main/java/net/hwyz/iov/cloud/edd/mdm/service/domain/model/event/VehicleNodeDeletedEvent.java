@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * 车载节点删除事件（EEAD 子域）
  * <p>
- * 推送至 Kafka topic：mdm.eead.vehicleNode.event，eventType=VehicleNodeDeleted。
+ * 推送至 Kafka topic：mdm.vehicle-node（Kafka Topic 目录，MDM-DSN-CR-041），eventType=VehicleNodeDeleted。
  * payload 携带删除前最后一份完整字段 + forceDelete 标识（design §8 OQ-9）。
  *
  * @author hwyz_leo

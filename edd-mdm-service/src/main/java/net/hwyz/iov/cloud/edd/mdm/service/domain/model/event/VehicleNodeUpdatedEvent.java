@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * 车载节点更新事件（EEAD 子域）
  * <p>
- * 推送至 Kafka topic：mdm.eead.vehicleNode.event，eventType=VehicleNodeUpdated
+ * 推送至 Kafka topic：mdm.vehicle-node（Kafka Topic 目录，MDM-DSN-CR-041），eventType=VehicleNodeUpdated
  * 失效（deactivate）操作也使用本事件，通过 payload.status=INACTIVE 体现失效语义。
  *
  * @author hwyz_leo

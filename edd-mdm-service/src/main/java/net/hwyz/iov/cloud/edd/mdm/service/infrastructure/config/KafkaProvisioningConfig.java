@@ -9,11 +9,10 @@ import org.springframework.context.annotation.Configuration;
 /**
  * MDM Kafka 基础设施配置
  * <p>
- * 提供 Kafka Admin Bean（MDM-DSN-CR-034）：
- * - 供 FW-KAFKA Topic Provisioning 使用（框架对 Admin 缺失时才自建，此处显式提供，
- *   避免与 Spring Boot KafkaAutoConfiguration 的 kafkaAdmin Bean 名冲突）
- * - Admin 连接参数复用 {@link KafkaProperties}，运行 Principal 需具备
- *   DescribeTopics / CreateTopics 权限
+ * 提供 Kafka Admin Bean（MDM-DSN-CR-041）：
+ * - 供 {@code MdmKafkaTopicInitializer} 启动预检 / 初始化使用（describeTopics / createTopics）
+ * - Admin 连接参数复用 {@link KafkaProperties}，运行 Principal 需具备 DescribeTopics
+ *   权限；生产环境如未授予 CreateTopics 权限，由部署前置任务使用受控平台账号创建
  *
  * @author hwyz_leo
  */

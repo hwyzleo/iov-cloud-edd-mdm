@@ -2,9 +2,6 @@ mybatis-plus:
   type-aliases-package: net.hwyz.iov.cloud.edd.mdm.service.infrastructure.persistence.po
 
 iov:
-  kafka:
-    topic-provisioning:
-      enabled: true
   mdm:
     device-category-catalog:
       bootstrap-enabled: false
@@ -12,6 +9,36 @@ iov:
       bootstrap-enabled: false
     material-category-catalog:
       bootstrap-enabled: false
+
+edd:
+  mdm:
+    kafka:
+      topic-initialization:
+        enabled: true
+        create-missing-producer-topics: true
+        fail-fast: true
+        partitions: ${EDD_MDM_KAFKA_TOPIC_PARTITIONS:3}
+        replicas: ${EDD_MDM_KAFKA_TOPIC_REPLICAS:1}
+      topics:
+        brand: mdm.brand
+        car-line: mdm.car-line
+        configuration: mdm.configuration
+        device-category: mdm.device-category
+        material-category: mdm.material-category
+        model: mdm.model
+        option-code: mdm.option-code
+        option-family: mdm.option-family
+        part: mdm.part
+        plant: mdm.plant
+        platform: mdm.platform
+        rxswin: mdm.rxswin
+        software-baseline: mdm.software-baseline
+        supplier: mdm.supplier
+        swin-definition: mdm.swin-definition
+        swin-scheme: mdm.swin-scheme
+        type-approval-baseline: mdm.type-approval-baseline
+        variant: mdm.variant
+        vehicle-node: mdm.vehicle-node
 
 mdm:
   material:
